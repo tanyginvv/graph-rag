@@ -1,0 +1,30 @@
+paths:
+  chunks: "chunks 2/docs/dic_chunks.json"
+  embedding_cache: "data/cache/embeddings"
+  sparse_cache: "data/cache/sparse_bm25.json"
+  manifest: "data/index_manifest.json"
+
+qdrant:
+  url: "http://localhost:6333"
+  collection: "chunks"
+
+retrieval:
+  default_profile: "sparse_only"
+  default_limit: 5
+  prefetch_limit: 80
+
+graph:
+  enabled: true
+  uri: "bolt://localhost:7687"
+  user: "neo4j"
+  password_env: "NEO4J_PASSWORD"
+  database: "neo4j"
+  batch_size: 200
+
+llm:
+  provider: "deepseek"
+  base_url: "https://api.deepseek.com"
+  api_key_env: "DEEPSEEK_API_KEY"
+  model: "deepseek-v4-flash"
+  max_context_chunks: 5
+  max_chars_per_chunk: 1800

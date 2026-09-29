@@ -1,0 +1,12 @@
+chunker:
+  max_chunk_size: 600        # лимит; крупные таблицы делятся по строкам
+  min_chunk_size: 150        # target lower bound (не жёсткий)
+  overlap_tokens: 80
+  strategy: "recursive"
+  tokenizer: "cl100k_base"   # tiktoken encoding
+
+preprocess:
+  remove_references: true
+  remove_impact_statement: true
+  remove_image_placeholders: true
+  remove_emails: true

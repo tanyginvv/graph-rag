@@ -1,0 +1,590 @@
+[
+  {
+    "chunk_id": "time-llm_chunk_000",
+    "article_id": "time-llm",
+    "article_meta": {
+      "title": "Time-LLM: Time Series Forecasting by Reprogramming Large Language Models",
+      "authors": [
+        "Jin",
+        "Wang",
+        "Ma",
+        "Chu",
+        "Zhang",
+        "Shi",
+        "Chen",
+        "Liang",
+        "Li",
+        "Pan"
+      ],
+      "year": 2024,
+      "arxiv_id": "2310.01728"
+    },
+    "section": "Abstract",
+    "section_hierarchy": [
+      "Abstract"
+    ],
+    "chunk_type": "prose",
+    "index": 0,
+    "text": "## Abstract\n\nTime series forecasting holds significant importance in many real-world dynamic systems and has been extensively studied. Unlike natural language process (NLP) and computer vision (CV), where a single large model can tackle multiple tasks, models for time series forecasting are often specialized, necessitating distinct designs for different tasks and applications. While pre-trained foundation models have made impressive strides in NLP and CV, their development in time series domains has been constrained by data sparsity. Recent studies have revealed that large language models (LLMs) possess robust pattern recognition and reasoning abilities over complex sequences of tokens. However, the challenge remains in effectively aligning the modalities of time series data and natural language to leverage these capabilities. In this work, we present TIME-LLM, a reprogramming framework to repurpose LLMs for general time series forecasting with the backbone language models kept intact. We begin by reprogramming the input time series with text prototypes before feeding it into the frozen LLM to align the two modalities. To augment the LLM's ability to reason with time series data, we propose Prompt-as-Prefix (PaP), which enriches the input context and directs the transformation of reprogrammed input patches. The transformed time series patches from the LLM are finally projected to obtain the forecasts. Our comprehensive evaluations demonstrate that TIME-LLM is a powerful time series learner that outperforms state-of-the-art, specialized forecasting models. Moreover, TIME-LLM excels in both few-shot and zero-shot learning scenarios. The code is made available at `https://github.com/KimMeen/Time-LLM`.\n\n",
+    "summary": "Time-LLM: reprogramming LLM для TS forecasting. Patch reprogramming — TS патчи проецируются в text prototype embeddings, Prompt-as-Prefix (PaP) направляет frozen LLM. SOTA на long-term, short-term, few-shot, zero-shot forecasting с Llama-7B и GPT-2.",
+    "keywords": [
+      "Time-LLM",
+      "reprogramming",
+      "Patch Reprogramming",
+      "Prompt-as-Prefix",
+      "frozen LLM",
+      "Llama-7B",
+      "GPT-2",
+      "SOTA"
+    ],
+    "question_types": [
+      "А",
+      "Ж"
+    ],
+    "token_count": 140
+  },
+  {
+    "chunk_id": "time-llm_chunk_001",
+    "article_id": "time-llm",
+    "article_meta": {
+      "title": "Time-LLM: Time Series Forecasting by Reprogramming Large Language Models",
+      "authors": [
+        "Jin",
+        "Wang",
+        "Ma",
+        "Chu",
+        "Zhang",
+        "Shi",
+        "Chen",
+        "Liang",
+        "Li",
+        "Pan"
+      ],
+      "year": 2024,
+      "arxiv_id": "2310.01728"
+    },
+    "section": "Introduction",
+    "section_hierarchy": [
+      "Introduction",
+      "1. Introduction"
+    ],
+    "chunk_type": "prose",
+    "index": 1,
+    "text": "## 1. Introduction\n\nTime series forecasting is a critical capability across many real-world dynamic systems [Jin et al., 2023a], with applications ranging from demand planning [Leonard, 2001] and inventory optimization [Li et al., 2022] to energy load forecasting [Liu et al., 2023a] and climate modeling [Schneider and Dickinson, 1974]. Each time series forecasting task typically requires extensive domain expertise and task-specific model designs. This stands in stark contrast to foundation language models like GPT-3 [Brown et al., 2020], GPT-4 [OpenAI, 2023], Llama [Touvron et al., 2023], inter alia, which can perform well on a diverse range of NLP tasks in a few-shot or even zero-shot setting.\n\nPre-trained foundation models, such as large language models (LLMs), have driven rapid progress in computer vision (CV) and natural language processing (NLP). While time series modeling has not benefited from the same significant breakthroughs, LLMs' impressive capabilities have inspired their application to time series forecasting [Jin et al., 2023b]. Several desiderata exist for leveraging LLMs to advance forecasting techniques:\n\n- Generalizability. LLMs have demonstrated a remarkable capability for few-shot and zero-shot transfer learning [Brown et al., 2020]. This suggests their potential for generalizable forecasting across domains without requiring per-task retraining from scratch. In contrast, current forecasting methods are often rigidly specialized by domain.\n- Data efficiency. By leveraging pre-trained knowledge, LLMs have shown the ability to perform new tasks with only a few examples. This data efficiency could enable forecasting for settings where historical data is limited. In contrast, current methods typically require abundant in-domain data.\n- Reasoning. LLMs exhibit sophisticated reasoning and pattern recognition capabilities [Mirchandani et al., 2023; Wang et al., 2023; Chu et al., 2023]. Harnessing these skills could allow making highly precise forecasts by leveraging learned higher-level concepts. Existing non-LLM methods are largely statistical without much innate reasoning.\n- Multimodal knowledge. As LLM architectures and training techniques improve, they gain more diverse knowledge across modalities like vision, speech, and text [Ma et al., 2023]. Tapping into this knowledge could enable synergistic forecasting that fuses different data types. Conventional tools lack ways to jointly leverage multiple knowledge bases.\n- Easy optimization. LLMs are trained once on massive computing and then can be applied to forecasting tasks without learning from scratch. Optimizing existing forecasting models often requires significant architecture search and hyperparameter tuning [Zhou et al., 2023b].\n\nIn summary, LLMs offer a promising path to make time series forecasting more general, efficient, synergistic, and accessible compared to current specialized modeling paradigms. Thus, adapting these powerful models for time series data can unlock significant untapped potential.\n\nThe realization of the above benefits hinges on the effective alignment of the modalities of time series data and natural language. However, this is a challenging task as LLMs operate on discrete tokens, while time series data is inherently continuous. Furthermore, the knowledge and reasoning capabilities to interpret time series patterns are not naturally present within LLMs' pre-training. Therefore, it remains an open challenge to unlock the knowledge within LLMs in activating their ability for general time series forecasting in a way that is accurate, data-efficient, and task-agnostic.\n\nIn this work, we propose TIME-LLM, a reprogramming framework to adapt large language models for time series forecasting while keeping the backbone model intact. The core idea is to reprogram the input time series into text prototype representations that are more naturally suited to language models' capabilities. To further augment the model's reasoning about time series concepts, we introduce Prompt-as-Prefix (PaP), a novel idea in enriching the input time series with additional context and providing task instructions in the modality of natural language. This provides declarative guidance about desired transformations to apply to the reprogrammed input. The output of the language model is then projected to generate time series forecasts. Our comprehensive evaluation demonstrates that large language models can act as effective few-shot and zero-shot time series learners when adopted through this reprogramming approach, outperforming specialized forecasting models. By leveraging LLMs' reasoning capability while keeping the models intact, our work points the way toward multimodal foundation models that can excel on both language and sequential data tasks. Our proposed reprogramming framework offers an extensible paradigm for imbuing large models with new capabilities beyond their original pre-training.\n\nOur main contributions in this work can be summarized as follows:\n\n- We introduce a novel concept of reprogramming large language models for time series forecasting without altering the pre-trained backbone model. In doing so, we show that forecasting can be cast as yet another \"language\" task that can be effectively tackled by an off-the-shelf LLM.\n- We propose a new framework, TIME-LLM, which encompasses reprogramming the input time series into text prototype representations that are more natural for the LLM, and augmenting the input context with declarative prompts (e.g., domain expert knowledge and task instructions) to guide LLM reasoning. Our technique points towards multimodal foundation models excelling in both language and time series.\n- TIME-LLM consistently exceeds state-of-the-art performance in mainstream forecasting tasks, especially in few-shot and zero-shot scenarios. Moreover, this superior performance is achieved while maintaining excellent model reprogramming efficiency. Thus, our research is a concrete step in unleashing LLMs' untapped potential for time series and perhaps other sequential data.\n\n",
+    "summary": "Time-LLM: три desiderata — (1) универсальность (разные задачи/домены), (2) zero-shot/few-shot способность, (3) использование pretrained LLM без файнтюнинга. Patch Reprogramming конвертирует TS в text prototype space. Prompt-as-Prefix (PaP) с тремя компонентами направляет frozen LLM (Llama-7B/GPT-2).",
+    "keywords": [
+      "Time-LLM",
+      "reprogramming",
+      "desiderata",
+      "Patch Reprogramming",
+      "Prompt-as-Prefix",
+      "frozen LLM",
+      "Llama-7B",
+      "text prototype"
+    ],
+    "question_types": [
+      "А"
+    ],
+    "token_count": 580
+  },
+  {
+    "chunk_id": "time-llm_chunk_002",
+    "article_id": "time-llm",
+    "article_meta": {
+      "title": "Time-LLM: Time Series Forecasting by Reprogramming Large Language Models",
+      "authors": [
+        "Jin",
+        "Wang",
+        "Ma",
+        "Chu",
+        "Zhang",
+        "Shi",
+        "Chen",
+        "Liang",
+        "Li",
+        "Pan"
+      ],
+      "year": 2024,
+      "arxiv_id": "2310.01728"
+    },
+    "section": "Methodology",
+    "section_hierarchy": [
+      "Methodology",
+      "3. Methodology"
+    ],
+    "chunk_type": "prose",
+    "index": 2,
+    "text": "## 3. Methodology\n\nOur model architecture is depicted in Figure 2. We focus on reprogramming an embedding-visible language foundation model, such as Llama [Touvron et al., 2023] and GPT-2 [Radford et al., 2019], for general time series forecasting without requiring any fine-tuning of the backbone model. Specifically, we consider the following problem: given a sequence of historical observations $X \\in \\mathbb{R}^{N \\times T}$ consisting of $N$ different 1-dimensional variables across $T$ time steps, we aim to reprogram a large language model $f(\\cdot)$ to understand the input time series and accurately forecast the readings at $H$ future time steps, denoted by $\\hat{Y} \\in \\mathbb{R}^{N \\times H}$, with the overall objective to minimize the mean square errors between the ground truths $Y$ and predictions, i.e.,\n\n$$\n\\frac{1}{H}\\sum_{h=1}^{H}\\lVert \\hat{Y}_h - Y_h \\rVert_F^2.\n$$\n\nOur method encompasses three main components: (1) input transformation, (2) a pre-trained and frozen LLM, and (3) output projection. Initially, a multivariate time series is partitioned into $N$ univariate time series, which are subsequently processed independently [Nie et al., 2023]. The $i$-th series is denoted as $X^{(i)} \\in \\mathbb{R}^{1 \\times T}$, which undergoes normalization, patching, and embedding prior to being reprogrammed with learned text prototypes to align the source and target modalities. Then, we augment the LLM's time series reasoning ability by prompting it together with reprogrammed patches to generate output representations, which are projected to the final forecasts $\\hat{Y}^{(i)} \\in \\mathbb{R}^{1 \\times H}$. We note that only the parameters of the lightweight input transformation and output projection are updated, while the backbone language model is frozen. In contrast to vision-language and other multimodal language models, which usually fine-tune with paired cross-modality data, TIME-LLM is directly optimized and becomes readily available with only a small set of time series and a few training epochs, maintaining high efficiency and imposing fewer resource constraints compared to building large domain-specific models from scratch or fine-tuning them. To further reduce memory footprints, various off-the-shelf techniques (e.g., quantization) can be seamlessly integrated for slimming TIME-LLM.\n\n> Figure 2 (see PDF p. 4). The model framework of TIME-LLM. Given an input time series, we first tokenize and embed it via (1) patching along with a (2) customized embedding layer. (3) These patch embeddings are then reprogrammed with condensed text prototypes to align two modalities. To augment the LLM's reasoning ability, (4) additional prompt prefixes are added to the input to direct the transformation of input patches. (5) The output patches from the LLM are projected to generate the forecasts.\n\n",
+    "summary": "Пайплайн Time-LLM (5 шагов): (1) Input Embedding — RevIN + patching → patch tokens, (2) Patch Reprogramming — Multi-head Cross-Attention перепрограммирует TS патчи в text prototype embeddings, (3) Prompt-as-Prefix (PaP) — 3 компонента: task description, statistics, инструкции, (4) Frozen LLM backbone, (5) Output Projection — flatten + linear → forecast.",
+    "keywords": [
+      "Time-LLM",
+      "pipeline",
+      "5 steps",
+      "Input Embedding",
+      "Patch Reprogramming",
+      "Prompt-as-Prefix",
+      "Output Projection",
+      "frozen LLM"
+    ],
+    "question_types": [
+      "А",
+      "Е"
+    ],
+    "token_count": 300
+  },
+  {
+    "chunk_id": "time-llm_chunk_003",
+    "article_id": "time-llm",
+    "article_meta": {
+      "title": "Time-LLM: Time Series Forecasting by Reprogramming Large Language Models",
+      "authors": [
+        "Jin",
+        "Wang",
+        "Ma",
+        "Chu",
+        "Zhang",
+        "Shi",
+        "Chen",
+        "Liang",
+        "Li",
+        "Pan"
+      ],
+      "year": 2024,
+      "arxiv_id": "2310.01728"
+    },
+    "section": "Methodology",
+    "section_hierarchy": [
+      "Methodology",
+      "3. Methodology",
+      "3.1. Model Structure"
+    ],
+    "chunk_type": "formula_heavy",
+    "index": 3,
+    "text": "### 3.1. Model Structure\n\n**Input Embedding.** Each input channel $X^{(i)}$ is first individually normalized to have zero mean and unit standard deviation via reversible instance normalization (RevIN) in mitigating the time series distribution shift [Kim et al., 2021]. Then, we divide $X^{(i)}$ into several consecutive overlapped or non-overlapped patches [Nie et al., 2023] with length $L_p$; thus the total number of input patches is\n\n$$\nP = \\left\\lfloor \\frac{T - L_p}{S} \\right\\rfloor + 2,\n$$\n\nwhere $S$ denotes the horizontal sliding stride. The underlying motivations are two-fold: (1) better preserving local semantic information by aggregating local information into each patch and (2) serving as tokenization to form a compact sequence of input tokens, reducing computational burdens. Given these patches $X_P^{(i)} \\in \\mathbb{R}^{P \\times L_p}$, we embed them as $\\hat{X}_P^{(i)} \\in \\mathbb{R}^{P \\times d_m}$, adopting a simple linear layer as the patch embedder to create dimensions $d_m$.\n\n",
+    "summary": "Input Embedding: RevIN нормализация → patching (patch length P, non-overlapping) → линейная проекция патчей в patch tokens размерности D. RevIN statistics сохраняются для обратной денормализации.",
+    "keywords": [
+      "RevIN",
+      "patching",
+      "linear projection",
+      "patch tokens",
+      "instance normalization",
+      "denormalization"
+    ],
+    "question_types": [
+      "Г",
+      "Л"
+    ],
+    "token_count": 220
+  },
+  {
+    "chunk_id": "time-llm_chunk_004",
+    "article_id": "time-llm",
+    "article_meta": {
+      "title": "Time-LLM: Time Series Forecasting by Reprogramming Large Language Models",
+      "authors": [
+        "Jin",
+        "Wang",
+        "Ma",
+        "Chu",
+        "Zhang",
+        "Shi",
+        "Chen",
+        "Liang",
+        "Li",
+        "Pan"
+      ],
+      "year": 2024,
+      "arxiv_id": "2310.01728"
+    },
+    "section": "Methodology",
+    "section_hierarchy": [
+      "Methodology",
+      "3. Methodology",
+      "3.1. Model Structure"
+    ],
+    "chunk_type": "formula_heavy",
+    "index": 4,
+    "text": "**Patch Reprogramming.** Here we reprogram patch embeddings into the source data representation space to align the modalities of time series and natural language to activate the backbone's time series understanding and reasoning capabilities. A common practice is learning a form of \"noise\" that, when applied to target input samples, allows the pre-trained source model to produce the desired target outputs without requiring parameter updates. This is technically feasible for bridging data modalities that are identical or similar. Examples include repurposing a vision model to work with cross-domain images [Misra et al., 2023] or reprogramming an acoustic model to handle time series data [Yang et al., 2021]. In both cases, there are explicit, learnable transformations between the source and target data, allowing for the direct editing of input samples. However, time series can neither be directly edited nor described losslessly in natural language, posing significant challenges to directly bootstrap the LLM for understanding time series without resource-intensive fine-tuning.\n\nTo close this gap, we propose reprogramming $\\hat{X}_P^{(i)}$ using pre-trained word embeddings $E \\in \\mathbb{R}^{V \\times D}$ in the backbone, where $V$ is the vocabulary size. Nevertheless, there is no prior knowledge indicating which source tokens are directly relevant. Thus, simply leveraging $E$ will result in a large and potentially dense reprogramming space. A simple solution is to maintain a small collection of text prototypes by linearly probing $E$, denoted as $E' \\in \\mathbb{R}^{V' \\times D}$, where $V' \\subseteq V$. An illustration is in Figure 3(a). Text prototypes learn connecting language cues, e.g., \"short up\" (red lines) and \"steady down\" (blue lines), which are then combined to represent the local patch information (e.g., \"short up then down steadily\" for characterizing patch 5) without leaving the space where the language model is pre-trained. This approach is efficient and allows for the adaptive selection of relevant source information.\n\nTo realize this, we employ a multi-head cross-attention layer. Specifically, for each head $k \\in \\{1, \\cdots, K\\}$, we define query matrices $Q_k^{(i)} = \\hat{X}_P^{(i)} W_k^Q$, key matrices $K_k^{(i)} = E' W_k^K$, and value matrices $V_k^{(i)} = E' W_k^V$, where $W_k^Q \\in \\mathbb{R}^{d_m \\times d}$ and $W_k^K, W_k^V \\in \\mathbb{R}^{D \\times d}$. Specifically, $D$ is the hidden dimension of the backbone model, and $d = \\left\\lfloor d_m / K \\right\\rfloor$. Then, we have the operation to reprogram time series patches in each attention head defined as:\n\n$$\nZ_k^{(i)} = \\operatorname{ATTENTION}(Q_k^{(i)}, K_k^{(i)}, V_k^{(i)}) = \\operatorname{SOFTMAX}\\left(\\frac{Q_k^{(i)} K_k^{(i)\\top}}{\\sqrt{d_k}}\\right)V_k^{(i)}.\n\\tag{1}\n$$\n\nBy aggregating each $Z_k^{(i)} \\in \\mathbb{R}^{P \\times d}$ in every head, we obtain $Z^{(i)} \\in \\mathbb{R}^{P \\times d_m}$. This is then linearly projected to align the hidden dimensions with the backbone model, yielding $O^{(i)} \\in \\mathbb{R}^{P \\times D}$.\n\n> Figure 3 (see PDF p. 5). Illustration of (a) patch reprogramming and (b) Patch-as-Prefix versus Prompt-as-Prefix.\n\n",
+    "summary": "Patch Reprogramming: Multi-head Cross-Attention между TS patch tokens и pretrained text prototypes (word embeddings frozen LLM). TS патчи «перепрограммируются» в source data representations выровненные с text embedding space. Это bridge между TS и LLM без файнтюнинга.",
+    "keywords": [
+      "Patch Reprogramming",
+      "Multi-head Cross-Attention",
+      "text prototypes",
+      "word embeddings",
+      "alignment",
+      "frozen LLM",
+      "bridge"
+    ],
+    "question_types": [
+      "Г",
+      "Б"
+    ],
+    "token_count": 300
+  },
+  {
+    "chunk_id": "time-llm_chunk_005",
+    "article_id": "time-llm",
+    "article_meta": {
+      "title": "Time-LLM: Time Series Forecasting by Reprogramming Large Language Models",
+      "authors": [
+        "Jin",
+        "Wang",
+        "Ma",
+        "Chu",
+        "Zhang",
+        "Shi",
+        "Chen",
+        "Liang",
+        "Li",
+        "Pan"
+      ],
+      "year": 2024,
+      "arxiv_id": "2310.01728"
+    },
+    "section": "Methodology",
+    "section_hierarchy": [
+      "Methodology",
+      "3. Methodology",
+      "3.1. Model Structure"
+    ],
+    "chunk_type": "prose",
+    "index": 5,
+    "text": "**Prompt-as-Prefix.** Prompting serves as a straightforward yet effective approach for task-specific activation of LLMs [Yin et al., 2023]. However, the direct translation of time series into natural language presents considerable challenges, hindering both the creation of instruction-following datasets and the effective utilization of on-the-fly prompting without performance compromise [Xue and Salim, 2022]. Recent advancements indicate that other data modalities, such as images, can be seamlessly integrated as the prefixes of prompts, thereby facilitating effective reasoning based on these inputs [Tsimpoukelli et al., 2021]. Motivated by these findings, and to render our approach directly applicable to real-world time series, we pose an alternative question: can prompts act as prefixes to enrich the input context and guide the transformation of reprogrammed time series patches? We term this concept as Prompt-as-Prefix (PaP) and observe that it significantly enhances the LLM's adaptability to downstream tasks while complementing patch reprogramming (see Section 4.5).\n\nAn illustration of the two prompting approaches is in Figure 3(b). In Patch-as-Prefix, a language model is prompted to predict subsequent values in a time series, articulated in natural language. This approach encounters certain constraints: (1) language models typically exhibit reduced sensitivity in processing high-precision numerals without the aid of external tools, thereby presenting substantial challenges in accurately addressing practical forecasting tasks over long horizons; (2) intricate, customized post-processing is required for different language models, given that they are pre-trained on diverse corpora and may employ different tokenization types in generating high-precision numerals with precision and efficiency. This results in forecasts being represented in disparate natural language formats, such as `['0', '.', '6', '1']` and `['0', '.', '61']`, to denote the decimal `0.61`.\n\nPrompt-as-Prefix, on the other hand, tactfully avoids these constraints. In practice, we identify three pivotal components for constructing effective prompts: (1) dataset context, (2) task instruction, and (3) input statistics. A prompt example is in Figure 4. The dataset context furnishes the LLM with essential background information concerning the input time series, which often exhibits distinct characteristics across various domains. Task instruction serves as a crucial guide for the LLM in the transformation of patch embeddings for specific tasks. We also enrich the input time series with additional crucial statistics, such as trends and lags, to facilitate pattern recognition and reasoning.\n\n> Figure 4 (see PDF p. 5). Prompt example. `<>` placeholders are task-specific configurations and calculated input statistics.\n\n",
+    "summary": "Prompt-as-Prefix (PaP): prefix-prompt из 3 компонентов — (1) task description, (2) dataset context и statistics, (3) инструкции для LLM. PaP конкатенируется перед reprogrammed patch tokens и подаётся в frozen LLM. Направляет LLM генерацию без fine-tuning.",
+    "keywords": [
+      "Prompt-as-Prefix",
+      "prefix-prompt",
+      "task description",
+      "statistics",
+      "instructions",
+      "frozen LLM",
+      "PaP"
+    ],
+    "question_types": [
+      "Б"
+    ],
+    "token_count": 180
+  },
+  {
+    "chunk_id": "time-llm_chunk_006",
+    "article_id": "time-llm",
+    "article_meta": {
+      "title": "Time-LLM: Time Series Forecasting by Reprogramming Large Language Models",
+      "authors": [
+        "Jin",
+        "Wang",
+        "Ma",
+        "Chu",
+        "Zhang",
+        "Shi",
+        "Chen",
+        "Liang",
+        "Li",
+        "Pan"
+      ],
+      "year": 2024,
+      "arxiv_id": "2310.01728"
+    },
+    "section": "Methodology",
+    "section_hierarchy": [
+      "Methodology",
+      "3. Methodology",
+      "3.1. Model Structure"
+    ],
+    "chunk_type": "prose",
+    "index": 6,
+    "text": "**Output Projection.** Upon packing and feedforwarding the prompt and patch embeddings $O^{(i)}$ through the frozen LLM as shown in Figure 2, we discard the prefixal part and obtain the output representations. Following this, we flatten and linearly project them to derive the final forecasts $\\hat{Y}^{(i)}$.\n\n\n### B.1. Implementation\n\nWe mainly follow the experimental configurations in [Wu et al., 2023] across all baselines within a unified evaluation pipeline in `https://github.com/thuml/Time-Series-Library` for fair comparisons. We use Llama-7B [Touvron et al., 2023] as the default backbone model unless stated otherwise. All our experiments are repeated three times and we report the averaged results. Our model implementation is on PyTorch [Paszke et al., 2019] with all experiments conducted on NVIDIA A100-80G GPUs. Our detailed model configurations are in Appendix B.4, and our code is made available at `https://github.com/KimMeen/Time-LLM`.\n\n**Technical Details.** We provide additional technical details of TIME-LLM in three aspects: (1) the learning of text prototypes, (2) the calculation of trends and lags in time series for use in prompts, and (3) the implementation of the output projection. To identify a small set of text prototypes $E' \\in \\mathbb{R}^{V' \\times D}$ from $E \\in \\mathbb{R}^{V \\times D}$, we learn a matrix $W \\in \\mathbb{R}^{V' \\times V}$ as the intermediary. To describe the overall time series trend in natural language, we calculate the sum of differences between consecutive time steps. A sum greater than 0 indicates an upward trend, while a lesser sum denotes a downward trend. In addition, we calculate the top-5 lags of the time series, identified by computing the autocorrelation using fast Fourier transformation and selecting the five lags with the highest correlation values. After we pack and feedforward the prompt and patch embeddings $O^{(i)} \\in \\mathbb{R}^{P \\times D}$ through the frozen LLM, we discard the prefixal part and obtain the output representations, denoted as $\\tilde{O}_i \\in \\mathbb{R}^{P \\times D}$. Subsequently, we follow PatchTST [Nie et al., 2023] and flatten $\\tilde{O}_i$ into a 1D tensor with length $P \\times D$, which is then linearly projected as $\\hat{Y}_i \\in \\mathbb{R}^{H}$.\n",
+    "summary": "Завершающий шаг (Output Projection): output frozen LLM → flatten → линейная проекция в forecast горизонт H. RevIN денормализация восстанавливает исходный масштаб. Token embedding, Patch Reprogramming, PaP — trainable; LLM backbone — frozen. ~6.6M обучаемых параметров.",
+    "keywords": [
+      "Output Projection",
+      "flatten",
+      "linear projection",
+      "denormalization",
+      "RevIN",
+      "6.6M params",
+      "trainable",
+      "frozen LLM",
+      "М"
+    ],
+    "question_types": [
+      "М"
+    ],
+    "token_count": 130
+  },
+  {
+    "chunk_id": "time-llm_chunk_007",
+    "article_id": "time-llm",
+    "article_meta": {
+      "title": "Time-LLM: Time Series Forecasting by Reprogramming Large Language Models",
+      "authors": [
+        "Jin",
+        "Wang",
+        "Ma",
+        "Chu",
+        "Zhang",
+        "Shi",
+        "Chen",
+        "Liang",
+        "Li",
+        "Pan"
+      ],
+      "year": 2024,
+      "arxiv_id": "2310.01728"
+    },
+    "section": "Methodology",
+    "section_hierarchy": [
+      "Methodology",
+      "3. Methodology"
+    ],
+    "chunk_type": "prose",
+    "index": 7,
+    "text": "Our method encompasses three main components: (1) input transformation, (2) a pre-trained and frozen LLM, and (3) output projection. Initially, a multivariate time series is partitioned into $N$ univariate time series, which are subsequently processed independently [Nie et al., 2023]. The $i$-th series is denoted as $X^{(i)} \\in \\mathbb{R}^{1 \\times T}$, which undergoes normalization, patching, and embedding prior to being reprogrammed with learned text prototypes to align the source and target modalities. Then, we augment the LLM's time series reasoning ability by prompting it together with reprogrammed patches to generate output representations, which are projected to the final forecasts $\\hat{Y}^{(i)} \\in \\mathbb{R}^{1 \\times H}$. We note that only the parameters of the lightweight input transformation and output projection are updated, while the backbone language model is frozen. In contrast to vision-language and other multimodal language models, which usually fine-tune with paired cross-modality data, TIME-LLM is directly optimized and becomes readily available with only a small set of time series and a few training epochs, maintaining high efficiency and imposing fewer resource constraints compared to building large domain-specific models from scratch or fine-tuning them. To further reduce memory footprints, various off-the-shelf techniques (e.g., quantization) can be seamlessly integrated for slimming TIME-LLM.\n\n> Figure 2 (see PDF p. 4). The model framework of TIME-LLM. Given an input time series, we first tokenize and embed it via (1) patching along with a (2) customized embedding layer. (3) These patch embeddings are then reprogrammed with condensed text prototypes to align two modalities. To augment the LLM's reasoning ability, (4) additional prompt prefixes are added to the input to direct the transformation of input patches. (5) The output patches from the LLM are projected to generate the forecasts.\n\n\n### B.1. Implementation\n\nWe mainly follow the experimental configurations in [Wu et al., 2023] across all baselines within a unified evaluation pipeline in `https://github.com/thuml/Time-Series-Library` for fair comparisons. We use Llama-7B [Touvron et al., 2023] as the default backbone model unless stated otherwise. All our experiments are repeated three times and we report the averaged results. Our model implementation is on PyTorch [Paszke et al., 2019] with all experiments conducted on NVIDIA A100-80G GPUs. Our detailed model configurations are in Appendix B.4, and our code is made available at `https://github.com/KimMeen/Time-LLM`.\n\n**Technical Details.** We provide additional technical details of TIME-LLM in three aspects: (1) the learning of text prototypes, (2) the calculation of trends and lags in time series for use in prompts, and (3) the implementation of the output projection. To identify a small set of text prototypes $E' \\in \\mathbb{R}^{V' \\times D}$ from $E \\in \\mathbb{R}^{V \\times D}$, we learn a matrix $W \\in \\mathbb{R}^{V' \\times V}$ as the intermediary. To describe the overall time series trend in natural language, we calculate the sum of differences between consecutive time steps. A sum greater than 0 indicates an upward trend, while a lesser sum denotes a downward trend. In addition, we calculate the top-5 lags of the time series, identified by computing the autocorrelation using fast Fourier transformation and selecting the five lags with the highest correlation values. After we pack and feedforward the prompt and patch embeddings $O^{(i)} \\in \\mathbb{R}^{P \\times D}$ through the frozen LLM, we discard the prefixal part and obtain the output representations, denoted as $\\tilde{O}_i \\in \\mathbb{R}^{P \\times D}$. Subsequently, we follow PatchTST [Nie et al., 2023] and flatten $\\tilde{O}_i$ into a 1D tensor with length $P \\times D$, which is then linearly projected as $\\hat{Y}_i \\in \\mathbb{R}^{H}$.\n\n### B.4. Model Configurations\n\nThe configurations of our models, relative to varied tasks and datasets, are consolidated in Table 9. By default, the Adam optimizer [Kingma and Ba, 2015] is employed throughout all experiments. Specifically, the quantity of text prototypes $V'$ is held constant at 100 and 1000 for short-term and long-term forecasting tasks, respectively. We utilize the Llama-7B model at full capacity, maintaining the backbone model layers at 32 across all tasks as a standard. The term input length $T$ signifies the number of time steps present in the original input time series data. Patch dimensions $d_m$ represent the hidden dimensions of the embedded time series patches prior to reprogramming. Lastly, heads $K$ correlate to the multi-head cross-attention utilized for patch reprogramming. In the four rightmost columns of Table 9, we detail the configurations related to model training.\n\nTable 9. An overview of the experimental configurations for TIME-LLM. \"LTF\" and \"STF\" denote long-term and short-term forecasting, respectively.\n\n| Task-Dataset | Text Prototype V' | Backbone Layers | Input Length T | Patch Dim. dm | Heads K | LR | Loss | Batch Size | Epochs |\n| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |\n",
+    "summary": "Backbone LLM: Llama-7B или GPT-2, заморожены. Trainable: token embedding, Patch Reprogramming, PaP, Output Projection (~6.6M параметров). Реализация: AdamW, lr=1e-4, LoRA/QLoRA сравнение (full tuning неэффективно).",
+    "keywords": [
+      "Llama-7B",
+      "GPT-2",
+      "frozen backbone",
+      "6.6M params",
+      "AdamW",
+      "LoRA",
+      "QLoRA",
+      "efficient"
+    ],
+    "question_types": [
+      "Д",
+      "К",
+      "И"
+    ],
+    "token_count": 170
+  },
+  {
+    "chunk_id": "time-llm_chunk_008",
+    "article_id": "time-llm",
+    "article_meta": {
+      "title": "Time-LLM: Time Series Forecasting by Reprogramming Large Language Models",
+      "authors": [
+        "Jin",
+        "Wang",
+        "Ma",
+        "Chu",
+        "Zhang",
+        "Shi",
+        "Chen",
+        "Liang",
+        "Li",
+        "Pan"
+      ],
+      "year": 2024,
+      "arxiv_id": "2310.01728"
+    },
+    "section": "Appendix",
+    "section_hierarchy": [
+      "Appendix",
+      "B. Experimental Details",
+      "B.2. Dataset Details"
+    ],
+    "chunk_type": "prose",
+    "index": 8,
+    "text": "### B.2. Dataset Details\n\nDataset statistics are summarized in Table 8. We evaluate the long-term forecasting performance on the well-established eight different benchmarks, including four ETT datasets [Zhou et al., 2021] (i.e., ETTh1, ETTh2, ETTm1, and ETTm2), Weather, Electricity, Traffic, and ILI from [Wu et al., 2023]. Furthermore, we evaluate the performance of short-term forecasting on the M4 benchmark [Makridakis et al., 2018] and the quarterly dataset in the M3 benchmark [Makridakis and Hibon, 2000].\n\nTable 8. Dataset statistics are from [Wu et al., 2023]. The dimension indicates the number of time series (i.e., channels), and the dataset size is organized in `(training, validation, testing)`.\n\n| Task | Dataset | Dim. | Series Length | Dataset Size | Frequency | Domain |\n| --- | --- | --- | --- | --- | --- | --- |\n| Long-term Forecasting | ETTm1 | 7 | {96, 192, 336, 720} | (34465, 11521, 11521) | 15 min | Temperature |\n| Long-term Forecasting | ETTm2 | 7 | {96, 192, 336, 720} | (34465, 11521, 11521) | 15 min | Temperature |\n| Long-term Forecasting | ETTh1 | 7 | {96, 192, 336, 720} | (8545, 2881, 2881) | 1 hour | Temperature |\n| Long-term Forecasting | ETTh2 | 7 | {96, 192, 336, 720} | (8545, 2881, 2881) | 1 hour | Temperature |\n| Long-term Forecasting | Electricity | 321 | {96, 192, 336, 720} | (18317, 2633, 5261) | 1 hour | Electricity |\n| Long-term Forecasting | Traffic | 862 | {96, 192, 336, 720} | (12185, 1757, 3509) | 1 hour | Transportation |\n| Long-term Forecasting | Weather | 21 | {96, 192, 336, 720} | (36792, 5271, 10540) | 10 min | Weather |\n| Long-term Forecasting | ILI | 7 | {24, 36, 48, 60} | (617, 74, 170) | 1 week | Illness |\n| Short-term Forecasting | M3-Quarterly | 1 | 8 | (756, 0, 756) | Quarterly | Multiple |\n| Short-term Forecasting | M4-Yearly | 1 | 6 | (23000, 0, 23000) | Yearly | Demographic |\n| Short-term Forecasting | M4-Quarterly | 1 | 8 | (24000, 0, 24000) | Quarterly | Finance |\n| Short-term Forecasting | M4-Monthly | 1 | 18 | (48000, 0, 48000) | Monthly | Industry |\n| Short-term Forecasting | M4-Weekly | 1 | 13 | (359, 0, 359) | Weekly | Macro |\n| Short-term Forecasting | M4-Daily | 1 | 14 | (4227, 0, 4227) | Daily | Micro |\n| Short-term Forecasting | M4-Hourly | 1 | 48 | (414, 0, 414) | Hourly | Other |\n\nThe Electricity Transformer Temperature (ETT; an indicator reflective of long-term electric power deployment) benchmark is comprised of two years of data, sourced from two counties in China, and is subdivided into four distinct datasets, each with varying sampling rates: ETTh1 and ETTh2, which are sampled at a 1-hour level, and ETTm1 and ETTm2, which are sampled at a 15-minute level. Each entry within the ETT datasets includes six power load features and a target variable, termed \"oil temperature\". The Electricity dataset comprises records of electricity consumption from 321 customers, measured at a 1-hour sampling rate. The Weather dataset includes one-year records from 21 meteorological stations located in Germany, with a sampling rate of 10 minutes. The Traffic dataset includes data on the occupancy rates of the freeway system, recorded from 862 sensors across the State of California, with a sampling rate of 1 hour. The influenza-like illness (ILI) dataset contains records of patients experiencing severe influenza with complications.\n\nThe M4 benchmark comprises 100K time series, amassed from various domains commonly present in business, financial, and economic forecasting. These time series have been partitioned into six distinctive datasets, each with varying sampling frequencies that range from yearly to hourly. The M3-Quarterly dataset comprises 756 quarterly sampled time series in the M3 benchmark. These series are categorized into five different domains: demographic, micro, macro, industry, and finance.\n\n",
+    "summary": "Датасеты: Long-term — ETT×4, Weather, Electricity, Traffic, ILI, Exchange (horizons {96,192,336,720}); Short-term — M4 (6 frequencies); Few-shot — 10%/5% данных; Zero-shot — cross-domain transfer.",
+    "keywords": [
+      "ETT",
+      "Weather",
+      "Electricity",
+      "Traffic",
+      "ILI",
+      "Exchange",
+      "M4",
+      "long-term",
+      "short-term",
+      "few-shot",
+      "zero-shot",
+      "Benchmark"
+    ],
+    "question_types": [
+      "В"
+    ],
+    "token_count": 320
+  },
+  {
+    "chunk_id": "time-llm_chunk_009",
+    "article_id": "time-llm",
+    "article_meta": {
+      "title": "Time-LLM: Time Series Forecasting by Reprogramming Large Language Models",
+      "authors": [
+        "Jin",
+        "Wang",
+        "Ma",
+        "Chu",
+        "Zhang",
+        "Shi",
+        "Chen",
+        "Liang",
+        "Li",
+        "Pan"
+      ],
+      "year": 2024,
+      "arxiv_id": "2310.01728"
+    },
+    "section": "Appendix",
+    "section_hierarchy": [
+      "Appendix",
+      "B. Experimental Details",
+      "B.3. Evaluation Metrics"
+    ],
+    "chunk_type": "prose",
+    "index": 9,
+    "text": "### B.3. Evaluation Metrics\n\nFor evaluation metrics, we utilize the mean square error (MSE) and mean absolute error (MAE) for long-term forecasting. In terms of the short-term forecasting on M4 benchmark, we adopt the symmetric mean absolute percentage error (SMAPE), mean absolute scaled error (MASE), and overall weighted average (OWA) as in N-BEATS [Oreshkin et al., 2020]. Note that OWA is a specific metric utilized in the M4 competition. The calculations of these metrics are as follows:\n\n$$\n\\mathrm{MSE} = \\frac{1}{H}\\sum_{h=1}^{H}(Y_h - \\hat{Y}_h)^2,\n$$\n\n$$\n\\mathrm{MAE} = \\frac{1}{H}\\sum_{h=1}^{H}\\lvert Y_h - \\hat{Y}_h \\rvert,\n$$\n\n$$\n\\mathrm{SMAPE} = \\frac{200}{H}\\sum_{h=1}^{H}\\frac{\\lvert Y_h - \\hat{Y}_h \\rvert}{\\lvert Y_h \\rvert + \\lvert \\hat{Y}_h \\rvert},\n$$\n\n$$\n\\mathrm{MAPE} = \\frac{100}{H}\\sum_{h=1}^{H}\\frac{\\lvert Y_h - \\hat{Y}_h \\rvert}{\\lvert Y_h \\rvert},\n$$\n\n$$\n\\mathrm{MASE} = \\frac{1}{H}\\sum_{h=1}^{H}\\frac{\\lvert Y_h - \\hat{Y}_h \\rvert}{\\frac{1}{H-s}\\sum_{j=s+1}^{H}\\lvert Y_j - Y_{j-s} \\rvert},\n$$\n\n$$\n\\mathrm{OWA} = \\frac{1}{2}\\left(\\frac{\\mathrm{SMAPE}}{\\mathrm{SMAPE}_{\\mathrm{Naive2}}} + \\frac{\\mathrm{MASE}}{\\mathrm{MASE}_{\\mathrm{Naive2}}}\\right),\n$$\n\nwhere $s$ is the periodicity of the time series data. $H$ denotes the number of data points (i.e., prediction horizon in our cases). $Y_h$ and $\\hat{Y}_h$ are the $h$-th ground truth and prediction where $h \\in \\{1, \\cdots, H\\}$.\n\n",
+    "summary": "Метрики: MSE, MAE (long-term, few-shot, zero-shot); SMAPE, MASE, OWA (short-term M4); MAPE (zero-shot). MSE для основных сравнений.",
+    "keywords": [
+      "MSE",
+      "MAE",
+      "SMAPE",
+      "MASE",
+      "OWA",
+      "MAPE",
+      "Metric"
+    ],
+    "question_types": [
+      "З"
+    ],
+    "token_count": 180
+  },
+  {
+    "chunk_id": "time-llm_chunk_010",
+    "article_id": "time-llm",
+    "article_meta": {
+      "title": "Time-LLM: Time Series Forecasting by Reprogramming Large Language Models",
+      "authors": [
+        "Jin",
+        "Wang",
+        "Ma",
+        "Chu",
+        "Zhang",
+        "Shi",
+        "Chen",
+        "Liang",
+        "Li",
+        "Pan"
+      ],
+      "year": 2024,
+      "arxiv_id": "2310.01728"
+    },
+    "section": "Experiments",
+    "section_hierarchy": [
+      "Experiments",
+      "4. Main Results"
+    ],
+    "chunk_type": "prose",
+    "index": 10,
+    "text": "## 4. Main Results\n\nTIME-LLM consistently outperforms state-of-the-art forecasting methods by large margins across multiple benchmarks and settings, especially in few-shot and zero-shot scenarios. We compared our approach against a broad collection of up-to-date models, including a recent study that fine-tunes language models for time series analysis [Zhou et al., 2023a]. To ensure a fair comparison, we adhere to the experimental configurations in [Wu et al., 2023] across all baselines with a unified evaluation pipeline (`https://github.com/thuml/Time-Series-Library`). We use Llama-7B [Touvron et al., 2023] as the default backbone unless stated otherwise.\n\n**Baselines.** We compare with the SOTA time series models, and we cite their performance from [Zhou et al., 2023a] if applicable. Our baselines include a series of Transformer-based methods: PatchTST (2023), ETSformer (2022), Non-Stationary Transformer (2022), FEDformer (2022), Autoformer (2021), Informer (2021), and Reformer (2020). We also select a set of recent competitive models, including GPT4TS (2023a), LLMTime (2023), DLinear (2023), TimesNet (2023), and LightTS (2022a). In short-term forecasting, we further compare our model with N-HiTS (2023b) and N-BEATS (2020). More details are in Appendix A.\n\n### 4.1. Long-term Forecasting\n\n**Setups.** We evaluate on ETTh1, ETTh2, ETTm1, ETTm2, Weather, Electricity (ECL), Traffic, and ILI, which have been extensively adopted for benchmarking long-term forecasting models [Wu et al., 2023]. Details of the implementation and datasets can be found in Appendix B. The input time series length $T$ is set as 512, and we use four different prediction horizons $H \\in \\{96, 192, 336, 720\\}$. The evaluation metrics include mean square error (MSE) and mean absolute error (MAE).\n\n**Results.** Our brief results are shown in Table 1, where TIME-LLM outperforms all baselines in most cases and significantly so to the majority of them. The comparison with GPT4TS [Zhou et al., 2023a] is particularly noteworthy. GPT4TS is a very recent work that involves fine-tuning on the backbone language model. We note average performance gains of 12% and 20% over GPT4TS and TimesNet, respectively. When compared with the SOTA task-specific Transformer model PatchTST, by reprogramming the smallest Llama, TIME-LLM realizes an average MSE reduction of 1.4%. Relative to the other models, e.g., DLinear, our improvements are also pronounced, exceeding 12%.\n\nTable 1. Long-term forecasting results. All results are averaged from four different forecasting horizons: $H \\in \\{24, 36, 48, 60\\}$ for ILI and $\\{96, 192, 336, 720\\}$ for the others. A lower value indicates better performance. The original PDF marks best and second-best values by color.\n\n<table>\n\n    <tr><td>ETTm1</td><td>0.329</td><td>0.372</td><td>0.388</td><td>0.403</td><td>0.357</td><td>0.378</td><td>0.351</td><td>0.380</td><td>0.400</td><td>0.406</td><td>0.448</td><td>0.452</td><td>0.588</td><td>0.517</td><td>0.481</td><td>0.456</td><td>0.429</td><td>0.425</td><td>0.435</td><td>0.437</td><td>0.961</td><td>0.734</td><td>0.799</td><td>0.671</td></tr>\n    <tr><td>ETTm2</td><td>0.251</td><td>0.313</td><td>0.284</td><td>0.339</td><td>0.267</td><td>0.333</td><td>0.255</td><td>0.315</td><td>0.291</td><td>0.333</td><td>0.305</td><td>0.349</td><td>0.327</td><td>0.371</td><td>0.306</td><td>0.347</td><td>0.293</td><td>0.342</td><td>0.409</td><td>0.436</td><td>1.410</td><td>0.810</td><td>1.479</td><td>0.915</td></tr>\n    <tr><td>Weather</td><td>0.225</td><td>0.257</td><td>0.237</td><td>0.270</td><td>0.248</td><td>0.300</td><td>0.225</td><td>0.264</td><td>0.259</td><td>0.287</td><td>0.309</td><td>0.360</td><td>0.338</td><td>0.382</td><td>0.288</td><td>0.314</td><td>0.271</td><td>0.334</td><td>0.261</td><td>0.312</td><td>0.634</td><td>0.548</td><td>0.803</td><td>0.656</td></tr>\n    <tr><td>ECL</td><td>0.158</td><td>0.252</td><td>0.167</td><td>0.263</td><td>0.166</td><td>0.263</td><td>0.161</td><td>0.252</td><td>0.192</td><td>0.295</td><td>0.214</td><td>0.327</td><td>0.227</td><td>0.338</td><td>0.193</td><td>0.296</td><td>0.208</td><td>0.323</td><td>0.229</td><td>0.329</td><td>0.311</td><td>0.397</td><td>0.338</td><td>0.422</td></tr>\n    <tr><td>Traffic</td><td>0.388</td><td>0.264</td><td>0.414</td><td>0.294</td><td>0.433</td><td>0.295</td><td>0.390</td><td>0.263</td><td>0.620</td><td>0.336</td><td>0.610</td><td>0.376</td><td>0.628</td><td>0.379</td><td>0.624</td><td>0.340</td><td>0.621</td><td>0.396</td><td>0.622</td><td>0.392</td><td>0.764</td><td>0.416</td><td>0.741</td><td>0.422</td></tr>\n    <tr><td>ILI</td><td>1.435</td><td>0.801</td><td>1.925</td><td>0.903</td><td>2.169</td><td>1.041</td><td>1.443</td><td>0.797</td><td>2.139</td><td>0.931</td><td>2.847</td><td>1.144</td><td>3.006</td><td>1.161</td><td>2.077</td><td>0.914</td><td>2.497</td><td>1.004</td><td>7.382</td><td>2.003</td><td>5.137</td><td>1.544</td><td>4.724</td><td>1.445</td></tr>\n    <tr><td>1stCount</td><td colspan=\"2\">7</td><td colspan=\"2\">0</td><td colspan=\"2\">0</td><td colspan=\"2\">5</td><td colspan=\"2\">0</td><td colspan=\"2\">0</td><td colspan=\"2\">0</td><td colspan=\"2\">0</td><td colspan=\"2\">0</td><td colspan=\"2\">0</td><td colspan=\"2\">0</td><td colspan=\"2\">0</td></tr>\n  </tbody>\n</table>\n\n\n    <tr><td>1stCount</td><td colspan=\"2\">5</td><td colspan=\"2\">2</td><td colspan=\"2\">1</td><td colspan=\"2\">1</td><td colspan=\"2\">0</td><td colspan=\"2\">0</td><td colspan=\"2\">0</td><td colspan=\"2\">0</td><td colspan=\"2\">0</td><td colspan=\"2\">0</td><td colspan=\"2\">0</td><td colspan=\"2\">0</td></tr>\n  </tbody>\n</table>\n\n### 4.4. Zero-shot Forecasting\n\n**Setups.** Beyond few-shot learning, LLMs hold potential as effective zero-shot reasoners [Kojima et al., 2022]. In this section, we evaluate the zero-shot learning capabilities of the reprogrammed LLM within the framework of cross-domain adaptation. Specifically, we examine how well a model performs on a target dataset when it is optimized on another source dataset, where the model has not encountered any data samples from the target dataset. Similar to few-shot learning, we use the long-term forecasting protocol and evaluate on various cross-domain scenarios utilizing the ETT datasets.\n\n**Results.** Our brief results are in Table 5. TIME-LLM consistently outperforms the most competitive baselines by a large margin, over 14.2% with respect to the second-best in MSE reduction. Considering the few-shot results, we observe that reprogramming an LLM tends to yield significantly better results in data-scarcity scenarios. For example, our overall error reductions with respect to GPT4TS in 10% few-shot forecasting, 5% few-shot forecasting, and zero-shot forecasting are increasing gradually: 7.7%, 8.4%, and 22%. Even when benchmarked against LLMTime, the most recent approach in this field, with the backbone LLM of comparable size (7B), TIME-LLM shows a substantial improvement exceeding 75%. We attribute this to our approach being better at activating the LLM's knowledge transfer and reasoning capabilities in a resource-efficient manner when performing time series tasks.\n\nTable 5. Zero-shot learning results. The original PDF marks best and second-best values by color. Appendix E shows the detailed results.\n",
+    "summary": "Результаты: Time-LLM — SOTA на long-term (лучше PatchTST, DLinear, GPT4TS на большинстве датасетов), short-term (competitive на M4), few-shot (сохраняет качество с 10%/5% данных), zero-shot (cross-domain transfer лучше бейзлайнов).",
+    "keywords": [
+      "SOTA",
+      "Time-LLM",
+      "PatchTST",
+      "DLinear",
+      "GPT4TS",
+      "long-term",
+      "short-term",
+      "few-shot",
+      "zero-shot",
+      "MSE",
+      "MAE"
+    ],
+    "question_types": [
+      "А+",
+      "Ж"
+    ],
+    "token_count": 360
+  },
+  {
+    "chunk_id": "time-llm_chunk_011",
+    "article_id": "time-llm",
+    "article_meta": {
+      "title": "Time-LLM: Time Series Forecasting by Reprogramming Large Language Models",
+      "authors": [
+        "Jin",
+        "Wang",
+        "Ma",
+        "Chu",
+        "Zhang",
+        "Shi",
+        "Chen",
+        "Liang",
+        "Li",
+        "Pan"
+      ],
+      "year": 2024,
+      "arxiv_id": "2310.01728"
+    },
+    "section": "Experiments",
+    "section_hierarchy": [
+      "Experiments",
+      "4. Main Results",
+      "4.5. Model Analysis"
+    ],
+    "chunk_type": "prose",
+    "index": 11,
+    "text": "### 4.5. Model Analysis\n\n**Language Model Variants.** We compare two representative backbones with varying capacities (A.1-4 in Table 6). Our results indicate that the scaling law is retained after the LLM reprogramming. We adopt Llama-7B by default in its full capacity, which manifestly outperforms its 1/4 capacity variant (A.2; inclusive of the first 8 Transformer layers) by 14.5%. An average MSE reduction of 14.7% is observed over GPT-2 (A.3), which slightly outperforms its variant GPT-2 (6) (A.4) by 2.7%.\n\n**Cross-modality Alignment.** Our results in Table 6 indicate that ablating either patch reprogramming or Prompt-as-Prefix hurts knowledge transfer in reprogramming the LLM for effective time series forecasting. In the absence of representation alignment (B.1), we observe a notable average performance degradation of 9.2%, which becomes more pronounced (exceeding 17%) in few-shot tasks. In TIME-LLM, the act of prompting stands as a pivotal element in harnessing the LLM's capacity for understanding the inputs and tasks. Ablation of this component (B.2) results in over 8% and 19% degradation in standard and few-shot forecasting tasks, respectively. We find that removing the input statistics (C.3) hurts the most, resulting in an average increase of 10.2% MSE. This is anticipated as external knowledge can be naturally incorporated via prompting to facilitate the learning and inference. Additionally, providing the LLM with clear task instructions and input context (e.g., dataset captioning) is also beneficial (i.e., C.2 and C.1; eliciting over 7.7% and 9.6%, respectively).\n\nTable 6. Ablations on ETTh1 and ETTm1 in predicting 96 and 192 steps ahead (MSE reported).\n\n| Variant | ETTh1-96 | ETTh1-192 | ETTm1-96 | ETTm1-192 | Few-shot ETTh1-96 | Few-shot ETTh1-192 | Few-shot ETTm1-96 | Few-shot ETTm1-192 |\n| --- | --- | --- | --- | --- | --- | --- | --- | --- |\n| A.1 Llama (Default; 32) | 0.362 | 0.398 | 0.272 | 0.310 | 0.448 | 0.484 | 0.346 | 0.373 |\n| A.2 Llama (8) | 0.389 | 0.412 | 0.297 | 0.329 | 0.567 | 0.632 | 0.451 | 0.490 |\n| A.3 GPT-2 (12) | 0.385 | 0.419 | 0.306 | 0.332 | 0.548 | 0.617 | 0.447 | 0.509 |\n| A.4 GPT-2 (6) | 0.394 | 0.427 | 0.311 | 0.342 | 0.571 | 0.640 | 0.468 | 0.512 |\n| B.1 w/o Patch Reprogramming | 0.410 | 0.412 | 0.310 | 0.342 | 0.498 | 0.570 | 0.445 | 0.487 |\n| B.2 w/o Prompt-as-Prefix | 0.398 | 0.423 | 0.298 | 0.339 | 0.521 | 0.617 | 0.432 | 0.481 |\n| C.1 w/o Dataset Context | 0.402 | 0.417 | 0.298 | 0.331 | 0.491 | 0.538 | 0.392 | 0.447 |\n| C.2 w/o Task Instruction | 0.388 | 0.420 | 0.285 | 0.327 | 0.476 | 0.529 | 0.387 | 0.439 |\n| C.3 w/o Statistical Context | 0.391 | 0.419 | 0.279 | 0.347 | 0.483 | 0.547 | 0.421 | 0.461 |\n\n**Reprogramming Interpretation.** We provide a case study on ETTh1 of reprogramming 48 time series patches with 100 text prototypes in Figure 5. The top four subplots visualize the optimization of reprogramming space from randomly initialized (a) to well optimized (d). We find only a small set of prototypes (columns) participated in reprogramming the input patches (rows) in subplot (e). Also, patches undergo different representations through varying combinations of prototypes. This indicates: (1) text prototypes learn to summarize language cues, and a select few are highly relevant for representing information in local time series patches, which we visualize by randomly selecting 10 in subplot (f). Our results suggest a high relevance to the words that describe time series properties (i.e., word sets 1 and 2); (2) patches usually have different underlying semantics, necessitating different prototypes to represent.\n\n> Figure 5 (see PDF p. 9). A showcase of patch reprogramming.\n\n**Reprogramming Efficiency.** Table 7 provides an overall efficiency analysis of TIME-LLM with and without the backbone LLM. Our proposed reprogramming network itself is lightweight in activating the LLM's ability for time series forecasting (i.e., fewer than 6.6 million trainable parameters; only around 0.2% of the total parameters in Llama-7B), and the overall efficiency of TIME-LLM is actually capped by the leveraged backbones. This is favorable even compared to parameter-efficient fine-tuning methods such as QLoRA [Dettmers et al., 2023] in balancing task performance and efficiency.\n\nTable 7. Efficiency analysis of TIME-LLM on ETTh1 in forecasting different steps ahead.\n\n| Variant | ETTh1-96 Param. (M) | ETTh1-96 Mem. (MiB) | ETTh1-96 Speed (s/iter) | ETTh1-192 Param. (M) | ETTh1-192 Mem. (MiB) | ETTh1-192 Speed (s/iter) | ETTh1-336 Param. (M) | ETTh1-336 Mem. (MiB) | ETTh1-336 Speed (s/iter) | ETTh1-512 Param. (M) | ETTh1-512 Mem. (MiB) | ETTh1-512 Speed (s/iter) |\n| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |\n| D.1 Llama (32) | 3404.53 | 32136 | 0.517 | 3404.57 | 33762 | 0.582 | 3404.62 | 37988 | 0.632 | 3404.69 | 39004 | 0.697 |\n| D.2 Llama (8) | 975.83 | 11370 | 0.184 | 975.87 | 12392 | 0.192 | 975.92 | 13188 | 0.203 | 976.11 | 13616 | 0.217 |\n| D.3 w/o LLM | 6.39 | 3678 | 0.046 | 6.42 | 3812 | 0.087 | 6.48 | 3960 | 0.093 | 6.55 | 4176 | 0.129 |\n\n\n## F. Ablation Study\n\nThe full ablation results are in Table 17. We additionally compare the model performance under reprogramming and fine-tuning (with QLoRA [Dettmers et al., 2023]) protocols. Our results indicate a clear performance gain of our approach compared to the QLoRA variant (A.5) by 19% on average.\n\nTable 17. Full ablations on ETTh1 and ETTm1 in predicting 96 and 192 steps ahead (MSE reported).\n\n| Variant | ETTh1-96 | ETTh1-192 | ETTm1-96 | ETTm1-192 | Few-shot ETTh1-96 | Few-shot ETTh1-192 | Few-shot ETTm1-96 | Few-shot ETTm1-192 |\n| --- | --- | --- | --- | --- | --- | --- | --- | --- |\n| A.1 Llama (Default; 32) | 0.362 | 0.398 | 0.272 | 0.310 | 0.448 | 0.484 | 0.346 | 0.373 |\n| A.2 Llama (8) | 0.389 | 0.412 | 0.297 | 0.329 | 0.567 | 0.632 | 0.451 | 0.490 |\n| A.3 GPT-2 (12) | 0.385 | 0.419 | 0.306 | 0.332 | 0.548 | 0.617 | 0.447 | 0.509 |\n| A.4 GPT-2 (6) | 0.394 | 0.427 | 0.311 | 0.342 | 0.571 | 0.640 | 0.468 | 0.512 |\n| A.5 Llama (QLoRA; 32) | 0.391 | 0.420 | 0.310 | 0.338 | 0.543 | 0.611 | 0.578 | 0.618 |\n| B.1 w/o Patch Reprogramming | 0.410 | 0.412 | 0.310 | 0.342 | 0.498 | 0.570 | 0.445 | 0.487 |\n| B.2 w/o Prompt-as-Prefix | 0.398 | 0.423 | 0.298 | 0.339 | 0.521 | 0.617 | 0.432 | 0.481 |\n| C.1 w/o Dataset Context | 0.402 | 0.417 | 0.298 | 0.331 | 0.491 | 0.538 | 0.392 | 0.447 |\n| C.2 w/o Task Instruction | 0.388 | 0.420 | 0.285 | 0.327 | 0.476 | 0.529 | 0.387 | 0.439 |\n| C.3 w/o Statistical Context | 0.391 | 0.419 | 0.279 | 0.347 | 0.483 | 0.547 | 0.421 | 0.461 |\n\n",
+    "summary": "Model Analysis + Ablation: (1) PaP компоненты — удаление любого компонента ухудшает качество, (2) Patch Reprogramming vs linear adapter — Multi-head Cross-Attention превосходит, (3) замороженная LLM vs fine-tuned — frozen + reprogramming эффективнее (6.6M params vs full model). Ablation подтверждает necessity каждого компонента.",
+    "keywords": [
+      "ablation",
+      "PaP",
+      "Patch Reprogramming",
+      "frozen vs fine-tuned",
+      "6.6M params",
+      "Multi-head Cross-Attention",
+      "model analysis",
+      "QLoRA"
+    ],
+    "question_types": [
+      "А+",
+      "Б"
+    ],
+    "token_count": 450
+  },
+  {
+    "chunk_id": "time-llm_chunk_012",
+    "article_id": "time-llm",
+    "article_meta": {
+      "title": "Time-LLM: Time Series Forecasting by Reprogramming Large Language Models",
+      "authors": [
+        "Jin",
+        "Wang",
+        "Ma",
+        "Chu",
+        "Zhang",
+        "Shi",
+        "Chen",
+        "Liang",
+        "Li",
+        "Pan"
+      ],
+      "year": 2024,
+      "arxiv_id": "2310.01728"
+    },
+    "section": "Conclusion",
+    "section_hierarchy": [
+      "Conclusion",
+      "5. Conclusion and Future Work"
+    ],
+    "chunk_type": "prose",
+    "index": 12,
+    "text": "## 5. Conclusion and Future Work\n\nTIME-LLM shows promise in adapting frozen large language models for time series forecasting by reprogramming time series data into text prototypes more natural for LLMs and providing natural language guidance via Prompt-as-Prefix to augment reasoning. Evaluations demonstrate the adapted LLMs can outperform specialized expert models, indicating their potential as effective time series machines. Our results also provide a novel insight that time series forecasting can be cast as yet another \"language\" task that can be tackled by an off-the-shelf LLM to achieve state-of-the-art performance through our Time-LLM framework. Further research should explore optimal reprogramming representations, enrich LLMs with explicit time series knowledge through continued pre-training, and build towards multimodal models with joint reasoning across time series, natural language, and other modalities. Furthermore, applying the reprogramming framework to equip LLMs with broader time series analytical abilities or other new capabilities should also be considered.\n\n",
+    "summary": "Time-LLM — reprogramming framework: Patch Reprogramming + Prompt-as-Prefix перепрограммируют frozen LLM для TS forecasting. SOTA на long-term, short-term, few-shot, zero-shot. Будущая работа: multi-modal, external knowledge integration.",
+    "keywords": [
+      "Time-LLM",
+      "reprogramming",
+      "Patch Reprogramming",
+      "Prompt-as-Prefix",
+      "frozen LLM",
+      "SOTA",
+      "multi-modal"
+    ],
+    "question_types": [
+      "А"
+    ],
+    "token_count": 120
+  }
+]

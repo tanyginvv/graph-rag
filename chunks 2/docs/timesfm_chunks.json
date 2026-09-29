@@ -1,0 +1,492 @@
+[
+  {
+    "chunk_id": "timesfm_chunk_000",
+    "article_id": "timesfm",
+    "article_meta": {
+      "title": "A Decoder-Only Foundation Model for Time Series Forecasting (TimesFM)",
+      "authors": [
+        "Das",
+        "Kong",
+        "Leach",
+        "Mathur",
+        "Sen",
+        "Yu"
+      ],
+      "year": 2024,
+      "arxiv_id": "2310.10688"
+    },
+    "section": "Abstract",
+    "section_hierarchy": [
+      "Abstract"
+    ],
+    "chunk_type": "prose",
+    "index": 0,
+    "text": "## Abstract\n\nMotivated by recent advances in large language models for Natural Language Processing (NLP), we design a time-series foundation model for forecasting whose out-of-the-box zero-shot performance on a variety of public datasets comes close to the accuracy of state-of-the-art supervised forecasting models for each individual dataset. Our model is based on pretraining a decoder style attention model with input patching, using a large time-series corpus comprising both real-world and synthetic datasets. Experiments on a diverse set of previously unseen forecasting datasets suggests that the model can yield accurate zero-shot forecasts across different domains, forecasting horizons and temporal granularities.\n\n",
+    "summary": "TimesFM — decoder-only foundation model для TS forecasting, 200M параметров, предобучена на 100B+ real-world временных точках. Patching, longer output patches, autoregressive decoding. Zero-shot SOTA на Monash, Darts, ETT — превосходит llmtime на 25%+.",
+    "keywords": [
+      "TimesFM",
+      "decoder-only",
+      "foundation model",
+      "200M params",
+      "100B points",
+      "patching",
+      "zero-shot",
+      "llmtime",
+      "SOTA"
+    ],
+    "question_types": [
+      "А",
+      "Ж"
+    ],
+    "token_count": 110
+  },
+  {
+    "chunk_id": "timesfm_chunk_001",
+    "article_id": "timesfm",
+    "article_meta": {
+      "title": "A Decoder-Only Foundation Model for Time Series Forecasting (TimesFM)",
+      "authors": [
+        "Das",
+        "Kong",
+        "Leach",
+        "Mathur",
+        "Sen",
+        "Yu"
+      ],
+      "year": 2024,
+      "arxiv_id": "2310.10688"
+    },
+    "section": "Introduction",
+    "section_hierarchy": [
+      "Introduction",
+      "1. Introduction"
+    ],
+    "chunk_type": "prose",
+    "index": 1,
+    "text": "## 1. Introduction\n\nTime-series data is ubiquitous in various domains such as retail, finance, manufacturing, healthcare and natural sciences. In many of these domains, one of the most important use-cases of time-series data is forecasting. Time-series forecasting is critical to several scientific and industrial applications, like retail supply chain optimization, energy and traffic prediction, and weather forecasting. In recent times, deep learning models [SFGJ20, OCCB19] have emerged as a popular approach for forecasting rich, multivariate, time-series data, often outperforming classical statistical approaches such as ARIMA or GARCH [BJ68]. In several forecasting competitions such as the M5 competition [MSA22] and IARAI Traffic4cast contest [KKN+21], deep network based solutions performed very well.\n\nAt the same time, we are witnessing rapid progress in the Natural Language Processing (NLP) domain on large foundation models for downstream NLP tasks. Large language models (LLMs) are growing in popularity because they can be used to generate text, translate languages, write different kinds of creative content, and answer questions in an informative way [RWC+19]. They are trained on massive amounts of data, which allows them to learn the patterns of human language. This makes them very powerful tools that can be used for a variety of downstream tasks, often in a zero-shot learning mode.\n\nThis motivates the question: \"Can large pretrained models trained on massive amounts of time-series data learn temporal patterns that can be useful for time-series forecasting on previously unseen datasets?\" In particular, can we design a time-series foundation model that obtains good zero-shot out-of-the-box forecasting performance? Such a pretrained time-series foundation model, if possible, would bring significant benefits for downstream forecasting users in terms of no additional training burden and significantly reduced compute requirements. It is not immediately obvious that such a foundation model for time-series forecasting is possible. Unlike in NLP, there is no well defined vocabulary or grammar for time-series. Additionally, such a model would need to support forecasting with varying history lengths (context), prediction lengths (horizon), and time granularities. Furthermore, unlike the huge volume of public text data for pretraining language models, vast amounts of time-series data is not readily available. In spite of these issues, we provide evidence to answer the above question in the affirmative.\n\nIn particular, we design TimesFM, a single foundation model for time-series forecasting that, when applied to a variety of previously unseen forecasting datasets across different domains, obtains close to state-of-the-art zero-shot accuracy compared to the best supervised models trained individually for these datasets. Our model can work well across different forecasting history lengths, prediction lengths, and time granularities at inference time. The key elements of our foundation model are twofold:\n\n1. a large-scale time-series corpus built using both real-world data, mostly time-series data from web search queries[^1] and Wikipedia page visits[^2], and synthetic data, which meets the volume and diversity of data needed for training our foundation model\n2. a decoder style attention architecture with input patching, that can be efficiently pre-trained on this time-series corpus\n\nCompared to the latest large language models, our time-series foundation model is much smaller in both parameter size (200M parameters) and pretraining data size (`O(100B)` timepoints); yet we show that even at such scales, it is possible to pretrain a practical foundation model for forecasting whose zero-shot performance comes close to the accuracy of fully-supervised approaches on a diverse set of time-series data. Our work also suggests that unlike recent work [GFQW23] that recommends large language models such as GPT-3 and LLaMA-2 as out-of-the-box zero-shot forecasters, foundation models trained from scratch exclusively on time-series data can obtain much better zero-shot performance at a tiny fraction of their costs.\n\n",
+    "summary": "TimesFM — foundation model для TS с нуля (from scratch). В отличие от LLM-адаптаций (Time-LLM, GPT4TS), TimesFM не использует NLP-pretrained модели. Decoder-only архитектура с patching, обучена на massive разнородном корпусе (Google Trends, Wikimedia, M3, M4, Darts, Monash и др.).",
+    "keywords": [
+      "TimesFM",
+      "foundation model",
+      "from scratch",
+      "decoder-only",
+      "patching",
+      "pretraining corpus",
+      "Google Trends",
+      "M3",
+      "M4",
+      "Monash"
+    ],
+    "question_types": [
+      "А"
+    ],
+    "token_count": 450
+  },
+  {
+    "chunk_id": "timesfm_chunk_002",
+    "article_id": "timesfm",
+    "article_meta": {
+      "title": "A Decoder-Only Foundation Model for Time Series Forecasting (TimesFM)",
+      "authors": [
+        "Das",
+        "Kong",
+        "Leach",
+        "Mathur",
+        "Sen",
+        "Yu"
+      ],
+      "year": 2024,
+      "arxiv_id": "2310.10688"
+    },
+    "section": "RelatedWork",
+    "section_hierarchy": [
+      "RelatedWork",
+      "2. Related Work"
+    ],
+    "chunk_type": "prose",
+    "index": 2,
+    "text": "## 2. Related Work\n\nIn the last decade, deep learning models [SFGJ20, OCCB19] have emerged as powerful contenders in forecasting time-series in the presence of large training datasets and have been shown to outperform traditional statistical methods such as ARIMA and exponential smoothing [McK84]. Forecasting models can be categorized broadly into:\n\n1. local univariate models that include traditional methods like ARIMA, exponential smoothing [McK84], and non-autoregressive models like Prophet [TL18]\n2. global univariate models like DeepAR [SFGJ20], Temporal Convolutions [BBO17], N-BEATS [OCCB19], and long-term forecasting models such as [NNSK22, DKL+23] that are trained globally on many time-series but during inference predict the future of a time-series as a function of its own past and other related covariates\n3. global multivariate models that take in the past of all time-series in the dataset to predict the future of all the time-series, such as the classical VAR model [ZW06] as well as deep learning models like [SYD19, ZMW+22, CLY+23]\n\nAll the works cited above have primarily been applied in the supervised setting with the notable exception of PatchTST [NNSK22] and N-BEATS [OCCB19]. PatchTST has a section on dataset-to-dataset transfer learning in the semi-supervised setting. [OCCB21] also show that the N-BEATS architecture lends itself to transfer learning between various source-target dataset pairs. However, none of these works aim to train a single foundation model that can work on a plethora of datasets. For an in-depth discussion about transfer learning in time-series we refer the reader to the survey in [MLZ+23].\n\nThere has been some very recent work on re-using or fine-tuning large language models for time-series forecasting. In particular, [GFQW23] benchmarks pretrained LLMs like GPT-3 and LLaMA-2 for zero-shot forecasting performance. As we show later, our model obtains much superior zero-shot performance at a tiny fraction of these model sizes. [ZNW+23] and [CPC23] show how to fine-tune a GPT-2 [RWC+19] backbone model for time-series forecasting tasks. With the exception of a transfer-learning study, forecasting on a target dataset after having trained on a source dataset, these papers mostly focus on fine-tuning a pretrained model on target datasets, and not on pretraining a single foundation model with good out-of-the-box zero-shot performance on a variety of datasets. To the best of our knowledge, the very recent work in TimeGPT-1 [GMC23] is the only other parallel work on a zero-shot foundation model for time-series forecasting. However, the model is not public access, and several model details and the benchmark dataset have not been revealed.\n\n",
+    "summary": "Related Work: LLM-based TS методы — LLMTime (zero-shot через tokenization чисел), Time-LLM (reprogramming), GPT4TS, Lag-Llama (lag features + distribution head). TimesFM отличается: decoder-only архитектура без NLP pretraining, 100B+ real-world точек для обучения.",
+    "keywords": [
+      "LLMTime",
+      "Time-LLM",
+      "GPT4TS",
+      "Lag-Llama",
+      "LLM-based",
+      "from scratch",
+      "decoder-only",
+      "patching"
+    ],
+    "question_types": [
+      "А"
+    ],
+    "token_count": 300
+  },
+  {
+    "chunk_id": "timesfm_chunk_003",
+    "article_id": "timesfm",
+    "article_meta": {
+      "title": "A Decoder-Only Foundation Model for Time Series Forecasting (TimesFM)",
+      "authors": [
+        "Das",
+        "Kong",
+        "Leach",
+        "Mathur",
+        "Sen",
+        "Yu"
+      ],
+      "year": 2024,
+      "arxiv_id": "2310.10688"
+    },
+    "section": "Methodology",
+    "section_hierarchy": [
+      "Methodology",
+      "4. Model Architecture"
+    ],
+    "chunk_type": "prose",
+    "index": 3,
+    "text": "## 4. Model Architecture\n\nA foundation model for time-series forecasting should be able to adapt to variable context and horizon lengths, while having enough capacity to encode all patterns from a large pretraining dataset. Transformers have been shown to be able to adapt to different context lengths in NLP [RWC+19]. However, there are several time-series specific design choices. The main guiding principles for our architecture are the following.\n\n**Patching.** Inspired by the success of patch based modeling in recent long-horizon forecasting work [NNSK22], we choose to break down the time-series into patches during training. A patch of a time-series is a natural analogue for a token in language models, and patching has been shown to improve performance. Moreover, this improves inference speed as the number of tokens being fed into the transformer is reduced by a factor of the patch length. On the other hand, increasing the patch length all the way to the context length moves us away from decoder-only training and the efficiencies that come with it. We delve into this further in Section 6.2.\n\n**Decoder-only model.** A key difference between our architecture and PatchTST [NNSK22] is that our model is trained in decoder-only mode [LSP+18]. In other words, given a sequence of input patches, the model is optimized to predict the next patch as a function of all past patches. Similar to LLMs this can be done in parallel over the entire context window, and automatically enables the model to predict the future after having seen varying numbers of input patches.\n\n**Longer output patches.** In LLMs the output is always generated in an auto-regressive fashion one token at a time. However, in long-horizon forecasting it has been observed that directly predicting the full horizon yields better accuracy than multi-step auto-regressive decoding [ZCZX23]. But this is not possible when the horizon length is not known *a priori*, as in the case of zero-shot forecasting which is our primary goal.\n\nWe propose a middle ground by allowing our output patches for prediction to be longer than the input patches. As an example, suppose the input patch length is 32 and the output patch length is 128. During training, the model is simultaneously trained to use the first 32 time-points to forecast the next 128 time-steps, the first 64 time-points to forecast time-steps 65 to 192, the first 96 time-points to forecast time-steps 97 to 224 and so on. During inference, suppose the model is given a new time-series of length 256 and tasked with forecasting the next 256 time-steps into the future. The model will first generate the future predictions for time-steps 257 to 384, then condition on the initial 256 length input plus the generated output to generate time-steps 385 to 512. On the other hand, if in a model the output patch length was fixed to the input patch length of 32, then for the same task we would have to go through 8 auto-regressive generation steps instead of just 2. However, there is a trade-off. If the output patch length is too long, then it is difficult to handle time-series whose lengths are less than the output patch length, for instance monthly and yearly time-series in our pretraining data.\n\n**Patch Masking.** If we use patches naively, the model might only learn to predict well for context lengths that are multiples of the input patch length. Therefore we make careful use of masking during training. Parts of patches as well as entire patches from the beginning of the context window can be masked in a data batch. We employ a specific random masking strategy during training that helps the model see all possible context lengths starting from 1 to a maximum context length.\n\nNow that we have mentioned the guiding principles, we next formally describe each component of our model architecture, illustrated in Figure 1, which we name TimesFM (Time-series Foundation Model).\n\n**Input Layers.** The job of the input layers is to preprocess the time-series into input tokens to the transformer layers. We first break the input into contiguous non-overlapping patches. Then each patch is processed by a Residual Block into a vector of size `model_dim`. Along with the input, we also supply a binary padding mask $m_{1:L}$ where 1 denotes that the corresponding input in $y_{1:L}$ should be ignored and vice versa. The Residual Block is essentially a Multi-layer Perceptron (MLP) block with one hidden layer with a skip connection, similar to that defined in [DKL+23].\n\n\n**Stacked Transformer.** The bulk of the parameters in our model are in `num_layers` $(n_l)$ transformer layers stacked on top of each other. Each of these layers has the standard multi-head self-attention (SA) followed by a feed-forward network (FFN). The main hyperparameters are `model_dim`, which is equal to the dimension of the input tokens $t_j$, and number of heads (`num_heads`). We set the hidden size of the FFNs to be equal to `model_dim` as well. We use causal attention, that is, each output token can only attend to input tokens that come before it in the sequence, including the corresponding input token. This can be described by\n\n$$\no_j = \\mathrm{StackedTransformer}((t_1, \\tilde{m}_1), \\cdots, (t_j, \\tilde{m}_j)),\n\\tag{3}\n$$\n\nfor all $j \\in [N]$. $\\tilde{m}_j$ is the masking indicator for the $j$-th token defined as $\\min\\{m_{p(j-1)+1:pj}\\}$, i.e. if a patch has any non-masked time-point the corresponding token is marked as not being masked. All patches that are masked out completely are not attended to by the causal self attention.\n\n**Output Layers.** The remaining task is to map the output tokens into predictions. We train in decoder-only mode, i.e. each output token should be able to be predictive of the part of the time-series that follows the last input patch corresponding to it. This is common for popular large language models like [RWC+19]. However, one key difference in our time-series foundation model is that input patch length need not be equal to output patch length, i.e. we should be able to predict a larger chunk of the time-series based on the encoded information from the input patches seen so far. Let the output patch length be `output_patch_len` $(h)$. We use another Residual Block to map the output tokens to the predictions:\n\n",
+    "summary": "Архитектура TimesFM: decoder-only stacked Transformer с causal attention. Пайплайн: input patching → Input Residual Block → positional encoding → Stacked Transformer → Output Residual Block → autoregressive decoding через longer output patches. Input Residual Block сжимает входные патчи в fewer tokens для эффективного long-horizon forecasting.",
+    "keywords": [
+      "TimesFM",
+      "decoder-only",
+      "stacked Transformer",
+      "causal attention",
+      "Residual Block",
+      "output patches",
+      "autoregressive decoding",
+      "patching"
+    ],
+    "question_types": [
+      "Д",
+      "Е"
+    ],
+    "token_count": 350
+  },
+  {
+    "chunk_id": "timesfm_chunk_004",
+    "article_id": "timesfm",
+    "article_meta": {
+      "title": "A Decoder-Only Foundation Model for Time Series Forecasting (TimesFM)",
+      "authors": [
+        "Das",
+        "Kong",
+        "Leach",
+        "Mathur",
+        "Sen",
+        "Yu"
+      ],
+      "year": 2024,
+      "arxiv_id": "2310.10688"
+    },
+    "section": "Methodology",
+    "section_hierarchy": [
+      "Methodology",
+      "4. Model Architecture"
+    ],
+    "chunk_type": "prose",
+    "index": 4,
+    "text": "## 4. Model Architecture\n\nA foundation model for time-series forecasting should be able to adapt to variable context and horizon lengths, while having enough capacity to encode all patterns from a large pretraining dataset. Transformers have been shown to be able to adapt to different context lengths in NLP [RWC+19]. However, there are several time-series specific design choices. The main guiding principles for our architecture are the following.\n\n**Patching.** Inspired by the success of patch based modeling in recent long-horizon forecasting work [NNSK22], we choose to break down the time-series into patches during training. A patch of a time-series is a natural analogue for a token in language models, and patching has been shown to improve performance. Moreover, this improves inference speed as the number of tokens being fed into the transformer is reduced by a factor of the patch length. On the other hand, increasing the patch length all the way to the context length moves us away from decoder-only training and the efficiencies that come with it. We delve into this further in Section 6.2.\n\n**Decoder-only model.** A key difference between our architecture and PatchTST [NNSK22] is that our model is trained in decoder-only mode [LSP+18]. In other words, given a sequence of input patches, the model is optimized to predict the next patch as a function of all past patches. Similar to LLMs this can be done in parallel over the entire context window, and automatically enables the model to predict the future after having seen varying numbers of input patches.\n\n**Longer output patches.** In LLMs the output is always generated in an auto-regressive fashion one token at a time. However, in long-horizon forecasting it has been observed that directly predicting the full horizon yields better accuracy than multi-step auto-regressive decoding [ZCZX23]. But this is not possible when the horizon length is not known *a priori*, as in the case of zero-shot forecasting which is our primary goal.\n\nWe propose a middle ground by allowing our output patches for prediction to be longer than the input patches. As an example, suppose the input patch length is 32 and the output patch length is 128. During training, the model is simultaneously trained to use the first 32 time-points to forecast the next 128 time-steps, the first 64 time-points to forecast time-steps 65 to 192, the first 96 time-points to forecast time-steps 97 to 224 and so on. During inference, suppose the model is given a new time-series of length 256 and tasked with forecasting the next 256 time-steps into the future. The model will first generate the future predictions for time-steps 257 to 384, then condition on the initial 256 length input plus the generated output to generate time-steps 385 to 512. On the other hand, if in a model the output patch length was fixed to the input patch length of 32, then for the same task we would have to go through 8 auto-regressive generation steps instead of just 2. However, there is a trade-off. If the output patch length is too long, then it is difficult to handle time-series whose lengths are less than the output patch length, for instance monthly and yearly time-series in our pretraining data.\n\n**Patch Masking.** If we use patches naively, the model might only learn to predict well for context lengths that are multiples of the input patch length. Therefore we make careful use of masking during training. Parts of patches as well as entire patches from the beginning of the context window can be masked in a data batch. We employ a specific random masking strategy during training that helps the model see all possible context lengths starting from 1 to a maximum context length.\n\nNow that we have mentioned the guiding principles, we next formally describe each component of our model architecture, illustrated in Figure 1, which we name TimesFM (Time-series Foundation Model).\n\n\n$$\n\\hat{y}_{pj+1:pj+h} = \\mathrm{OutputResidualBlock}(o_j).\n\\tag{4}\n$$\n\nThus we encode all the data in $y_{1:pj}$ into $o_j$ and use that to predict the subsequent $h$ time-points $y_{pj+1:pj+h}$. This is done for all patches in one training mini-batch.\n\n**Loss Function.** In this work, we focus on point forecasting. Therefore we can use a point forecasting loss during training like Mean Squared Error (MSE). The loss that is minimized during training can be expressed as\n\n$$\n\\mathrm{TrainLoss} = \\frac{1}{N}\\sum_{j=1}^{N} \\mathrm{MSE}(\\hat{y}_{pj+1:pj+h}, y_{pj+1:pj+h}).\n\\tag{5}\n$$\n\nNote that if one is interested in probabilistic forecasting, then it is easy to have multiple output heads for each output patch, each head minimizing a separate quantile loss as in [WTNM17]. Another approach can be to output the logits of a probability distribution family and minimize the maximum likelihood loss for probabilistic forecasting [ADSS21, SFGJ20].\n\n**Training.** We train the model with standard mini-batch gradient descent in decoder-only fashion, that goes through all windows for a time-series and across time-series. The only non-standard part is the way we sample the mask during training. For each time-series in the batch, we sample a random number $r$ between 0 and $p-1$. Then we set $m_{1:r}=1$ and the rest as zero, i.e. we mask out a fraction of the first input patch. However, this is sufficient to cover all input context lengths from 1 to the maximum training context length. Suppose the maximum context length is 512 and $p=32$. Then if $r=4$, the output prediction after seeing the first patch (from $o_1$) is optimized to predict after seeing 28 = 32 - 4 time-points, the output of the next patch (from $o_2$) is optimized to predict after seeing 28 + 32 time-points, and so on. When this argument is repeated for all such $r$'s, the model has seen all possible context lengths till 512.\n\n**Inference.** The trained network can be used to produce forecasts for any horizon using auto-regressive decoding similar to large language models. Given an input $y_{1:L}$, assume $L$ is a multiple of $p$ for simplicity, it can first predict $\\hat{y}_{L+1:L+h}$. Then, we can use the concatenated vector $\\tilde{y}_{1:L+h} = [y_{1:L}; \\hat{y}_{L+1:L+h}]$ as an input to the network to generate the next output patch prediction $\\hat{y}_{L+h+1:L+2h}$ and so on. If $L$ is not a multiple of $p$, we simply append zeros to make it a multiple of $p$ and mark the corresponding entries in the mask as 1.\n\n",
+    "summary": "Представление TS через patching: временной ряд разбивается на неперекрывающиеся патчи, каждый patch → token через Residual Block. Longer output patches: выходной Residual Block генерирует патч, длиннее входного — это позволяет прогнозировать горизонт за fewer decoding steps. Positional encoding на patch-уровне.",
+    "keywords": [
+      "patching",
+      "Residual Block",
+      "longer output patches",
+      "positional encoding",
+      "tokenization",
+      "patch-level",
+      "decoding steps"
+    ],
+    "question_types": [
+      "Г"
+    ],
+    "token_count": 320
+  },
+  {
+    "chunk_id": "timesfm_chunk_005",
+    "article_id": "timesfm",
+    "article_meta": {
+      "title": "A Decoder-Only Foundation Model for Time Series Forecasting (TimesFM)",
+      "authors": [
+        "Das",
+        "Kong",
+        "Leach",
+        "Mathur",
+        "Sen",
+        "Yu"
+      ],
+      "year": 2024,
+      "arxiv_id": "2310.10688"
+    },
+    "section": "Methodology",
+    "section_hierarchy": [
+      "Methodology",
+      "5. Pretraining Details"
+    ],
+    "chunk_type": "prose",
+    "index": 5,
+    "text": "**Training.** We train the model with standard mini-batch gradient descent in decoder-only fashion, that goes through all windows for a time-series and across time-series. The only non-standard part is the way we sample the mask during training. For each time-series in the batch, we sample a random number $r$ between 0 and $p-1$. Then we set $m_{1:r}=1$ and the rest as zero, i.e. we mask out a fraction of the first input patch. However, this is sufficient to cover all input context lengths from 1 to the maximum training context length. Suppose the maximum context length is 512 and $p=32$. Then if $r=4$, the output prediction after seeing the first patch (from $o_1$) is optimized to predict after seeing 28 = 32 - 4 time-points, the output of the next patch (from $o_2$) is optimized to predict after seeing 28 + 32 time-points, and so on. When this argument is repeated for all such $r$'s, the model has seen all possible context lengths till 512.\n\n**Inference.** The trained network can be used to produce forecasts for any horizon using auto-regressive decoding similar to large language models. Given an input $y_{1:L}$, assume $L$ is a multiple of $p$ for simplicity, it can first predict $\\hat{y}_{L+1:L+h}$. Then, we can use the concatenated vector $\\tilde{y}_{1:L+h} = [y_{1:L}; \\hat{y}_{L+1:L+h}]$ as an input to the network to generate the next output patch prediction $\\hat{y}_{L+h+1:L+2h}$ and so on. If $L$ is not a multiple of $p$, we simply append zeros to make it a multiple of $p$ and mark the corresponding entries in the mask as 1.\n\n> Figure 1 (see PDF p. 4). We provide an illustration of the TimesFM model architecture during training, where we show an input time-series of a specific length that can be broken down into input patches. Each patch along is processed into a vector by a residual block, as defined in the model definition, to the model dimension of the transformer layers. The vector is then added to positional encodings and fed into $n_l$ stacked transformer layers. SA refers to self-attention, note that we use multi-head causal attention, and FFN is the fully connected layer in the transformer. The output tokens are then mapped through a residual block to an output of size `output_patch_len`, which is the forecast for the time window following the last input patch seen by the model so far.\n\n\n## 5. Pretraining Details\n\nWe would like our pretraining corpus to include large volumes of temporal data representing a variety of domains, trend and seasonality patterns, and time granularities that ideally capture the forecasting use-cases which we are interested in serving by the deployed model. It is challenging to find a large time-series dataset that meets the volume and diversity of data needed for training our foundation model. We address this problem by sourcing the bulk of data used to train our models from three major sources: Google Trends, Wiki Pageview statistics, and synthetic time-series. In summary the main data sources are as follows.\n\n**Google Trends.** Google Trends[^3] captures search interest over time for millions of queries. We choose around 22k head queries based on their search interest over 15 years from 2007 to 2022. Beyond these head queries the time-series become more than 50% sparse. We download the search interest over time for these queries in hourly, daily, weekly, and monthly granularities to form our dataset. The date ranges are January 2018 to December 2019 for hourly and January 2007 to December 2021 for the other granularities. The Trends datasets amount to roughly 0.5B time-points.\n\n**Wiki Pageviews.** Wiki Pageviews[^4] captures the hourly views of all Wikimedia pages. We download all pageview data from January 2012 to November 2023, clean and aggregate the views by page into hourly, daily, weekly, and monthly granularities, and filter out pageview time-series with excessive zeros. The final corpus contains roughly 300B time-points.\n\n**Synthetic Data.** Another major component of our pretraining data is of synthetic origin. We create generators for ARMA [McK84] processes, seasonal patterns, mixtures of sines and cosines of different frequencies, trends, linear or exponential with a few change-points, and step functions. A synthetic time-series can be an additive combination of one or more of these processes. We create 3M synthetic time-series each of length 2048 time-points. More details about our synthetic data generation are presented later in Appendix A.8.\n\n**Other real-world data sources.** Along with the wiki and trends data, we also add time-series from several other publicly available datasets to our pretraining corpus. We add all the granularities of the M4 dataset [MSA22], the hourly and 15-minute Electricity data, and the hourly Traffic datasets, see [ZZP+21]. We also add the 10-minute granularity Weather dataset used for evaluations in [ZZP+21]. M4 has a good mix of granularities with around 100k time-series in total. Traffic and Electricity are large long-term forecasting datasets with more than 800 and more than 300 time-series each, having tens of thousands of time-points. In addition, we add all the 15-minute granularity traffic time-series from [WJJ+23].\n\n**Dataset Mixing and Training.** We train on a mixture distribution over these datasets that aims to give sufficient weight to all granularities and datasets. The training loader samples 80% real data and 20% synthetic, with the real data mixture providing equal weights to the groups hourly + sub-hourly, daily, weekly, and monthly datasets. We train with a maximum context length of 512 whenever the length of the time-series allows that. For weekly granularity we do not have sufficiently long time-series; therefore a maximum context length of 256 is used. For the same reason, a maximum context length of 64 is used while training on at least monthly granularity data. We also use only the standard normalization part of reversible instance normalization [KKT+21], i.e. the context of each time-series is scaled by the context mean and standard deviation of the first input patch in the context.\n\nTable 1: Composition of TimesFM pretraining dataset.\n\n| Dataset | Granularity | # Time series | # Time points |\n| --- | --- | --- | --- |\n| Synthetic |  | 3,000,000 | 6,144,000,000 |\n| Electricity | Hourly | 321 | 8,443,584 |\n| Traffic | Hourly | 862 | 15,122,928 |\n| Weather [ZZP+21] | 10 Min | 42 | 2,213,232 |\n| Favorita Sales | Daily | 111,840 | 139,179,538 |\n\n### A.8. Synthetic Data\n\nWe create the synthetic data to reflect common time-series patterns using traditional statistical models. We start with four simple time-series patterns:\n\n- piece-wise linear trends `(I)`, where the number of piece-wise linear components is randomly chosen between 2 and 8\n- ARMA$(p, q)$ `(II)`, where $1 \\le p, q \\le 8$ and the corresponding coefficients are generated from either a multivariate Gaussian or a uniform, then normalized\n- sine waves `(III)` of different random periods between 4 and max context length / 2 time-points and time delays\n- cosine waves `(IV)` of different random periods between 4 and max context length / 2 time-points and time delays\n\nWe then randomly enable or disable these four components `(I)-(IV)`, generate their time-series of length 2048 respectively, and sum them up using uniformly sampled random weights to create each time-series in the synthetic dataset. We also choose to apply the trend multiplicatively 50% of the times the trend component is chosen.\n\n",
+    "summary": "Обучение: patch masking (случайное маскирование входных патчей) как augmentation. Pretraining корпус: 100B+ точек из 19 источников (Google Trends, Wikimedia pageviews, M3, M4, Darts, Monash, ETT, Weather, Electricity, Traffic, синтетические данные). Standard normalization: mean/std scaling по context window первого патча. From-scratch training, 200M параметров.",
+    "keywords": [
+      "patch masking",
+      "pretraining corpus",
+      "100B points",
+      "19 sources",
+      "synthetic data",
+      "standard normalization",
+      "from scratch",
+      "200M params"
+    ],
+    "question_types": [
+      "Б",
+      "И",
+      "К"
+    ],
+    "token_count": 350
+  },
+  {
+    "chunk_id": "timesfm_chunk_006",
+    "article_id": "timesfm",
+    "article_meta": {
+      "title": "A Decoder-Only Foundation Model for Time Series Forecasting (TimesFM)",
+      "authors": [
+        "Das",
+        "Kong",
+        "Leach",
+        "Mathur",
+        "Sen",
+        "Yu"
+      ],
+      "year": 2024,
+      "arxiv_id": "2310.10688"
+    },
+    "section": "Experiments",
+    "section_hierarchy": [
+      "Experiments",
+      "5. Pretraining Details",
+      "6. Empirical Results"
+    ],
+    "chunk_type": "prose",
+    "index": 6,
+    "text": "## 5. Pretraining Details\n\nWe would like our pretraining corpus to include large volumes of temporal data representing a variety of domains, trend and seasonality patterns, and time granularities that ideally capture the forecasting use-cases which we are interested in serving by the deployed model. It is challenging to find a large time-series dataset that meets the volume and diversity of data needed for training our foundation model. We address this problem by sourcing the bulk of data used to train our models from three major sources: Google Trends, Wiki Pageview statistics, and synthetic time-series. In summary the main data sources are as follows.\n\n**Google Trends.** Google Trends[^3] captures search interest over time for millions of queries. We choose around 22k head queries based on their search interest over 15 years from 2007 to 2022. Beyond these head queries the time-series become more than 50% sparse. We download the search interest over time for these queries in hourly, daily, weekly, and monthly granularities to form our dataset. The date ranges are January 2018 to December 2019 for hourly and January 2007 to December 2021 for the other granularities. The Trends datasets amount to roughly 0.5B time-points.\n\n**Wiki Pageviews.** Wiki Pageviews[^4] captures the hourly views of all Wikimedia pages. We download all pageview data from January 2012 to November 2023, clean and aggregate the views by page into hourly, daily, weekly, and monthly granularities, and filter out pageview time-series with excessive zeros. The final corpus contains roughly 300B time-points.\n\n**Synthetic Data.** Another major component of our pretraining data is of synthetic origin. We create generators for ARMA [McK84] processes, seasonal patterns, mixtures of sines and cosines of different frequencies, trends, linear or exponential with a few change-points, and step functions. A synthetic time-series can be an additive combination of one or more of these processes. We create 3M synthetic time-series each of length 2048 time-points. More details about our synthetic data generation are presented later in Appendix A.8.\n\n**Other real-world data sources.** Along with the wiki and trends data, we also add time-series from several other publicly available datasets to our pretraining corpus. We add all the granularities of the M4 dataset [MSA22], the hourly and 15-minute Electricity data, and the hourly Traffic datasets, see [ZZP+21]. We also add the 10-minute granularity Weather dataset used for evaluations in [ZZP+21]. M4 has a good mix of granularities with around 100k time-series in total. Traffic and Electricity are large long-term forecasting datasets with more than 800 and more than 300 time-series each, having tens of thousands of time-points. In addition, we add all the 15-minute granularity traffic time-series from [WJJ+23].\n\n**Dataset Mixing and Training.** We train on a mixture distribution over these datasets that aims to give sufficient weight to all granularities and datasets. The training loader samples 80% real data and 20% synthetic, with the real data mixture providing equal weights to the groups hourly + sub-hourly, daily, weekly, and monthly datasets. We train with a maximum context length of 512 whenever the length of the time-series allows that. For weekly granularity we do not have sufficiently long time-series; therefore a maximum context length of 256 is used. For the same reason, a maximum context length of 64 is used while training on at least monthly granularity data. We also use only the standard normalization part of reversible instance normalization [KKT+21], i.e. the context of each time-series is scaled by the context mean and standard deviation of the first input patch in the context.\n\n## 6. Empirical Results\n\nWe evaluate our model in zero-shot settings on three groups of well known public datasets against the best performing baselines for each group. These datasets have been intentionally held out from our pretraining data. We show that a single pretrained model can come close to or surpass the performance of baseline models on the benchmarks even when the baselines are specially trained or tuned for each specific task. Subsequently, we perform ablation studies that justify different choices made in our architecture.\n\n",
+    "summary": "Датасеты: Pretraining — 19 источников (Google Trends, Wikimedia, M3, M4, Darts, Monash, Electricity, Traffic, Weather, ETT, синтетические). Zero-shot evaluation — Monash (18 datasets), Darts (8 datasets), ETT (4 datasets).",
+    "keywords": [
+      "Monash",
+      "Darts",
+      "ETT",
+      "Google Trends",
+      "Wikimedia",
+      "M3",
+      "M4",
+      "Electricity",
+      "Traffic",
+      "Weather",
+      "Benchmark"
+    ],
+    "question_types": [
+      "В"
+    ],
+    "token_count": 250
+  },
+  {
+    "chunk_id": "timesfm_chunk_007",
+    "article_id": "timesfm",
+    "article_meta": {
+      "title": "A Decoder-Only Foundation Model for Time Series Forecasting (TimesFM)",
+      "authors": [
+        "Das",
+        "Kong",
+        "Leach",
+        "Mathur",
+        "Sen",
+        "Yu"
+      ],
+      "year": 2024,
+      "arxiv_id": "2310.10688"
+    },
+    "section": "Appendix",
+    "section_hierarchy": [
+      "Appendix",
+      "A.2. Metrics"
+    ],
+    "chunk_type": "prose",
+    "index": 7,
+    "text": "### A.2. Metrics\n\nThe metrics that are used for reporting results in this paper are:\n\n- `MAE` [GBW+21]\n\n$$\n\\mathrm{MAE}(y_{L+1:L+H}, \\hat{y}_{L+1:L+H}) = \\frac{1}{H}\\left\\lVert y_{L+1:L+H} - \\hat{y}_{L+1:L+H} \\right\\rVert_1.\n\\tag{6}\n$$\n\n- `msMAPE` [GBW+21]\n\n$$\n\\mathrm{msMAPE}(y_{L+1:L+H}, \\hat{y}_{L+1:L+H}) = \\frac{1}{H}\\sum_{i=1}^{H}\\frac{2|y_{L+i} - \\hat{y}_{L+i}|}{\\max\\left\\{|y_{L+i}| + |\\hat{y}_{L+i}| + \\epsilon,\\ 0.5 + \\epsilon\\right\\}}.\n\\tag{7}\n$$\n\nIn Monash benchmarks [GBW+21] $\\epsilon = 0.1$ was used. This metric is used in order to avoid undefined values in other normalized metrics like MAPE. In multivariate datasets the metrics are calculated for each time-series and then we take the mean or the median. In this paper we only use the mean versions.\n\n**Aggregating across datasets.** Since the datasets have wildly different scales averaging unnormalized metrics like MAE is not kosher. Therefore following [GFQW23] we scale the metric of each baseline for a dataset by the same metric achieved by a naive baseline on that dataset. The naive baseline just makes the constant prediction $y_L$ repeated across the prediction length. We did not need to do that for the Informer datasets since on these datasets metrics are usually reported on standard normalized data [NNSK22].\n\n\n### 6.1. Zero-shot Evaluation\n\nTo benchmark our model's performance, we choose three groups of commonly used forecasting datasets that cover various domains, sizes, granularities, and horizon lengths: Darts [HLP+22], Monash [GBW+21], and Informer datasets [ZZP+21], to test the generalization power of our foundation model against other baselines.\n\nIn all cases, we report performance on the official metrics and scalings of the datasets, using either their standard test splits or common test splits in other literature. We present a summary of the results below; more details can be found in Appendix A.5. We provide the hyper-parameters and other details about our model in Appendix A.6.\n",
+    "summary": "Метрики: MAE (основная), Scaled MAE (GM — geometric mean across datasets), msMAPE (mean scaled MAPE). Для Monash: MAE scaled per dataset frequency. Для Darts: MAE. Для ETT: MSE, MAE.",
+    "keywords": [
+      "MAE",
+      "Scaled MAE",
+      "GM",
+      "msMAPE",
+      "MSE",
+      "Metric"
+    ],
+    "question_types": [
+      "З"
+    ],
+    "token_count": 180
+  },
+  {
+    "chunk_id": "timesfm_chunk_008",
+    "article_id": "timesfm",
+    "article_meta": {
+      "title": "A Decoder-Only Foundation Model for Time Series Forecasting (TimesFM)",
+      "authors": [
+        "Das",
+        "Kong",
+        "Leach",
+        "Mathur",
+        "Sen",
+        "Yu"
+      ],
+      "year": 2024,
+      "arxiv_id": "2310.10688"
+    },
+    "section": "Experiments",
+    "section_hierarchy": [
+      "Experiments",
+      "6. Empirical Results",
+      "6.1. Zero-shot Evaluation"
+    ],
+    "chunk_type": "prose",
+    "index": 8,
+    "text": "### 6.1. Zero-shot Evaluation\n\nTo benchmark our model's performance, we choose three groups of commonly used forecasting datasets that cover various domains, sizes, granularities, and horizon lengths: Darts [HLP+22], Monash [GBW+21], and Informer datasets [ZZP+21], to test the generalization power of our foundation model against other baselines.\n\nIn all cases, we report performance on the official metrics and scalings of the datasets, using either their standard test splits or common test splits in other literature. We present a summary of the results below; more details can be found in Appendix A.5. We provide the hyper-parameters and other details about our model in Appendix A.6.\n\n**Monash [GBW+21].** Monash archive is a collection of 30 datasets of different training and prediction lengths that covers granularities ranging from minutes to years and domains including finance, demand forecasting, weather, and traffic. The archive reports four official metrics for several statistical baselines such as Exponential Smoothing (ETS) and ARIMA, as well as supervised ML baselines like CatBoost [PGV+18], DeepAR [SFGJ20], and WaveNet [ODZ+16]. Following llmtime [GFQW23] we start from the Monash Huggingface repository[^5] and filter out the datasets that contain missing values. This leaves us with 18 datasets which we specify in Appendix A.5.2.\n\nOut of the four official metrics, following prior work [GFQW23], we report our performance in terms of mean MAE, see Appendix A.2. As the datasets have massively different scales, for each dataset we normalize the metric by the metric achieved by a naive baseline that just constantly predicts the last value in the context for each time-series. Then the scaled MAEs are averaged across all datasets. The scaled aggregation was also used in [GFQW23]. In Figure 2a, we use the Geometric Mean (GM) for averaging since it is more robust for normalized metrics [FW86]. We also report the Arithmetic Mean based aggregated metrics in Figure 4 in the appendix.\n\nThe mean scaled MAE across all datasets is plotted in Figure 2a along with standard error bars. We compare the performance of TimesFM with the baseline models implemented in Monash, and the zero-shot llmtime [GFQW23] model that uses GPT-3 [RWC+19] with a specific prompting technique. Note that the zero-shot models are marked as Zero-Shot. TimesFM is the top model even though we never trained on these datasets. It is slightly better but within significance of N-BEATS, outperforms deep supervised models like DeepAR [SFGJ20], and improves on llmtime's performance by more than 25%.\n\n**Darts [HLP+22].** This is a collection of 8 univariate datasets which include interesting seasonalities and additive+multiplicative trends. We report performance of several baselines implemented in the Darts package like TCN [LVRH16], N-HiTS [COO+23], and N-BEATS [OCCB19]. All these baselines are supervised. As before, we also report zero-shot forecasting results from llmtime [GFQW23] using GPT-3 [RWC+19]. Other supervised baselines in [GFQW23] like SM-GP [WA13] and ARIMA [McK84] are also added.\n\nWe report the official metric for this dataset group, MAE for each individual dataset, in Appendix A.5. In Figure 2b, we present the average scaled MAE across all 8 datasets, as we did for the Monash datasets. TimesFM is within statistical significance of the best models, llmtime and seasonal ARIMA in this case. Note that since there are only 8 individual time-series in this dataset group, the standard errors are not sharp and therefore do not provide a clear ordering among the models. Also note that for ARIMA, the seasonality needs to be encoded correctly in the parameters for the best results, which needed manual tuning. Further, since these datasets are used in numerous time series blog posts for illustrative purposes, data contamination for llmtime cannot be ruled out.\n\n**Informer [ZZP+21].** The Informer datasets have been widely used for benchmarking various supervised long-horizon forecasting methods. A few of these datasets are used in pretraining, so we focus on the other datasets in this collection, ETTm1, ETTm2, ETTh1, and ETTh2, related to electricity transformer temperatures over a two year period in 1-hour and 15-minute granularities. Note that the long-horizon baselines usually report rolling validation results on the test set which would amount to millions of tokens for evaluating llmtime [GFQW23] and would be too expensive. Therefore, following llmtime, we compare all methods on the last test window. Also, it is reasonable to directly average the MAE for these datasets since the results are reported on standard normalized data using the statistics of the training portion.\n\nWe consider the task of predicting horizon lengths 96 and 192, given a context length of 512 for all methods. The MAE averaged over all 8 tasks, 4 datasets with two horizons each, is presented in Figure 2c. TimesFM performs the best and the supervised PatchTST [NNSK22] baseline, which is a state-of-the-art long-horizon deep forecasting method, is within significance of it. The other long-horizon methods are quite a bit worse even though they have been trained on these datasets. llmtime is better than FEDFormer but worse than PatchTST with statistical significance.\n\nWe present visual examples of our forecasts along with baselines in Appendix A.9.\n\n",
+    "summary": "Zero-shot результаты: TimesFM — top model на Monash (18 datasets), 25% лучше llmtime. На Darts (8 datasets) — competitive с statistical baselines. На ETT — превосходит или сравнивается с supervised SOTA (без файнтюнинга!).",
+    "keywords": [
+      "zero-shot",
+      "Monash",
+      "Darts",
+      "ETT",
+      "25%",
+      "llmtime",
+      "SOTA",
+      "TimesFM",
+      "MAE"
+    ],
+    "question_types": [
+      "А+",
+      "Ж"
+    ],
+    "token_count": 450
+  },
+  {
+    "chunk_id": "timesfm_chunk_009",
+    "article_id": "timesfm",
+    "article_meta": {
+      "title": "A Decoder-Only Foundation Model for Time Series Forecasting (TimesFM)",
+      "authors": [
+        "Das",
+        "Kong",
+        "Leach",
+        "Mathur",
+        "Sen",
+        "Yu"
+      ],
+      "year": 2024,
+      "arxiv_id": "2310.10688"
+    },
+    "section": "Experiments",
+    "section_hierarchy": [
+      "Experiments",
+      "6. Empirical Results",
+      "6.2. Ablation"
+    ],
+    "chunk_type": "prose",
+    "index": 9,
+    "text": "### 6.2. Ablation\n\nNext, we perform several ablation studies that inform the design decisions we made for our model architecture.\n\n**Scaling.** Performance curves with respect to number of parameters in a model have been a keenly studied area in the context of LLMs. [KMH+20] established a power law-like relationship between the number of parameters in a language model and its downstream performance, i.e. the more the number of parameters the better the performance. However, [HBM+22] established a more nuanced scaling law that lays down methods to train compute-optimal models based on the number of tokens available in a training dataset.\n\nWe perform a preliminary scaling study where we train three TimesFM models of sizes 17M, 70M, and 200M parameters, using the same pre-training dataset till 1.5M iterations with a global batch-size of 4096. Then we collect checkpoints that represent varying numbers of FLOPS, Floating Point OPerationS, across the different model runs. Then we plot the performance on Scaled MAE (GM) on Monash as a function of FLOPS, in Figure 3a. This is now a standard way to perform scaling studies in LLMs, see recent work like [GD23]. It can be clearly seen that the errors decrease monotonically with the number of FLOPS, in log scale. All experiments were performed on a TPUv5e[^6] setup with 16 tensor-cores. For the 200M model it takes 2 days to complete 1.5M iterations on our setup.\n\n**Autoregressive Decoding.** In recent long-term forecasting works [ZCZX23, NNSK22, DKL+23], it has been observed that directly predicting the entire forecasting horizon in one shot from a decoder can yield better results than auto-regressive decoding on long-horizon benchmarks. For a foundation model, the horizon length of the task is not known before inference time, therefore one-shot decoding might not be possible for very long horizons. However, as mentioned earlier, by keeping `output_patch_len` longer than `input_patch_len` one can ensure fewer autoregressive steps.\n\nThis was one of the key decisions in the design of TimesFM, and it is quite different from LLMs. In order to showcase this we choose the task of predicting 512 time-steps into the future for the ETT datasets on the original rolling validation task of the ETT test sets [ZZP+21]. In Figure 3b, we present results from models with `output_patch_len` varying from 8 to 128. We see a monotonic decrease in average MAE with `output_patch_len`.\n\n**Input Patch Length.** The size of `input_patch_len` represents an important trade-off. We have typically seen that increasing its value from 8 to 32 increases performance but having too high an `input_patch_len` is impractical since that makes the model shift from decoder-only training more towards encoder-decoder style training. Note that in the Training paragraph of Section 4, we describe the mask sampling strategy to support any context length. If in the extreme case $p$ is set to the maximum context length we have to individually sample all possible context windows from 1 to the maximum context length, which would be required for encoder-decoder style training.\n\nIn Figure 3c, we show the mean scaled MAE (GM) of a TimesFM(ZS) 70M model on Monash with `input_patch_len` varying from 8 to 128. Note that both models have been trained to about 1.5M steps even though the `p=8` model is three times slower to train. We can see that `p = 16, 32` marks the best performance, with the error increasing towards either end. Note that the `p = 32` model is almost twice as fast to train compared to `p = 16` and thus constitutes a prudent choice.\n\n**Dataset Ablation.** Next we showcase the need for synthetic data. Intuitively, the majority of our real datasets have commonly found granularities like hourly and daily, which have specific periodic patterns like 24 time-point periods for hourly data. This can make the model not generalize well to underrepresented frequencies. We train a 200M model with no synthetic data added in the mix and showcase the performance on Monash and ETT datasets in Figure 3d. It can be seen that there is a performance drop on Monash because many of the datasets in Monash have under-represented granularities like quarterly, yearly, or 10 minutes. Perhaps even more compelling is the comparison on ETT datasets. We can see that there is almost no difference between the two models on the hourly ETTh datasets, which have a well represented granularity. However, for the 15-minute ETTm datasets the model with synthetic data performs quite a bit better.\n\nWe provide a finetuning study in the same setting as [ZNW+23] in Appendix A.3, where our model performs better than all baselines on all the reported datasets. This shows the utility of our model on downstream tasks.\n\n> Figure 3 (see PDF p. 8).\n> (a) Scaled MAE (GM) on Monash datasets as a function of FLOPS across three model sizes 17M, 70M, and 200M. The first 4 points are from 17M and 70M checkpoints while the last 3 are from 200M.\n> (b) Ablation with respect to output patch length for the task of predicting 512 steps into the future on ETT datasets on the original test set in [ZZP+21]. We report the average across all 4 ETT datasets.\n> (c) Scaled MAE (GM) for our 70M models on Monash datasets for different input patch lengths. We also plot error bars denoting one standard error.\n> (d) Average scaled MAE for Monash on the left and average MAE on ETT datasets on the right. We compare the performance of the 200M model with and without the synthetic data.\n> Figure 3: Ablation studies with respect to various design choices.\n\n\n### A.3. Finetuning Study on ETT\n\nIn this section, we test whether TimesFM can be finetuned on a small fraction of a dataset to provide even better performance. We follow the same protocol as in GPT4TS [ZNW+23], see Table 13 in their paper. [ZNW+23] finetune GPT2 input and output blocks on long-term forecasting benchmarks on 10% of the original datasets and compare it against models trained from scratch on the same data. Then the models are evaluated on the original test set task of [ZZP+21]. We also tune the input and output residual blocks on 10% of the training set and present the results in Table 2.\n\nWe can see that our model performs the best by a large margin. In ETTh1, ETTh2, and ETTm1 our finetuned model is better than 18%, 3%, and 12% better than GPT4TS, respectively. In fact we can see our 10% finetuned model's performances are comparable or better than that of most baselines trained on the whole training dataset as reported in Table 14 of [ZNW+23]. This shows that the inductive biases encoded in our model weights by finetuning on a large time-series corpus are better for downstream forecasting tasks than an off-the-shelf language model like GPT2, even though our model is orders of magnitude smaller.\n\nTable 2: MAE of different methods on ETT datasets. All methods use 10% of the original training set for training or finetuning. The baseline numbers are from Table 13 in [ZZP+21]. The original PDF marks the best values in bold.\n\n| Dataset | Horizon | TimesFM(FT) | GPT4TS(FT) | DLinear | PatchTST | TimeNet | FEDFormer | Autoformer |\n| --- | --- | --- | --- | --- | --- | --- | --- | --- |\n| ETTh1 | 96 | 0.398 | 0.456 | 0.495 | 0.485 | 0.628 | 0.499 | 0.552 |\n| ETTh1 | 192 | 0.424 | 0.516 | 0.538 | 0.524 | 0.593 | 0.555 | 0.598 |\n| ETTh1 | 336 | 0.436 | 0.535 | 0.622 | 0.550 | 0.648 | 0.574 | 0.619 |\n| ETTh1 | 720 | 0.445 | 0.591 | 0.743 | 0.610 | 0.641 | 0.614 | 0.616 |\n| ETTh1 | Avg | 0.426 | 0.525 | 0.600 | 0.542 | 0.628 | 0.561 | 0.596 |\n| ETTh2 | 96 | 0.356 | 0.374 | 0.411 | 0.389 | 0.409 | 0.416 | 0.451 |\n| ETTh2 | 192 | 0.400 | 0.411 | 0.519 | 0.414 | 0.467 | 0.474 | 0.477 |\n",
+    "summary": "Ablation: (1) longer output patches критичны для long-horizon forecasting, (2) patch masking улучшает обобщение, (3) scaling analysis: увеличение параметров (17M→200M) монотонно улучшает качество. Finetuning на ETT дополнительно улучшает zero-shot результаты.",
+    "keywords": [
+      "ablation",
+      "output patches",
+      "patch masking",
+      "scaling",
+      "17M to 200M",
+      "finetuning",
+      "ETT",
+      "improvement"
+    ],
+    "question_types": [
+      "А+",
+      "Б"
+    ],
+    "token_count": 400
+  },
+  {
+    "chunk_id": "timesfm_chunk_010",
+    "article_id": "timesfm",
+    "article_meta": {
+      "title": "A Decoder-Only Foundation Model for Time Series Forecasting (TimesFM)",
+      "authors": [
+        "Das",
+        "Kong",
+        "Leach",
+        "Mathur",
+        "Sen",
+        "Yu"
+      ],
+      "year": 2024,
+      "arxiv_id": "2310.10688"
+    },
+    "section": "Methodology",
+    "section_hierarchy": [
+      "Methodology",
+      "5. Pretraining Details"
+    ],
+    "chunk_type": "prose",
+    "index": 10,
+    "text": "We would like our pretraining corpus to include large volumes of temporal data representing a variety of domains, trend and seasonality patterns, and time granularities that ideally capture the forecasting use-cases which we are interested in serving by the deployed model. It is challenging to find a large time-series dataset that meets the volume and diversity of data needed for training our foundation model. We address this problem by sourcing the bulk of data used to train our models from three major sources: Google Trends, Wiki Pageview statistics, and synthetic time-series. In summary the main data sources are as follows.\n\n**Google Trends.** Google Trends[^3] captures search interest over time for millions of queries. We choose around 22k head queries based on their search interest over 15 years from 2007 to 2022. Beyond these head queries the time-series become more than 50% sparse. We download the search interest over time for these queries in hourly, daily, weekly, and monthly granularities to form our dataset. The date ranges are January 2018 to December 2019 for hourly and January 2007 to December 2021 for the other granularities. The Trends datasets amount to roughly 0.5B time-points.\n\n**Wiki Pageviews.** Wiki Pageviews[^4] captures the hourly views of all Wikimedia pages. We download all pageview data from January 2012 to November 2023, clean and aggregate the views by page into hourly, daily, weekly, and monthly granularities, and filter out pageview time-series with excessive zeros. The final corpus contains roughly 300B time-points.\n\n**Synthetic Data.** Another major component of our pretraining data is of synthetic origin. We create generators for ARMA [McK84] processes, seasonal patterns, mixtures of sines and cosines of different frequencies, trends, linear or exponential with a few change-points, and step functions. A synthetic time-series can be an additive combination of one or more of these processes. We create 3M synthetic time-series each of length 2048 time-points. More details about our synthetic data generation are presented later in Appendix A.8.\n\n\n### A.4. Pretraining PatchTST\n\nSince TimesFM applies a similar patching strategy as PatchTST [NNSK22], for an ablation study we use the same data loader and pretrain a PatchTST model of 200M parameters to the same number of FLOPS as the final 200M TimesFM model. We denote it as PatchTST(ZS). The two models share the same hyperparameters of the transformer stack. For PatchTST(ZS) we use the same input patch length = 32, and a stride of length half of input patch size, i.e. stride = 16, as done in the original PatchTST paper.\n\nWe report the detailed results on Monash and ETT in Appendix A.5.2 and A.5.3. It can be seen that the results are not that good for PatchTST(ZS) on Monash. This is expected since our pretrain data loader will predominantly have context lengths of 512 instead of shorter context lengths as in Monash. Moreover the PatchTST model does fewer iterations at the same number of FLOPS. On ETT datasets, the PatchTST(ZS) model performs similarly to TimesFM(ZS) and PatchTST. This is also expected since the context length for this study is indeed 512.\n\nAs PatchTST(ZS) is an encoder-decoder model, to pretrain it for zero-shot forecasting one should theoretically prepare all possible context lengths and horizon lengths in the pretrain datasets. Pretraining it to its maximum performance requires much more compute and likely more careful tuning compared to pretraining TimesFM.\n\n",
+    "summary": "Нормировка: standard normalization — mean и std вычисляются по context окну первого входного патча. Обратимая денормализация после прогноза. PatchTST pretraining эксперимент подтверждает эффективность нормализации.",
+    "keywords": [
+      "standard normalization",
+      "mean",
+      "std",
+      "context window",
+      "denormalization",
+      "PatchTST",
+      "first patch"
+    ],
+    "question_types": [
+      "Л"
+    ],
+    "token_count": 130
+  },
+  {
+    "chunk_id": "timesfm_chunk_011",
+    "article_id": "timesfm",
+    "article_meta": {
+      "title": "A Decoder-Only Foundation Model for Time Series Forecasting (TimesFM)",
+      "authors": [
+        "Das",
+        "Kong",
+        "Leach",
+        "Mathur",
+        "Sen",
+        "Yu"
+      ],
+      "year": 2024,
+      "arxiv_id": "2310.10688"
+    },
+    "section": "Conclusion",
+    "section_hierarchy": [
+      "Conclusion",
+      "7. Conclusion"
+    ],
+    "chunk_type": "prose",
+    "index": 11,
+    "text": "## 7. Conclusion\n\nIn this paper, we presented TimesFM, a practical foundation model for forecasting whose zero-shot performance comes close to the accuracy of fully-supervised forecasting models on a diverse set of time-series data. This model is pretrained on real-world and synthetic datasets comprising `O(100B)` timepoints. We discuss limitations and future work in more detail in Appendix A.1.\n\n",
+    "summary": "TimesFM — decoder-only foundation model (200M params) для TS forecasting, предобученная на 100B+ точках. Zero-shot SOTA на Monash, competitive на Darts и ETT. Демонстрирует viability from-scratch pretraining для TS без NLP LLM backbone.",
+    "keywords": [
+      "TimesFM",
+      "foundation model",
+      "decoder-only",
+      "200M",
+      "zero-shot",
+      "SOTA",
+      "from scratch"
+    ],
+    "question_types": [
+      "А"
+    ],
+    "token_count": 80
+  }
+]

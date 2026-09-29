@@ -1,0 +1,488 @@
+[
+  {
+    "chunk_id": "values-to-tokens_chunk_000",
+    "article_id": "values-to-tokens",
+    "article_meta": {
+      "title": "From Values to Tokens: An LLM-Compatible Tokenization Paradigm for Time Series",
+      "authors": [
+        "Anonymous"
+      ],
+      "year": 2026,
+      "arxiv_id": "2508.09191"
+    },
+    "section": "Abstract",
+    "section_hierarchy": [
+      "Abstract"
+    ],
+    "chunk_type": "prose",
+    "index": 0,
+    "text": "**Abstract.** Time series forecasting plays a vital role in supporting decision-making across a wide range of critical applications, including energy, healthcare, and finance. Despite recent advances, forecasting accuracy remains limited due to the challenge of integrating historical numerical sequences with contextual features, which often comprise unstructured textual data. To address this challenge, we propose TokenCast, a large language model (LLM)-driven framework that leverages language-based symbolic representations as a unified intermediary for context-aware time series forecasting. Specifically, TokenCast employs a discrete tokenizer to transform continuous numerical sequences into temporal tokens, enabling structural alignment with language-based inputs. To effectively bridge the semantic gap between modalities, both temporal and contextual tokens are embedded into a shared representation space via a pre-trained LLM, further optimized with autoregressive generative objectives. Building upon this unified semantic space, the aligned LLM is subsequently fine-tuned in a supervised manner to predict future temporal tokens, which are then decoded back into the original numerical space. Extensive experiments are conducted on multiple real-world datasets, whose results reveal the performance of our framework and highlight its potential as a generative framework for multimodal time series forecasting. The code is available for further research at: `https://anonymous.4open.science/r/TokenCast-8EFF`.",
+    "summary": "TokenCast — LLM-управляемый фреймворк для контекстно-зависимого прогнозирования временных рядов через символьную дискретизацию: непрерывные ряды преобразуются в дискретные temporal tokens, выравниваются с контекстными текстовыми признаками в общем пространстве embedding'ов предобученной LLM, и файнтюнятся для авторегрессионной генерации будущих токенов с последующим декодированием.",
+    "keywords": [
+      "TokenCast",
+      "symbolic discretization",
+      "LLM",
+      "discrete tokenizer",
+      "cross-modality alignment",
+      "autoregressive generation",
+      "context-aware forecasting"
+    ],
+    "question_types": [
+      "А"
+    ],
+    "token_count": 190
+  },
+  {
+    "chunk_id": "values-to-tokens_chunk_001",
+    "article_id": "values-to-tokens",
+    "article_meta": {
+      "title": "From Values to Tokens: An LLM-Compatible Tokenization Paradigm for Time Series",
+      "authors": [
+        "Anonymous"
+      ],
+      "year": 2026,
+      "arxiv_id": "2508.09191"
+    },
+    "section": "Introduction",
+    "section_hierarchy": [
+      "Introduction",
+      "1. Introduction"
+    ],
+    "chunk_type": "prose",
+    "index": 1,
+    "text": "## 1. Introduction\n\nTime series forecasting (TSF) is critical for decision-making in domains such as energy (Das et al., 2023; Jin et al., 2024; Wang et al., 2025), healthcare (Qiu et al., 2024), and finance (Feng et al., 2019). The goal is to predict future values based on historical observations and associated contextual features.\n\nTo address these challenges, some studies have explored shallow fusion strategies to incorporate contextual features. Models such as DeepAR (Salinas et al., 2020) and Temporal Fusion Transformer (TFT) (Lim et al., 2021) typically concatenate external variables with time series or introduce gating mechanisms. While offering basic integration, these methods often rely on weak alignment and struggle to capture deep semantic interactions across modalities (Liu et al., 2024e). More recently, LLMs have been introduced into time series forecasting (Sun et al., 2023; Liu et al., 2024c; Ansari et al., 2024). Methods like Time-LLM (Jin et al., 2023) inject time series features into LLMs using linear adapters (Figure 1(a)) or soft prompts (Figure 1(b)). Although promising, these approaches fall short in resolving the structural discrepancies between numerical sequences and unstructured contextual features. Moreover, they fail to fully leverage the generative and reasoning capabilities of LLMs, which are pretrained on large-scale corpora. This observation raises a fundamental question: can time series be effectively modeled in a discrete token space to unlock the full potential of LLMs?\n\nMotivated by this question, we explore a more expressive yet under-explored paradigm that formulates time series forecasting as a multimodal discrete context understanding and generation problem, powered by pre-trained LLMs, as illustrated in Figure 1(c). The key idea is to transform continuous numerical sequences into discrete tokens and embed them into the same semantic space as contextual language inputs. This formulation enables the full use of LLM capabilities in semantic understanding, contextual reasoning, and autoregressive generation.\n\nBased on the above analysis, we propose TokenCast, an LLM-driven framework for context-aware time series forecasting via symbolic discretization. TokenCast begins with a time series tokenizer that converts continuous sequences into temporal tokens, mitigating structural discrepancies across data modalities. To bridge the semantic gap, temporal and contextual tokens are jointly embedded into a shared representation space using a pre-trained LLM, optimized via an autoregressive objective while keeping the backbone frozen and tuning only the embedding layer. Building on this unified semantic space, the aligned LLM is further fine-tuned with supervised forecasting signals to enhance predictive performance.",
+    "summary": "Введение мотивирует TokenCast: существующие LLM-методы (Time-LLM, GPT4TS) используют линейные адаптеры/soft prompts, но не решают структурное несоответствие между числовыми рядами и текстовыми контекстными признаками. TokenCast предлагает символьную дискретизацию — преобразование непрерывных рядов в дискретные токены, встраиваемые в единое семантическое пространство с контекстом, с последующим файнтюнингом LLM.",
+    "keywords": [
+      "TokenCast",
+      "symbolic discretization",
+      "LLM",
+      "contextual features",
+      "Time-LLM",
+      "linear adapter",
+      "soft prompt",
+      "multimodal"
+    ],
+    "question_types": [
+      "А"
+    ],
+    "token_count": 420
+  },
+  {
+    "chunk_id": "values-to-tokens_chunk_002",
+    "article_id": "values-to-tokens",
+    "article_meta": {
+      "title": "From Values to Tokens: An LLM-Compatible Tokenization Paradigm for Time Series",
+      "authors": [
+        "Anonymous"
+      ],
+      "year": 2026,
+      "arxiv_id": "2508.09191"
+    },
+    "section": "Methodology",
+    "section_hierarchy": [
+      "Methodology",
+      "3. The Proposed TokenCast",
+      "3.2. Framework Overview"
+    ],
+    "chunk_type": "prose",
+    "index": 2,
+    "text": "### 3.2. Framework Overview\n\nFigure 2 illustrates the overview of the TokenCast, which consists of three main stages. The process begins with the time series tokenizer, which transforms continuous time series into a sequence of discrete tokens via a decoupled and dynamical vector quantization tokenizer. Subsequently, both the temporal and contextual tokens are jointly processed by a pre-trained LLM, which performs cross-modality alignment under autoregressive objectives. Following this alignment, the aligned LLM is adapted to the forecasting task via generative fine-tuning, enabling token prediction. The predicted tokens are decoded to raw time series using a frozen time series de-tokenizer. The following sections elaborate on the principal stages of the TokenCast.",
+    "summary": "Фреймворк TokenCast состоит из трёх стадий: (1) time series tokenizer — преобразование непрерывных рядов в дискретные токены через векторное квантование, (2) cross-modality alignment — совместная обработка temporal и contextual токенов замороженной LLM с авторегрессионной целью, (3) generative fine-tuning — адаптация LLM к задаче прогнозирования с декодированием предсказанных токенов обратно в числовое пространство.",
+    "keywords": [
+      "TokenCast",
+      "pipeline",
+      "time series tokenizer",
+      "cross-modality alignment",
+      "generative fine-tuning",
+      "vector quantization",
+      "de-tokenizer"
+    ],
+    "question_types": [
+      "А",
+      "Е"
+    ],
+    "token_count": 140
+  },
+  {
+    "chunk_id": "values-to-tokens_chunk_003",
+    "article_id": "values-to-tokens",
+    "article_meta": {
+      "title": "From Values to Tokens: An LLM-Compatible Tokenization Paradigm for Time Series",
+      "authors": [
+        "Anonymous"
+      ],
+      "year": 2026,
+      "arxiv_id": "2508.09191"
+    },
+    "section": "Methodology",
+    "section_hierarchy": [
+      "Methodology",
+      "3. The Proposed TokenCast",
+      "3.3. Time Series Discretization",
+      "3.3.1. Time Series Tokenizer"
+    ],
+    "chunk_type": "formula_heavy",
+    "index": 3,
+    "text": "#### 3.3.1. Time Series Tokenizer\n\nTo fully harness the generative and reasoning capabilities of language models, symbolic representation naturally arises as an effective intermediary. Accordingly, we employ time series discretization as a simple yet powerful approach to establish this bridge. In contrast, reconstruction-based methods (Van Den Oord et al., 2016) map subsequences to discrete codes from a predefined codebook and achieve more precise representations through reconstruction optimization. While preserving the original information is advantageous, previous reconstruction-based methods typically encode the entire sequence, overlooking the statistical properties of time series. In the forecasting task, Reversible Instance Normalization (RevIN) (Kim et al., 2021) is widely used, yet its normalization and denormalization steps risk leaking future information. To overcome this limitation, we propose a decoupled and dynamic tokenizer.\n\nAs illustrated in Figure 2(a), we divide the multivariate time series into a historical time series $H \\in \\mathbb{R}^{L_H \\times C}$ and a predicted time series $P \\in \\mathbb{R}^{L_P \\times C}$, formally $X = [H; P]$. The process begins with a reversible instance normalization (RIN) layer. We compute the mean $\\mu(H)$ and standard deviation $\\sigma(H)$ solely from the historical time series $H$, and apply them to normalize the time series $X$, thereby preventing future information leakage. These statistics are retained for inverse transformation during decoding. The normalized time series is then passed through a causal encoder $f_{\\text{enc}}$, yielding a sequence of continuous latent representations $Z = f_{\\text{enc}}(X) \\in \\mathbb{R}^{T \\times d}$, where $T$ is the number of latent vectors and $d$ is the feature dimension.\n\nTo discretize the latent representations, we apply a vector quantization layer. For domain $i$, a learnable codebook $C_i = \\{e_{i,k}\\}_{k=1}^K \\subset \\mathbb{R}^d$ is maintained, containing $K$ embedding vectors. Each latent vector $z_t \\in \\mathbb{R}^d$ is mapped to its nearest neighbor as $z_t^q = e_{i,k^*}$, where $k^* = \\arg\\min_k \\|z_t - e_{i,k}\\|_2^2$. The output is a quantized sequence $Z_q = (z_1^q, \\ldots, z_T^q)$, with indices $\\{k^*\\}$ serving as discrete tokens. These tokens are subsequently decoded by a shared causal decoder $f_{\\text{dec}}$, and the final reconstruction $\\hat{X}$ is obtained by applying the inverse RIN operation using the stored statistics $\\mu(H)$ and $\\sigma(H)$, i.e., $\\hat{X} = f_{\\text{denorm}}(f_{\\text{dec}}(Z_q))$.",
+    "summary": "Токенизатор временных рядов: (1) Reversible Instance Normalization (RIN) по историческим данным (без утечки будущей информации), (2) causal encoder для получения latent-представлений, (3) векторное квантование через доменно-специфичный codebook — каждый latent-вектор отображается в ближайший кодовый вектор, индексы служат дискретными temporal tokens, (4) causal decoder + обратный RIN для реконструкции.",
+    "keywords": [
+      "RIN",
+      "RevIN",
+      "causal encoder",
+      "vector quantization",
+      "VQ codebook",
+      "discrete tokens",
+      "decoupled tokenizer",
+      "instance normalization"
+    ],
+    "question_types": [
+      "Г",
+      "Л"
+    ],
+    "token_count": 380
+  },
+  {
+    "chunk_id": "values-to-tokens_chunk_004",
+    "article_id": "values-to-tokens",
+    "article_meta": {
+      "title": "From Values to Tokens: An LLM-Compatible Tokenization Paradigm for Time Series",
+      "authors": [
+        "Anonymous"
+      ],
+      "year": 2026,
+      "arxiv_id": "2508.09191"
+    },
+    "section": "Methodology",
+    "section_hierarchy": [
+      "Methodology",
+      "3. The Proposed TokenCast",
+      "3.3. Time Series Discretization",
+      "3.3.2. Training Objective"
+    ],
+    "chunk_type": "formula_heavy",
+    "index": 4,
+    "text": "#### 3.3.2. Training Objective\n\nThe tokenizer is optimized by minimizing the objective function defined as follows:\n\n$$\nL = L_{\\text{recon}} + \\beta (L_{\\text{commit}} + L_{\\text{codebook}}) + \\gamma L_{\\text{diversity}}.\n\\tag{1}\n$$\n\nHere, $L_{\\text{recon}} = \\|\\hat{X} - X\\|_2^2$ is the reconstruction loss that optimizes both the encoder and decoder. Due to the non-differentiability of the $\\arg\\min$ operation in quantization, we employ the straight-through estimator (STE) during backpropagation. To train the vector quantizer, we include $L_{\\text{codebook}} = \\|\\operatorname{sg}[Z] - Z_q\\|_2^2$ and $L_{\\text{commit}} = \\|Z - \\operatorname{sg}[Z_q]\\|_2^2$, where $\\operatorname{sg}[\\cdot]$ denotes the stop-gradient operator. To avoid codebook collapse and promote diverse usage of codebook entries, we further add a diversity loss\n\n$$\nL_{\\text{diversity}} = \\frac{1}{N}\\sum_{i=1}^N \\frac{1}{d_i + \\varepsilon},\n\\qquad\nd_i = \\min_{j \\ne i} \\|e_i - e_j\\|_2.\n$$\n\nThis penalty discourages vectors from clustering too closely and encourages more uniform utilization of the codebook.",
+    "summary": "Целевая функция токенизатора: $L = L_{recon} + \\beta(L_{commit} + L_{codebook}) + \\gamma L_{diversity}$. Реконструкционная MSE-потеря, commitment/codebook потери для обучения VQ (с straight-through estimator), и diversity loss для предотвращения коллапса codebook и равномерного использования кодовых векторов.",
+    "keywords": [
+      "reconstruction loss",
+      "commitment loss",
+      "codebook loss",
+      "diversity loss",
+      "straight-through estimator",
+      "VQ",
+      "codebook collapse",
+      "tokenizer training"
+    ],
+    "question_types": [
+      "Г",
+      "И"
+    ],
+    "token_count": 170
+  },
+  {
+    "chunk_id": "values-to-tokens_chunk_005",
+    "article_id": "values-to-tokens",
+    "article_meta": {
+      "title": "From Values to Tokens: An LLM-Compatible Tokenization Paradigm for Time Series",
+      "authors": [
+        "Anonymous"
+      ],
+      "year": 2026,
+      "arxiv_id": "2508.09191"
+    },
+    "section": "Methodology",
+    "section_hierarchy": [
+      "Methodology",
+      "3. The Proposed TokenCast",
+      "3.4. Pre-trained LLM Backbone Formulation"
+    ],
+    "chunk_type": "prose",
+    "index": 5,
+    "text": "### 3.4. Pre-trained LLM Backbone Formulation\n\nFollowing the discretization of time series into discrete tokens, the next challenge is to model the complex dependencies embedded in these sequences. While architectures like TCNs or Transformers can be trained from scratch, we argue that a pre-trained LLM serves as a more effective backbone. This is supported by two observations: (1) a pre-trained LLM possesses strong semantic understanding and contextual reasoning capabilities acquired from large-scale corpora, and (2) the structure of discrete time series tokens closely resembles that of language tokens (Zhao et al., 2023). By casting forecasting as a generative task, we directly leverage the LLM's autoregressive generation ability. To guide LLM reasoning and incorporate contextual features, we employ a structured prompt template, as shown in Figure 2(b). This prompt template consists of four essential components: domain knowledge, task instructions, statistical properties, and discrete time series tokens. This design ensures token-level consistency with language tokens and introduces task-specific descriptions alongside statistical attributes, enabling the LLM to perform instruction-driven generation.",
+    "summary": "В качестве backbone используется предобученная LLM (напр. Qwen2.5), а не обученные с нуля TCN/Transformer. Дискретные temporal tokens структурно подобны языковым токенам, что позволяет использовать авторегрессионную генерацию LLM. Структурированный prompt template из четырёх компонентов (domain knowledge, task instructions, statistical properties, discrete tokens) направляет LLM на instruction-driven forecasting.",
+    "keywords": [
+      "pre-trained LLM",
+      "Qwen2.5",
+      "backbone",
+      "autoregressive generation",
+      "prompt template",
+      "domain knowledge",
+      "instruction-driven"
+    ],
+    "question_types": [
+      "А",
+      "Д"
+    ],
+    "token_count": 164
+  },
+  {
+    "chunk_id": "values-to-tokens_chunk_006",
+    "article_id": "values-to-tokens",
+    "article_meta": {
+      "title": "From Values to Tokens: An LLM-Compatible Tokenization Paradigm for Time Series",
+      "authors": [
+        "Anonymous"
+      ],
+      "year": 2026,
+      "arxiv_id": "2508.09191"
+    },
+    "section": "Methodology",
+    "section_hierarchy": [
+      "Methodology",
+      "3. The Proposed TokenCast",
+      "3.5. Cross-Modality Alignment"
+    ],
+    "chunk_type": "formula_heavy",
+    "index": 6,
+    "text": "### 3.5. Cross-Modality Alignment of Time Series and Contextual Features\n\nWhile discretization aligns time series structurally with language tokens, a semantic gap remains between time series and contextual features. Existing methods often introduce projection modules (e.g., MLPs) to map time series into the LLM's latent space for fusion (Liu et al., 2025). Although effective in downstream tasks, these strategies rely on external transformation modules for alignment, which bypass the language model's native vocabulary modeling mechanism. To this end, we implement a more explicit vocabulary-level alignment strategy. We construct a unified vocabulary by directly appending $K$ temporal tokens and $S$ task-specific special tokens to the original vocabulary $V_{\\text{orig}}$ of the pre-trained LLM, forming an extended vocabulary $V$. Correspondingly, a shared embedding matrix $E \\in \\mathbb{R}^{|V| \\times d}$ is used to encode all tokens, regardless of their modality origin.\n\nThis unified embedding mechanism enables seamless fusion of time series and contextual features while maintaining alignment with the pre-trained model. To ensure distributional alignment with pretrained embeddings for fine-tuning, the embedding of the newly introduced time series tokens is initialized by sampling from a multivariate Gaussian distribution defined by the mean $\\mu$ and covariance $\\Sigma$ of the original word embeddings.\n\nTo optimize cross-modality token representations within the shared embedding space, we adopt an autoregressive training objective. Specifically, we freeze all parameters of the pre-trained LLM and update only the shared embedding matrix $E$. Given a concatenated token sequence $[Z_q, Y]$, the training objective is formulated as a next-token prediction task:\n\n$$\nL_{\\text{align}} = - \\sum_{t=1}^{T} \\log p(z_t \\mid z_1, \\ldots, z_{t-1}; E),\n\\tag{2}\n$$\n\nwhere $z_t \\in V$ denotes the $t$-th token in the sequence, and $p(\\cdot)$ is the conditional probability predicted by the frozen language model given the embedding vectors from $E$.",
+    "summary": "Кросс-модальное выравнивание: unified vocabulary = исходный словарь LLM + K temporal tokens + S специальных токенов. Shared embedding matrix E кодирует все токены независимо от модальности. Новые temporal token embeddings инициализируются из Gaussian-распределения оригинальных word embeddings. LLM заморожена, обучается только матрица E через авторегрессионный next-token prediction на конкатенированной последовательности [Z_q, Y].",
+    "keywords": [
+      "unified vocabulary",
+      "shared embedding",
+      "Gaussian initialization",
+      "cross-modality alignment",
+      "frozen LLM",
+      "autoregressive objective",
+      "next-token prediction",
+      "embedding matrix"
+    ],
+    "question_types": [
+      "Г",
+      "Б",
+      "К"
+    ],
+    "token_count": 330
+  },
+  {
+    "chunk_id": "values-to-tokens_chunk_007",
+    "article_id": "values-to-tokens",
+    "article_meta": {
+      "title": "From Values to Tokens: An LLM-Compatible Tokenization Paradigm for Time Series",
+      "authors": [
+        "Anonymous"
+      ],
+      "year": 2026,
+      "arxiv_id": "2508.09191"
+    },
+    "section": "Methodology",
+    "section_hierarchy": [
+      "Methodology",
+      "3. The Proposed TokenCast",
+      "3.6. Generative Fine-tuning and Context-Aware Forecasting"
+    ],
+    "chunk_type": "prose",
+    "index": 7,
+    "text": "### 3.6. Generative Fine-tuning and Context-Aware Time Series Forecasting\n\nWe now detail the procedure for adapting the aligned LLM for forecasting tasks. As illustrated in Figure 2(c), we employ a generative fine-tuning strategy to specialize the model for context-aware time series forecasting. This process consists of two primary stages: (1) structured prompt-based generative fine-tuning; and (2) context-aware time series forecasting with token-based decoding. In the first stage, prompt-based generative fine-tuning is introduced to explicitly transfer the pretrained language modeling capability into the forecasting domain. Instead of relying on external mapping modules, generative fine-tuning directly formulates forecasting as a generation task, where the model is supervised to output both natural language reasoning and sequences of future time series tokens. This paradigm fosters a fast-thinking behavior: by optimizing an autoregressive objective against ground-truth structured responses, the model learns to rapidly recognize patterns, associate contextual features with temporal dynamics, and produce coherent outputs without engaging in deep deliberation. As a result, the aligned LLM acquires the ability to generate fluent and context-aware predictions.\n\nIn the second stage, the fine-tuned model is utilized for context-aware forecasting and decoding. During inference, the model receives a prompt with historical data and contextual features, and autoregressively generates a complete response. The key component of this generated output is the sequence of discrete tokens, which represents the model's prediction of future time series values. To translate this symbolic representation back into a continuous predicted time series, these tokens are processed by a frozen time series de-tokenizer. We use boundary markers to delimit the temporal tokens within the generated sequence. This procedure leverages the LLM's reasoning capacity, enabling reliable forecasting grounded in the contextual feature.",
+    "summary": "Генеративный файнтюнинг: (1) LLM файнтюнится на генерацию структурированного ответа — natural language reasoning + будущие temporal tokens, через авторегрессионную цель; (2) на инференсе LLM получает prompt с историческими данными и контекстом, генерирует discrete tokens, которые декодируются замороженным de-tokenizer'ом обратно в числовой ряд. Boundary markers разделяют temporal tokens в сгенерированной последовательности.",
+    "keywords": [
+      "generative fine-tuning",
+      "autoregressive generation",
+      "de-tokenizer",
+      "boundary markers",
+      "structured prompt",
+      "fast-thinking",
+      "token-based decoding",
+      "instruction-driven"
+    ],
+    "question_types": [
+      "Б",
+      "К"
+    ],
+    "token_count": 270
+  },
+  {
+    "chunk_id": "values-to-tokens_chunk_008",
+    "article_id": "values-to-tokens",
+    "article_meta": {
+      "title": "From Values to Tokens: An LLM-Compatible Tokenization Paradigm for Time Series",
+      "authors": [
+        "Anonymous"
+      ],
+      "year": 2026,
+      "arxiv_id": "2508.09191"
+    },
+    "section": "Experiments",
+    "section_hierarchy": [
+      "Experiments",
+      "4. Experiments",
+      "4.1. Experimental Setup"
+    ],
+    "chunk_type": "prose",
+    "index": 8,
+    "text": "#### 4.1.1. Datasets\n\nAs shown in Figure 3, we evaluate our framework on six real-world datasets from diverse domains enriched with contextual features: Economic (McCracken & Ng, 2016), Health (Panagopoulos et al., 2021), Web (Gasthaus et al., 2019), two subsets of Stock data (Feng et al., 2019), and Nature (Poyatos et al., 2020). These datasets, spanning various temporal patterns and contextual dependencies, collectively serve as a comprehensive benchmark for context-aware forecasting. Data preparation involves imputing missing values and applying z-score normalization to all datasets, thereby ensuring stable convergence and fair comparability. A detailed description of the datasets, preprocessing procedures, and additional implementation details is provided in Appendix A for clarity, transparency, and reproducibility.\n\n> Figure 3 (see PDF p. 6). Diverse real-world datasets from various domains and with distinct characteristics.\n\n#### 4.1.2. Baselines\n\nWe compare our proposed framework against eight strong baselines, grouped into four representative categories for comprehensive evaluation. For LLM-based models, we include Time-LLM (Jin et al., 2023) and GPT4TS (Zhou et al., 2023), which adapt pre-trained LLMs for time series forecasting using modality-aware prompting and reprogramming. In the self-supervised frameworks category, we evaluate TimeDART (Wang et al., 2024a) and SimMTM (Dong et al., 2023). These unimodal pretraining methods leverage self-supervised objectives to enhance time series representation learning. Additionally, we include Transformer-based methods like Autoformer (Wu et al., 2021) and Crossformer (Zhang & Yan, 2023). Finally, we consider the MLP-based method DLinear (Zeng et al., 2023). Further details are provided in Appendix B.1.",
+    "summary": "Experimental setup: 6 context-rich datasets (Economic, Health, Web, Stock-NY, Stock-NA, Nature) after imputation and z-score normalization. Baselines cover 4 groups: LLM-based (Time-LLM, GPT4TS), self-supervised (TimeDART, SimMTM), Transformer-based (Autoformer, Crossformer), and MLP-based (DLinear).",
+    "keywords": [
+      "Economic",
+      "Health",
+      "Web",
+      "Stock-NY",
+      "Stock-NA",
+      "Nature",
+      "Time-LLM",
+      "GPT4TS",
+      "TimeDART",
+      "SimMTM",
+      "Autoformer",
+      "Crossformer",
+      "DLinear",
+      "Benchmark"
+    ],
+    "question_types": [
+      "В"
+    ],
+    "token_count": 260
+  },
+  {
+    "chunk_id": "values-to-tokens_chunk_009",
+    "article_id": "values-to-tokens",
+    "article_meta": {
+      "title": "From Values to Tokens: An LLM-Compatible Tokenization Paradigm for Time Series",
+      "authors": [
+        "Anonymous"
+      ],
+      "year": 2026,
+      "arxiv_id": "2508.09191"
+    },
+    "section": "Experiments",
+    "section_hierarchy": [
+      "Experiments",
+      "4. Experiments",
+      "4.2. Forecasting Performance Analysis"
+    ],
+    "chunk_type": "table_with_prose",
+    "index": 9,
+    "text": "### 4.2. Forecasting Performance Analysis\n\nTable 1 comprehensively compares forecasting performance across six benchmark datasets. TokenCast demonstrates superior performance in most scenarios. Notably, LLM-based baselines like Time-LLM also show competitive results, particularly on context-rich datasets such as Economic and Stock-NY. This further validates the potential of leveraging large language models in time series forecasting. However, these models often lack the structural alignment mechanisms introduced by our framework, limiting their consistent performance. Conventional baselines such as TimeDART perform well on datasets with strong periodicity and weak contextual dependence (e.g., Nature), but their performance drops significantly on complex datasets rich in contextual features (e.g., Economic and Web). In summary, our framework delivers state-of-the-art results with high consistency, attributed to its core design: discretizing time series into discrete tokens and aligning them with contextual features.\n\nTable 1. All reported results are averages over four horizons and three trials on various context-rich benchmark datasets. Lower values indicate better performance. The best results are highlighted in bold, and the second-best are underlined.\n\n| Dataset | TokenCast MSE/MAE | Time-LLM MSE/MAE | GPT4TS MSE/MAE | TimeDART MSE/MAE | SimMTM MSE/MAE | Crossformer MSE/MAE | Autoformer MSE/MAE | DLinear MSE/MAE |\n| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |\n| Economic | 68.911/1.646 | 81.542/1.760 | 85.947/1.716 | 86.029/1.771 | 90.351/1.672 | 406.418/4.074 | 116.745/2.088 | 122.216/2.069 |\n| Health | 2.524/0.081 | 2.823/0.104 | 2.564/0.083 | 2.623/0.088 | 2.720/0.088 | 1644.997/2.504 | 2.617/0.266 | 28.587/0.455 |\n| Web | 497.410/1.246 | 557.833/1.751 | 540.492/1.458 | 773.635/1.369 | 847.649/1.327 | 698.316/1.963 | 722.506/3.303 | 632.301/1.398 |\n| Stock-NY | 0.482/0.455 | 0.662/0.510 | 0.638/0.502 | 0.776/0.606 | 0.613/0.495 | 1.111/0.912 | 0.676/0.573 | 1.004/0.754 |\n| Stock-NA | 1.134/0.780 | 1.200/0.925 | 1.272/0.880 | 1.409/0.883 | 1.343/0.834 | 1.912/1.052 | 1.496/0.903 | 1.710/0.958 |\n| Nature | 0.269/0.297 | 0.258/0.283 | 0.274/0.299 | 0.243/0.276 | 0.259/0.286 | 0.733/0.511 | 0.508/0.486 | 0.369/0.436 |\n| 1st Count | 5/5 | 0/0 | 0/0 | 1/1 | 0/0 | 0/0 | 0/0 | 0/0 |",
+    "summary": "Результаты (Table 1): TokenCast — лучший в 5 из 6 датасетов по MSE и MAE (Economic, Health, Web, Stock-NY, Stock-NA). Особенно силён на контекстно-насыщенных данных (Economic: MSE=68.9 vs 81.5 у Time-LLM). Nature — единственный датасет где TimeDART немного лучше (0.243 vs 0.269 MSE). LLM-бейзлайны (Time-LLM, GPT4TS) показывают конкурентные результаты на контекстно-богатых данных, но уступают в согласованности.",
+    "keywords": [
+      "TokenCast",
+      "Time-LLM",
+      "GPT4TS",
+      "TimeDART",
+      "SimMTM",
+      "Crossformer",
+      "Autoformer",
+      "DLinear",
+      "MSE",
+      "MAE",
+      "SOTA",
+      "Economic",
+      "Health",
+      "Web",
+      "Stock",
+      "Nature"
+    ],
+    "question_types": [
+      "А+",
+      "Ж"
+    ],
+    "token_count": 370
+  },
+  {
+    "chunk_id": "values-to-tokens_chunk_011",
+    "article_id": "values-to-tokens",
+    "article_meta": {
+      "title": "From Values to Tokens: An LLM-Compatible Tokenization Paradigm for Time Series",
+      "authors": [
+        "Anonymous"
+      ],
+      "year": 2026,
+      "arxiv_id": "2508.09191"
+    },
+    "section": "Experiments",
+    "section_hierarchy": [
+      "Experiments",
+      "4. Experiments",
+      "4.1. Experimental Setup",
+      "4.1.3. Implementation Details"
+    ],
+    "chunk_type": "prose",
+    "index": 10,
+    "text": "#### 4.1.3. Implementation Details\n\nFor each baseline, we search over multiple input lengths and report the best performance to avoid underestimating its capability. The historical length is set to $L = 96$ for the Nature dataset and $L = 36$ for the other five datasets, based on the data volume and temporal resolution. The forecasting horizons are set to $\\{24, 48, 96, 192\\}$ for Nature and $\\{24, 36, 48, 60\\}$ for the other datasets. We adopt two widely used evaluation metrics in time series forecasting: mean absolute error (MAE) and mean squared error (MSE). For exploratory analysis, we use 96-to-24 on Nature and 36-to-24 on the other datasets. Complete results for the main experiments, ablation studies, and exploratory analysis are included in Appendix C. All experiments are implemented in PyTorch and conducted on a distributed setup with 8 NVIDIA A100 GPUs.",
+    "summary": "Implementation details: historical length L=96 for Nature and L=36 for the other datasets. Forecasting horizons are {24, 48, 96, 192} for Nature and {24, 36, 48, 60} elsewhere. Evaluation metrics are MAE and MSE; experiments run in PyTorch on 8 NVIDIA A100 GPUs.",
+    "keywords": [
+      "historical length",
+      "forecasting horizons",
+      "Nature",
+      "MAE",
+      "MSE",
+      "PyTorch",
+      "NVIDIA A100"
+    ],
+    "question_types": [
+      "З",
+      "Ж"
+    ],
+    "token_count": 110
+  },
+  {
+    "chunk_id": "values-to-tokens_chunk_010",
+    "article_id": "values-to-tokens",
+    "article_meta": {
+      "title": "From Values to Tokens: An LLM-Compatible Tokenization Paradigm for Time Series",
+      "authors": [
+        "Anonymous"
+      ],
+      "year": 2026,
+      "arxiv_id": "2508.09191"
+    },
+    "section": "Conclusion",
+    "section_hierarchy": [
+      "Conclusion",
+      "5. Conclusion"
+    ],
+    "chunk_type": "prose",
+    "index": 11,
+    "text": "## 5. Conclusion\n\nWe proposed TokenCast, a context-aware time series prediction framework based on a pretrained LLM. This approach first converts a continuous time series into discrete tokens. Leveraging a pretrained LLM, it aligns the temporal and contextual tokens through an autoregressive objective, achieving unified modeling of both modalities. The model is then further fine-tuned to generate future token sequences. We evaluate TokenCast on multiple real-world datasets rich in contextual information. Experimental results demonstrate that TokenCast achieves superior accuracy. We also conduct comprehensive ablation experiments and qualitative analysis to validate the framework's adaptability and flexibility for symbolic, LLM-driven time series prediction. Looking ahead, we believe that leveraging language as a symbolic intermediary has the potential to advance time series prediction toward a multimodal and multi-task level.",
+    "summary": "Заключение: TokenCast — LLM-управляемый фреймворк, преобразующий непрерывные временные ряды в дискретные токены, выравнивающий их с контекстными признаками через авторегрессионную цель и файнтюнящий LLM для генерации будущих токенов. Достигнуто превосходное качество на реальных датасетах. Будущее направление — язык как символьный посредник для мультимодального и многозадачного прогнозирования.",
+    "keywords": [
+      "TokenCast",
+      "symbolic discretization",
+      "LLM",
+      "context-aware forecasting",
+      "cross-modality",
+      "multimodal"
+    ],
+    "question_types": [
+      "А"
+    ],
+    "token_count": 130
+  },
+  {
+    "chunk_id": "values-to-tokens_chunk_012",
+    "article_id": "values-to-tokens",
+    "article_meta": {
+      "title": "From Values to Tokens: An LLM-Compatible Tokenization Paradigm for Time Series",
+      "authors": [
+        "Anonymous"
+      ],
+      "year": 2026,
+      "arxiv_id": "2508.09191"
+    },
+    "section": "Experiments",
+    "section_hierarchy": [
+      "Experiments",
+      "4. Experiments",
+      "4.3. Ablation Studies"
+    ],
+    "chunk_type": "prose",
+    "index": 12,
+    "text": "### 4.3. Ablation Studies\n\n#### 4.3.1. Ablation on Alignment and Fine-tuning\n\nWe conduct the ablation study on two crucial training steps: cross-modality alignment and generative fine-tuning. The results in Figure 4 (left) clearly demonstrate their indispensable contribution to the overall framework. The cross-modality alignment stage consistently achieves lower MSE scores across all datasets. Without alignment, contextual features risk being misinterpreted by the time series backbone, leading to suboptimal forecasts. This highlights its role in bridging structural and semantic discrepancies between time series and contextual features, thus facilitating meaningful feature interaction. Meanwhile, the generative fine-tuning stage further enhances performance, with notable improvements on complex datasets such as Stock-NA. These findings emphasize the necessity of both alignment and fine-tuning in enabling reliable forecasting.\n\n#### 4.3.2. Ablation on Multimodal Contributions\n\nFigure 4 (right) examines the impact of multimodal context by selectively removing different types of contextual features. The results demonstrate that both general information (e.g., domain knowledge and task instructions) and local information (e.g., event-specific details) make substantial contributions to forecasting accuracy across datasets. Removing either type consistently degrades performance, with the absence of local information showing particularly severe effects on datasets characterized by dynamic and non-stationary patterns. Meanwhile, excluding textual context leads to the most significant accuracy drop, underscoring the critical role of text in capturing domain knowledge and high-level semantics. These findings highlight the complementary nature of different contextual modalities: while general information provides broad background knowledge, local information introduces fine-grained event-level signals.\n\n",
+    "summary": "Абляция TokenCast: два ключевых улучшения качества прогноза — cross-modality alignment и generative fine-tuning. Alignment даёт наиболее стабильное снижение MSE на всех датасетах, а fine-tuning особенно помогает на сложных кейсах вроде Stock-NA. В multimodal context самый сильный провал даёт удаление текстового контекста; удаление local information также сильно ухудшает прогноз на динамичных нестационарных данных.",
+    "keywords": [
+      "ablation",
+      "cross-modality alignment",
+      "generative fine-tuning",
+      "textual context",
+      "local information",
+      "general information",
+      "MSE",
+      "Stock-NA",
+      "multimodal contributions"
+    ],
+    "question_types": [
+      "Б",
+      "Ж"
+    ],
+    "token_count": 180
+  }
+]

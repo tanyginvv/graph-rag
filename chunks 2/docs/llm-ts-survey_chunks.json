@@ -1,0 +1,487 @@
+[
+  {
+    "chunk_id": "llm-ts-survey_chunk_000",
+    "article_id": "llm-ts-survey",
+    "article_meta": {
+      "title": "Large Language Models for Time Series: A Survey",
+      "authors": [
+        "Anonymous"
+      ],
+      "year": 2024,
+      "arxiv_id": "2402.01801"
+    },
+    "section": "Abstract",
+    "section_hierarchy": [
+      "Abstract"
+    ],
+    "chunk_type": "prose",
+    "index": 0,
+    "text": "## Abstract\n\nLarge Language Models (LLMs) have seen significant use in domains such as natural language processing and computer vision. Going beyond text, image and graphics, LLMs present a significant potential for analysis of time series data, benefiting domains such as climate, IoT, healthcare, traffic, audio and finance. This survey paper provides an in-depth exploration and a detailed taxonomy of the various methodologies employed to harness the power of LLMs for time series analysis. We address the inherent challenge of bridging the gap between LLMs' original text data training and the numerical nature of time series data, and explore strategies for transferring and distilling knowledge from LLMs to numerical time series analysis. We detail various methodologies, including (1) direct prompting of LLMs, (2) time series quantization, (3) aligning techniques, (4) utilization of the vision modality as a bridging mechanism, and (5) the combination of LLMs with tools. Additionally, this survey offers a comprehensive overview of the existing multimodal time series and text datasets and delves into the challenges and future opportunities of this emerging field. We maintain an up-to-date Github repository[^1] which includes all the papers and datasets discussed in the survey.\n\n",
+    "summary": "Обзорная статья систематизирует методы применения LLM для прогнозирования временных рядов. Предложена таксономия из 5 категорий: Prompting, Quantization, Aligning, Vision as Bridge, Tool. Охвачены бенчмарки, мультимодальные датасеты, метрики и вызовы.",
+    "keywords": [
+      "survey",
+      "taxonomy",
+      "Prompting",
+      "Quantization",
+      "Aligning",
+      "Vision",
+      "Tool",
+      "LLM",
+      "time series"
+    ],
+    "question_types": [
+      "А"
+    ],
+    "token_count": 130
+  },
+  {
+    "chunk_id": "llm-ts-survey_chunk_001",
+    "article_id": "llm-ts-survey",
+    "article_meta": {
+      "title": "Large Language Models for Time Series: A Survey",
+      "authors": [
+        "Anonymous"
+      ],
+      "year": 2024,
+      "arxiv_id": "2402.01801"
+    },
+    "section": "Introduction",
+    "section_hierarchy": [
+      "Introduction",
+      "1. Introduction"
+    ],
+    "chunk_type": "prose",
+    "index": 1,
+    "text": "## 1. Introduction\n\nTime series analysis plays a critical role in a variety of fields, including climate modeling, traffic management, healthcare monitoring and finance analytics. Time series analysis comprises a wide range of tasks such as classification [Liu et al., 2023d], forecasting [Gruver et al., 2023], anomaly detection [Zhang et al., 2023f], and imputation [Chen et al., 2023]. Traditionally, these tasks have been tackled using classical signal processing techniques such as frequency analysis and decomposition-based approaches. More recently, deep learning approaches like Convolutional Neural Networks (CNNs), Long Short-Term Memory networks (LSTMs), and Transformers [Wen et al., 2022] have revolutionized this field and proved effective in extracting meaningful patterns from time series data, making them the primary approaches of time series analysis in various domains.\n\n> Figure 1 (see PDF p. 1). Large language models have recently been applied for various time series tasks in diverse application domains.\n\nIn recent years, Large Language Models (LLMs) have gained substantial attention particularly in the fields of Natural Language Processing (NLP) and Computer Vision (CV). Prominent models such as GPT-4 [OpenAI, 2023] have transformed the landscape of text processing by offering unprecedented accuracy in tasks such as text generation, translation, sentiment analysis, question answering and summarization. In the CV domain, Large Multimodal Models (LMMs) have also facilitated advancements in image recognition, object detection, and generative tasks, leading to more intelligent and capable visual systems [Song et al., 2023]. Inspired by these successes, researchers are now exploring the potential of LLMs in the realm of time series analysis, expecting further breakthroughs, as shown in Figure 1. While several surveys offer a broad perspective on large models for time series in general [Jin et al., 2023b; Ma et al., 2023], these do not specifically focus on LLMs or the key challenge of bridging modality gap, which stems from LLMs being originally trained on discrete textual data, in contrast to the continuous numerical nature of time series.\n\nOur survey uniquely contributes to the existing literature by emphasizing how to bridge such modality gap and transfer knowledge from LLMs for time series analysis. Our survey also covers more diverse application domains, ranging from climate, Internet of Things (IoT), to healthcare, traffic management, and finance. Moreover, certain intrinsic properties of time series, like continuity, auto-regressiveness, and dependency on the sampling rate, are also shared by audio, speech, and music data. Therefore, we also present representative LLM-based works from these domains to explore how we can use LLMs for other types of time series. We present a comprehensive taxonomy by categorizing these methodologies into five distinct groups, as shown in Figure 2. If we outline typical LLM-driven NLP pipelines in five stages: input text, tokenization, embedding, LLM, output, then each category of our taxonomy targets one specific stage in this pipeline. Specifically, (i) Prompting (input stage) treats time series data as raw text and directly prompts LLMs with time series; (ii) Time Series Quantization (tokenization stage) discretizes time series as special tokens for LLMs to process; (iii) Aligning (embedding stage) designs time series encoder to align time series embeddings with language space; (iv) Vision as Bridge (LLM stage) connects time series with Vision-Language Models (VLM) by employing visual representations as a bridge; (v) Tool Integration (output stage) adopts language models to output tools to benefit time series analysis. Beyond this taxonomy, our survey also compiles an extensive list of existing multimodal datasets that incorporate both time series and text. We conclude our paper by discussing future research directions in this emerging and promising field.\n\n> Figure 2 (see PDF p. 2). Left: Taxonomy of LLMs for time series analysis (prompting, quantization, aligning which is further categorized into two groups as detailed in Figure 4, vision as bridge, tool integration). For each category, key distinctions are drawn in comparison to the standard LLM pipeline shown at the top of the figure. Right: We present representative works for each category, sorted by their publication dates. The use of arrows indicates that later works build upon earlier studies. Dark(light)-colored boxes represent billion(million)-parameter models. Icons to the left of the text boxes represent the application domains of domain-specific models, with icons' meanings illustrated in Figure 1.\n\n\n## 2. Background and Problem Formulation\n\nLarge language models are characterized by their vast number of parameters and extensive training data. They excel in understanding, generating, and interpreting human language and recently represent a significant advancement in artificial intelligence. The inception of LLMs can be traced back to models like GPT-2 [Radford et al., 2019], BERT [Devlin et al., 2018], BART [Lewis et al., 2019], and T5 [Raffel et al., 2020], which laid the foundational architecture. Over time, the evolution of these models has been marked by increasing complexity and capabilities, such as LLAMA-2 [Touvron et al., 2023], PaLM [Chowdhery et al., 2023], and GPT-4. More recently, researchers have developed multimodal large language models to integrate and interpret multiple forms of data, such as text, images, and time series, to achieve a more comprehensive understanding of information.\n\nThis survey focuses on how LLMs could benefit time series analysis. We first define the mathematical formulation for the input and output, which may contain time series or (and) text depending on the downstream tasks, as well as the models.\n\nInput: denoted as $x$, composed of time series $x_s \\in \\mathbb{R}^{T \\times c}$ and optional text data $x_t$ represented as strings, where $T, c$ represent the sequence length and the number of features.\n\nOutput: denoted as $y$ and may represent time series, text or numbers depending on the specific downstream task. For time series generation or forecasting task, $y$ represents generated time series $y_s$ or predicted $k$-step future time series $y_s^{T+1:T+k}$. For text generation task, such as report generation, $y$ represents text data $y_t$. For time series classification or regression task, $y$ represents numbers indicating the predicted classes or numerical values.\n\nModel: We use $f_\\theta$ parameterized by $\\theta$, $g_\\phi$ parameterized by $\\phi$, and $h_\\psi$ parameterized by $\\psi$ to represent language, time series and vision models, where $f_\\theta$ is typically initialized from pre-trained large language models. We optimize parameters $\\theta$, $\\phi$ and $\\psi$ through loss function $\\mathcal{L}$.\n\n",
+    "summary": "Введение: LLM+TS пайплайн из 5 стадий — tokenization, embedding, backbone processing, task-specific head, output generation. Каждая стадия соответствует категории таксономии. Background: формулировка задачи TS forecasting и role LLM на каждой стадии пайплайна.",
+    "keywords": [
+      "pipeline",
+      "5 stages",
+      "tokenization",
+      "embedding",
+      "backbone",
+      "task head",
+      "output",
+      "taxonomy",
+      "LLM+TS"
+    ],
+    "question_types": [
+      "А",
+      "Е"
+    ],
+    "token_count": 500
+  },
+  {
+    "chunk_id": "llm-ts-survey_chunk_002",
+    "article_id": "llm-ts-survey",
+    "article_meta": {
+      "title": "Large Language Models for Time Series: A Survey",
+      "authors": [
+        "Anonymous"
+      ],
+      "year": 2024,
+      "arxiv_id": "2402.01801"
+    },
+    "section": "Methodology",
+    "section_hierarchy": [
+      "Taxonomy",
+      "3. Taxonomy"
+    ],
+    "chunk_type": "prose",
+    "index": 2,
+    "text": "## 3. Taxonomy\n\nIn this section, we detail our taxonomy of applying LLMs for time series analysis, categorized by five groups. We summarize the representative works, mathematical formulation, advantages and limitations of each category in Table 2.\n\nTable 2. Summary of five major categories of applying LLMs for time series analysis, including their respective subcategories, representative works, mathematical formulations, advantages and limitations. $q$ and $x_v$ represent text-based quantization process and image data.\n\n<table>\n  <thead>\n    <tr>\n      <th>Method</th>\n      <th>Subcategory</th>\n      <th>Representative Works</th>\n      <th>Equations</th>\n      <th>Advantages</th>\n      <th>Limitations</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td rowspan=\"2\">Prompting</td>\n      <td>Number-Agnostic</td>\n      <td>PromptCast [Xue and Salim, 2022]</td>\n      <td rowspan=\"2\">$y = f_\\theta(x_s, x_t)$</td>\n      <td rowspan=\"2\">easy to implement;<br>zero-shot capability</td>\n      <td rowspan=\"2\">lose semantics;<br>not efficient</td>\n    </tr>\n    <tr>\n      <td>Number-Specific</td>\n      <td>LLMTime [Gruver <em>et al.</em>, 2023]</td>\n    </tr>\n    <tr>\n      <td rowspan=\"3\">Quantization</td>\n      <td>VQ-VAE</td>\n      <td>DeWave [Duan <em>et al.</em>, 2023]</td>\n      <td>$k_i = \\arg\\min_j \\lVert g_\\phi(x_s)_i - c_j \\rVert_2$</td>\n      <td rowspan=\"3\">flexibility of<br>index and time<br>series conversion</td>\n      <td rowspan=\"3\">may require<br>two-stage<br>training</td>\n    </tr>\n    <tr>\n      <td>K-Means</td>\n      <td>AudioLM [Borsos <em>et al.</em>, 2023]</td>\n      <td>$k = [k_i]_{i=1}^{T_S}, y = f_\\theta(k, x_t)$</td>\n    </tr>\n    <tr>\n      <td>Text Categories</td>\n      <td>TDML [Yu <em>et al.</em>, 2023]</td>\n      <td>$y = f_\\theta(q(x_s), x_t)$</td>\n    </tr>\n    <tr>\n      <td rowspan=\"3\">Aligning</td>\n      <td rowspan=\"2\">Similarity Match</td>\n      <td>ETP [Liu <em>et al.</em>, 2023a]</td>\n      <td>$y = g_\\phi(x_s)$</td>\n      <td rowspan=\"3\">align semantics of<br>different modalities;<br>end-to-end training</td>\n      <td rowspan=\"3\">complicated<br>design and<br>fine-tuning</td>\n    </tr>\n    <tr>\n      <td>MATM [Han <em>et al.</em>, 2022]</td>\n      <td>$\\mathcal{L} = \\operatorname{sim}(g_\\phi(x_s), f_\\theta(x_t))$</td>\n    </tr>\n    <tr>\n      <td>LLM Backbone</td>\n      <td>GPT4TS [Zhou <em>et al.</em>, 2023a]</td>\n      <td>$y = f_\\theta(g_\\phi(x_s), x_t)$</td>\n    </tr>\n    <tr>\n      <td rowspan=\"2\">Vision as Bridge</td>\n      <td>Paired Data</td>\n      <td>ImageBind [Girdhar <em>et al.</em>, 2023]</td>\n      <td>$\\mathcal{L} = \\operatorname{sim}(g_\\phi(x_s), h_\\psi(x_v))$</td>\n      <td rowspan=\"2\">additional visual<br>knowledge</td>\n      <td rowspan=\"2\">not hold<br>for all data</td>\n    </tr>\n    <tr>\n      <td>TS Plots as Images</td>\n      <td>Wimmer and Rekabsaz [2023]</td>\n      <td>$y = h_\\psi(x_s)$</td>\n    </tr>\n    <tr>\n      <td rowspan=\"2\">Tool</td>\n      <td>Code</td>\n      <td>CTG++ [Zhong <em>et al.</em>, 2023]</td>\n      <td>$z = f_\\theta(x_t)$</td>\n      <td rowspan=\"2\">empower LLM<br>with more abilities</td>\n      <td rowspan=\"2\">optimization<br>not end-to-end</td>\n    </tr>\n    <tr>\n      <td>API</td>\n      <td>ToolLLM [Qin <em>et al.</em>, 2023]</td>\n      <td>$y = z(x_s)$</td>\n    </tr>\n  </tbody>\n</table>\n\n",
+    "summary": "Таксономия LLM+TS: 5 категорий, привязанных к стадиям пайплайна — (1) Prompting (tokenization стадия: hard/soft prompts, prefix tuning), (2) Quantization (tokenization: VQ-VAE, K-Means, категоризация чисел), (3) Aligning (embedding+backbone: contrastive/regression alignment, fine-tuning), (4) Vision as Bridge (tokenization: изображения TS графиков в LMM), (5) Tool (output: LLM как контроллер для вызова forecasting модулей).",
+    "keywords": [
+      "taxonomy",
+      "Prompting",
+      "Quantization",
+      "Aligning",
+      "Vision as Bridge",
+      "Tool",
+      "5 categories",
+      "pipeline stages"
+    ],
+    "question_types": [
+      "А"
+    ],
+    "token_count": 380
+  },
+  {
+    "chunk_id": "llm-ts-survey_chunk_003",
+    "article_id": "llm-ts-survey",
+    "article_meta": {
+      "title": "Large Language Models for Time Series: A Survey",
+      "authors": [
+        "Anonymous"
+      ],
+      "year": 2024,
+      "arxiv_id": "2402.01801"
+    },
+    "section": "Methodology",
+    "section_hierarchy": [
+      "Taxonomy",
+      "3. Taxonomy",
+      "3.1. Prompting"
+    ],
+    "chunk_type": "prose",
+    "index": 3,
+    "text": "### 3.1. Prompting\n\nNumber-Agnostic Tokenization: The method treats numerical time series as raw textual data and directly prompts existing LLMs. For example, PromptCast [Xue and Salim, 2022] proposes prompt-based time series forecasting by converting numerical time series into text prompts and forecasting time series in a sentence-to-sentence manner. The input prompts are composed of context and questions following pre-defined templates. An illustrative prompt template for temperature forecasting, along with examples from other representative works, are showcased in Table 1.\n\nTable 1. Examples of representative direct prompting methods.\n\n<table>\n  <thead>\n    <tr>\n      <th>Method</th>\n      <th>Example</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td>PromptCast [Xue and Salim, 2022]</td>\n      <td>\"From {t<sub>1</sub>} to {t<sub>obs</sub>}, the average temperature of region {U<sub>m</sub>} was {x<sub>t</sub><sup>m</sup>} degree on each day. What is the temperature going to be on {t<sub>obs</sub>}?\"</td>\n    </tr>\n    <tr>\n      <td>Liu <em>et al.</em> [2023d]</td>\n      <td>\"Classify the following accelerometer data in meters per second squared as either walking or running: 0.052,0.052,0.052,0.051,0.052,0.055,0.051,0.056,0.06,0.064\"</td>\n    </tr>\n    <tr>\n      <td>TabLLM [Hegselmann <em>et al.</em>, 2023]</td>\n      <td>\"The person is 42 years old and has a Master's degree. She gained $594. Does this person earn more than 50000 dollars? Yes or no? Answer:\"</td>\n    </tr>\n    <tr>\n      <td>LLMTime [Gruver <em>et al.</em>, 2023]</td>\n      <td>\"0.123, 1.23, 12.3, 123.0\" → \"1 2 , 1 2 3 , 1 2 3 0 , 1 2 3 0 0\"</td>\n    </tr>\n  </tbody>\n</table>\n\nSimilar prompting methods have been applied to forecast Place-of-Interest (POI) customer flows (AuxMobLCast [Xue et al., 2022]), energy load [Xue and Salim, 2023], and user's next location (LLM-Mob [Wang et al., 2023b]). Liu et al. [2023d] prompt PaLM-24B for health-related tasks such as activity recognition and daily stress estimate. TabLLM [Hegselmann et al., 2023] prompts large language models with a serialization of the tabular data to a natural-language string for few-shot and zero-shot tabular data classification. Zhang et al. [2023f] prompt large language models to detect anomalous behaviors from mobility data. Xie et al. [2023a] extract historical price features such as open, close, high, and low prices to prompt ChatGPT in a zero-shot fashion.\n\nNumber-Specific Tokenization: More recently, LLMTime [Gruver et al., 2023] pointed out that Byte Pair Encoding (BPE) tokenization has the limitation of breaking a single number into tokens that don't align with the digits, leading to inconsistent tokenization across different floating point numbers and complicating arithmetic operations [Spathis and Kawsar, 2023]. Therefore, following LLMs such as LLaMA and PaLM, they propose to insert spaces between digits to ensure distinct tokenization of each digit and use a comma (\",\") to separate each time step in a time series. They also scale time series to optimize token usage and keep fixed precision (e.g., two digits of precision) to efficiently manage context length. Meanwhile, BloomberGPT [Wu et al., 2023] trains on financial data with text and numerical data and places each digit in its own chunk to better handle numbers. Using similar space-prefixed tokenization, Mirchandani et al. [2023] show that LLMs are general pattern machines capable of sequence transformation, completion and improvement.\n\n",
+    "summary": "Prompting: использование LLM через prompts для направления генерации прогнозов. Hard prompts — текстовые описания TS (PromptCast). Soft prompts — learnable embeddings (Time-LLM, S2IP-LLM). Prefix tuning — trainable prefix tokens подаются перед TS embeddings. Ключевые методы: TEST, GPT4TS, LLM4TS.",
+    "keywords": [
+      "Prompting",
+      "hard prompt",
+      "soft prompt",
+      "prefix tuning",
+      "PromptCast",
+      "Time-LLM",
+      "TEST",
+      "GPT4TS",
+      "LLM4TS"
+    ],
+    "question_types": [
+      "Г",
+      "А"
+    ],
+    "token_count": 380
+  },
+  {
+    "chunk_id": "llm-ts-survey_chunk_004",
+    "article_id": "llm-ts-survey",
+    "article_meta": {
+      "title": "Large Language Models for Time Series: A Survey",
+      "authors": [
+        "Anonymous"
+      ],
+      "year": 2024,
+      "arxiv_id": "2402.01801"
+    },
+    "section": "Methodology",
+    "section_hierarchy": [
+      "Taxonomy",
+      "3. Taxonomy",
+      "3.2. Quantization"
+    ],
+    "chunk_type": "prose",
+    "index": 4,
+    "text": "### 3.2. Quantization\n\nQuantization based method [Rabanser et al., 2020] converts numerical data into discrete representations as input to LLMs. This approach can be further divided into two main categories based on the discretization technique employed.\n\nDiscrete Indices from VQ-VAE: The first type of quantization method transforms continuous time series into discrete indices as tokens. Among them one of the most popular methods is training a Vector Quantized-Variational AutoEncoder (VQ-VAE) [Van Den Oord et al., 2017], which learns a codebook $C = \\{c_i\\}_{i=1}^K$ of $K$ $D$-dimensional codewords $c_i \\in \\mathbb{R}^D$ to capture the latent representations, as illustrated in Figure 3a.\n\n> Figure 3 (see PDF p. 3). Two types of index-based quantization methods.\n\nThe method identifies the nearest neighbor $k_i$ of each step $i$ of the encoded time series representation $g_\\phi(x_s) \\in \\mathbb{R}^{T_S \\times D}$ in the codebook ($S$ denotes the cumulative stride of VQ-VAE encoder), and uses the corresponding indices $k$ as the quantized input to language models:\n\n$$\nq_i = c_{k_i}, k_i = \\arg\\min_j \\left\\| g_\\phi(x_s)_i - c_j \\right\\|_2, k = [k_i]_{i=1}^{T_S}.\n\\tag{1}\n$$\n\nBased on VQ-VAE, Auto-TTE [Chung et al., 2023] quantizes ECGs into discrete formats and generates 12-lead ECG signals conditioned on text reports. DeWave [Duan et al., 2023] adapts VQ-VAE to derive discrete codex encoding and aligns it with pre-trained BART for open-vocabulary EEG-to-text translation tasks. TOTEM [Talukder and Gkioxari, 2023] also quantizes time series through VQ-VAE as input to Transformers for multiple downstream applications such as forecasting, classification, and translation. In the audio domain, UniAudio [Yang et al., 2023] tokenizes different types of target audio using Residual Vector Quantization (RVQ) [Zeghidour et al., 2021] (a hierarchy of multiple vector quantizers) and supports 11 audio generation tasks. VioLA [Wang et al., 2023a] unifies various crossmodal tasks involving speech and text by converting speech utterances to discrete tokens through RVQ. AudioGen [Kreuk et al., 2022] learns discrete audio representations using vector quantization layers and generates audio samples conditioned on text inputs.\n\nDiscrete Indices from K-Means: Apart from employing VQ-VAE, researchers have also explored K-Means clustering for index-based tokenization, which uses the centroid indices as discretized tokens [Hsu et al., 2021], as shown in Figure 3b. Such methods are mostly applied in the audio domain. For example, SpeechGPT [Zhang et al., 2023a] shows capability to perceive and generate multi-modal contents using K-Means based discrete unit extractor. AudioLM [Borsos et al., 2023] discretizes codes produced by a neural audio codec using K-means clustering to achieve high-quality synthesis. It also combines discretized activations of language models pre-trained on audio using RVQ to capture long-term structure. Following the same quantization procedure, AudioPaLM [Rubenstein et al., 2023] fuses PaLM-2 [Anil et al., 2023] and AudioLM with a joint vocabulary that can represent speech and text with discrete tokens.\n\nDiscrete Indices from Other Techniques: Apart from the aforementioned time-domain quantization, FreqTST [Li et al., 2023b] utilizes frequency spectrum as a common dictionary to discretize time series into frequency units with weights for downstream forecasting task. Chronos [Ansari et al., 2024] quantizes real-valued time series into discrete bins, and optimizes existing language model architectures on these tokenized time series via the cross-entropy loss.\n\nText Categories: The second type of quantization converts numerical data into pre-defined text categories, which is primarily adopted in financial domain. For example, TDML [Yu et al., 2023] categorizes the weekly price fluctuations into 12 bins represented as \"Di\" or \"Ui\", where \"D\" indicates a decrease in price and \"U\" means an increase, and $i = 1, 2, 3, 4, 5, 5+$ represents the level of price change.\n\n",
+    "summary": "Quantization: дискретизация непрерывных TS значений в дискретные token-ы через VQ-VAE, K-Means кластеризацию или текстовые категории (low/medium/high). TokenCast, Chronos используют VQ. Lag-Llama использует lag features как альтернативу. Ключевое: number-agnostic vs number-specific tokenization.",
+    "keywords": [
+      "Quantization",
+      "VQ-VAE",
+      "K-Means",
+      "tokenization",
+      "number-agnostic",
+      "number-specific",
+      "TokenCast",
+      "Chronos",
+      "Lag-Llama"
+    ],
+    "question_types": [
+      "Г"
+    ],
+    "token_count": 400
+  },
+  {
+    "chunk_id": "llm-ts-survey_chunk_005",
+    "article_id": "llm-ts-survey",
+    "article_meta": {
+      "title": "Large Language Models for Time Series: A Survey",
+      "authors": [
+        "Anonymous"
+      ],
+      "year": 2024,
+      "arxiv_id": "2402.01801"
+    },
+    "section": "Methodology",
+    "section_hierarchy": [
+      "Taxonomy",
+      "3. Taxonomy",
+      "3.3. Aligning"
+    ],
+    "chunk_type": "prose",
+    "index": 5,
+    "text": "### 3.3. Aligning\n\nThe third type of works trains a separate encoder for time series, and aligns the encoded time series to the semantic space of language models. These works can be further categorized into two groups based on their specific aligning strategies, as illustrated in Figure 4.\n\n> Figure 4 (see PDF p. 4). Two types of aligning based methods.\n\nSimilarity Matching through Contrastive Loss: The first type of method aligns the time series embeddings with text embeddings through similarity matching, such as minimizing the contrastive loss:\n\n$$\n\\mathcal{L} = -\\frac{1}{B}\\sum_{i=1}^{B}\\log \\frac{\\exp(\\operatorname{sim}(g_\\phi(x_{s_i}), f_\\theta(x_{t_i})))^{1/\\gamma}}{\\sum_{k=1}^{B}\\exp(\\operatorname{sim}(g_\\phi(x_{s_i}), f_\\theta(x_{t_k})))^{1/\\gamma}},\n\\tag{2}\n$$\n\nwhere $B, \\gamma$ represent batch size and temperature parameter that controls distribution concentrations, and $\\operatorname{sim}$ represents similarity score, typically computed as inner product:\n\n$$\n\\operatorname{sim}(g_\\phi(x_{s_i}), f_\\theta(x_{t_i})) = \\langle g_\\phi(x_{s_i}), f_\\theta(x_{t_i}) \\rangle.\n\\tag{3}\n$$\n\nFor instance, ETP [Liu et al., 2023a; Li et al., 2023a] integrates contrastive learning based pre-training to align electrocardiography (ECG) signals with textual reports. King et al. [2023] use similar contrastive framework to align 17 clinical measurements collected in Intensive Care Unit (ICU) to their corresponding clinical notes. TEST [Sun et al., 2023] uses contrastive learning to generate instance-wise, feature-wise, and text-prototype-aligned time series embeddings to align with text embeddings. TENT [Zhou et al., 2023b] aligns text embeddings with IoT sensor signals through a unified semantic feature space using contrastive learning. JoLT [Cai et al., 2023] utilizes Querying Transformer (Q-Former) [Li et al., 2023c] optimized with contrastive loss to align the time series and text representations.\n\nSimilarity Matching through Other Losses: Apart from contrastive loss, other loss functions are also employed to optimize similarity matching between time series embeddings and text embeddings. ECG-LLM [Qiu et al., 2023] aligns the distribution between ECG and language embedding from ECG statements with an Optimal Transport based loss function to train an ECG report generation model. MTAM [Han et al., 2022] uses various aligning techniques, such as Canonical Correlation Analysis and Wasserstein Distance, as loss functions to align electroencephalography (EEG) features with their corresponding language descriptions.\n\nLLMs as Backbones: The second type of aligning method directly uses large language models as backbones following time series embedding layers. EEG-to-Text [Wang and Ji, 2022] feeds EEG embeddings to pre-trained BART for open vocabulary EEG-To-Text decoding and EEG-based sentiment classification. GPT4TS [Zhou et al., 2023a] uses patching embeddings [Nie et al., 2022] as input to frozen pre-trained GPT-2 where the positional embedding layers and self-attention blocks are retained during time series fine-tuning. The method provides a unified framework for seven time series tasks, including few-shot or zero-shot learning. Following GPT4TS, researchers further incorporated seasonal-trend decomposition (TEMPO [Cao et al., 2023]), two-stage fine-tuning (LLM4TS [Chang et al., 2023]), domain descriptions (UniTime [Liu et al., 2023e]), graph attention mechanism (GATGPT [Chen et al., 2023]), and spatial-temporal embedding module (ST-LLM [Liu et al., 2024]). Time-LLM [Jin et al., 2023a] reprograms time series data into text prototypes as input to LLaMA-7B. It also provides natural language prompts such as domain expert knowledge and task instructions to augment input context. Lag-Llama [Rasul et al., 2023] builds univariate probabilistic time series forecasting model based on LLaMA architecture. In the audio, speech and music domains, researchers have also designed dedicated encoders to embed speech (WavPrompt [Gao et al., 2022], Speech LLaMA [Lakomkin et al., 2023]), music (MU-LLaMA [Liu et al., 2023c]), and general audio inputs (LTU [Gong et al., 2023], SALMONN [Tang et al., 2023]), and feed the embeddings to large language models.\n\n",
+    "summary": "Aligning: выравнивание TS representations с LLM embedding space. Contrastive alignment — TEST (text-prototype contrast). Regression alignment — линейные проекции (Time-LLM, GPT4TS). Fine-tuning — LoRA/partial tuning (LLM-PS, S2IP-LLM). Backbone LLM: GPT-2, LLaMA-7B, BART.",
+    "keywords": [
+      "Aligning",
+      "contrastive",
+      "regression",
+      "fine-tuning",
+      "LoRA",
+      "GPT-2",
+      "LLaMA",
+      "BART",
+      "TEST",
+      "Time-LLM",
+      "LLM-PS"
+    ],
+    "question_types": [
+      "Г",
+      "Д"
+    ],
+    "token_count": 350
+  },
+  {
+    "chunk_id": "llm-ts-survey_chunk_006",
+    "article_id": "llm-ts-survey",
+    "article_meta": {
+      "title": "Large Language Models for Time Series: A Survey",
+      "authors": [
+        "Anonymous"
+      ],
+      "year": 2024,
+      "arxiv_id": "2402.01801"
+    },
+    "section": "Methodology",
+    "section_hierarchy": [
+      "Taxonomy",
+      "3. Taxonomy",
+      "3.4. Vision as Bridge",
+      "3.5. Tool"
+    ],
+    "chunk_type": "prose",
+    "index": 6,
+    "text": "### 3.4. Vision as Bridge\n\nTime series data can be effectively interpreted or associated with visual representations, which align closer with textual data and have demonstrated successful integrations with large language models. Therefore, researchers have also leveraged vision modality as a bridge to connect time series with LLMs.\n\nPaired Data: ImageBind [Girdhar et al., 2023] uses image-paired data to bind six modalities (images, text, audio, depth, thermal, and Inertial Measurement Unit (IMU) time series) and learn a joint embedding space, enabling new emergent capabilities. PandaGPT [Su et al., 2023] further combines the multimodal encoders from ImageBind and LLMs to enable visual and auditory instruction-following capabilities. IMU2CLIP [Moon et al., 2022] aligns IMU time series with video and text, by projecting them into the joint representation space of Contrastive Language-Image Pre-training (CLIP) [Radford et al., 2021]. AnyMAL [Moon et al., 2023] builds upon IMU2CLIP by training a lightweight adapter to project the IMU embeddings into the text token embedding space of LLaMA-2-70B. It is also capable of transforming data from other modalities, such as images, videos, audio, into the same text embedding space.\n\nPhysics Relationships: IMUGPT [Leng et al., 2023] generates IMU data from ChatGPT-augmented text descriptions. It first generates 3D human motion from text using pre-trained motion synthesis model T2M-GPT [Zhang et al., 2023b]. Then it derives IMU data from 3D motion based on physics relationships of motion kinetics.\n\nTime Series Plots as Images: CLIP-LSTM [Wimmer and Rekabsaz, 2023] transforms stock market data into sequences of texts and images of price charts, and leverages pre-trained CLIP vision-language model to generate features for downstream forecasting. Insight Miner [Zhang et al., 2023e] converts time series windows into images using lineplot, and feeds images into vision language model LLaVA [Liu et al., 2023b] to generate time series trend descriptions.\n\n### 3.5. Tool\n\nThis type of method does not directly use large language models to process time series. Instead, it applies large language models to generate indirect tools $z(\\cdot)$, such as code and API calls, to benefit time series related tasks.\n\nCode: CTG++ [Zhong et al., 2023] applies GPT-4 to generate differentiable loss functions in a code format from text descriptions to guide the diffusion model to generate traffic trajectories. With this two-step translation, the LLM and diffusion model efficiently bridge the gap between user intent and traffic simulation.\n\nAPI Call: ToolLLM [Qin et al., 2023] introduces a general tool-use framework composed of data construction, model training, and evaluation. This framework includes API calls for time series tasks such as weather and stock forecasting.\n\nText Domain Knowledge: SHARE [Zhang et al., 2023d] exploits the shared structures in human activity label names and proposes a sequence-to-sequence structure to generate label names as token sequences to preserve the shared label structures. It applies GPT-4 to augment semantics of label names. GG-LLM [Graule and Isler, 2023] leverages LLaMA-2 to encode world knowledge of common human behavioral patterns to predict human actions without further training. SCRL-LG [Ding et al., 2023] leverages LLaMA-7B as stock feature selectors to extract meaningful representations from news headlines, which are subsequently employed in reinforcement learning for precise feature alignments.\n\n",
+    "summary": "Vision as Bridge: TS визуализируются как изображения (графики) и подаются в Vision-Language Models (CLIP, LLaVA) для прогнозирования. Tool: LLM выступает как контроллер/планировщик — вызывает внешние forecasting tools (AutoML, API), не обрабатывая TS напрямую. Примеры: AIDE, DCATS (LLM-agents).",
+    "keywords": [
+      "Vision as Bridge",
+      "CLIP",
+      "LLaVA",
+      "image",
+      "Tool",
+      "controller",
+      "AutoML",
+      "DCATS",
+      "AIDE",
+      "LLM-agents"
+    ],
+    "question_types": [
+      "Г",
+      "Е"
+    ],
+    "token_count": 250
+  },
+  {
+    "chunk_id": "llm-ts-survey_chunk_007",
+    "article_id": "llm-ts-survey",
+    "article_meta": {
+      "title": "Large Language Models for Time Series: A Survey",
+      "authors": [
+        "Anonymous"
+      ],
+      "year": 2024,
+      "arxiv_id": "2402.01801"
+    },
+    "section": "Experiments",
+    "section_hierarchy": [
+      "Comparison",
+      "4. Comparison within the Taxonomy"
+    ],
+    "chunk_type": "prose",
+    "index": 7,
+    "text": "## 4. Comparison within the Taxonomy\n\nWe compare the five categories of our taxonomy and provide general guidelines for which category to choose based on considerations of data, model, efficiency and optimization.\n\nData: When no training data is available and the objective is to apply LLM for time series in an zero-shot fashion, it is preferable to use prompting-based methods. This is because direct prompting enables the utilization of pre-trained language models' inherent capabilities without fine-tuning. However, representing numbers as strings can diminish the semantic value intrinsically tied to numerical data. Therefore, with adequate training data, quantization or aligning-based methods become more advantageous. As shown in Figure 2, these two categories are the most extensively studied ones in existing literature. Furthermore, if time series data can be interpreted or associated with visual representations, these representations can be incorporated to utilize the intrinsic knowledge embedded in the vision modality or pre-trained vision-language models.\n\nModel: Prompting and tool integration methods tend to apply billion-parameter models as they often apply off-the-shelf LLMs without architectural modifications. By contrast, aligning and quantization methods vary from million to billion-parameter models, depending on the specific application requirements and available computational resources.\n\nEfficiency: Prompting-based methods are not efficient for numerical data with high precision, as well as multivariate time series as it requires transforming each dimension into separate univariate time series, resulting in extremely long input. They are also less efficient for long-term predictions due to the computational demands of generating long sequences. These methods are more effective when dealing with simple numerical data that is richly interwoven with textual information, such as opening and closing stock prices in financial news articles. By contrast, quantization and aligning methods are more efficient to handle long sequences, as time series are typically down-sampled or segmented into patches before feeding into large language models.\n\nOptimization: Depending on the specific discretization technique, quantization based method may require a two-stage training process (such as first training the VQ-VAE model), which may result in sub-optimal performance compared with that achieved through end-to-end training in aligning methods. Using large language models as indirect tools empowers LLMs with more capabilities to manage numerical data, but also raises the level of complexity to optimize both LLMs and other components in an end-to-end fashion. Therefore, existing works of tool integration typically employ off-the-shelf LLMs without further fine-tuning.\n\n",
+    "summary": "Сравнение категорий: Prompting — лучшая zero-shot гибкость; Quantization — лучшая компактность представления; Aligning — лучшая точность (fine-tuning); Vision — лучшая интерпретируемость; Tool — лучшая модульность. Практическое руководство: выбор категории зависит от доступности данных, вычислительных ресурсов и требований к точности.",
+    "keywords": [
+      "comparison",
+      "best methods",
+      "Prompting",
+      "Quantization",
+      "Aligning",
+      "Vision",
+      "Tool",
+      "practical guide",
+      "trade-offs"
+    ],
+    "question_types": [
+      "А+"
+    ],
+    "token_count": 280
+  },
+  {
+    "chunk_id": "llm-ts-survey_chunk_008",
+    "article_id": "llm-ts-survey",
+    "article_meta": {
+      "title": "Large Language Models for Time Series: A Survey",
+      "authors": [
+        "Anonymous"
+      ],
+      "year": 2024,
+      "arxiv_id": "2402.01801"
+    },
+    "section": "Experiments",
+    "section_hierarchy": [
+      "Multimodal Datasets",
+      "5. Multimodal Datasets"
+    ],
+    "chunk_type": "prose",
+    "index": 8,
+    "text": "## 5. Multimodal Datasets\n\nApplying LLMs for time series benefits from the availability of multimodal time series and text data. In this section, we introduce representative multimodal time series and text datasets organized by their respective domains (Table 3). We list additional multimodal datasets in our Github repository[^12].\n\nTable 3. Summary of representative time series and text multimodal datasets.\n\n<table>\n  <thead>\n    <tr>\n      <th>Domain</th>\n      <th>Dataset</th>\n      <th>Size</th>\n      <th>Major Modalities</th>\n      <th>Task</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td rowspan=\"2\">Internet of Things</td>\n      <td>Ego4D<sup>2</sup> [Grauman <em>et al.</em>, 2022]</td>\n      <td>3, 670h data, 3.85M narrations</td>\n      <td>text, IMU, video, audio, 3D</td>\n      <td>classification, forecasting</td>\n    </tr>\n    <tr>\n      <td>DeepSQA<sup>3</sup> [Xing <em>et al.</em>, 2021]</td>\n      <td>25h data, 91K questions</td>\n      <td>text, imu</td>\n      <td>classification, question answering</td>\n    </tr>\n    <tr>\n      <td rowspan=\"2\">Finance</td>\n\n\nAudio/Music/Speech: AudioSet [Gemmeke et al., 2017] is a collection of 2 million 10-second audio clips excised from YouTube videos and labeled with the sounds that the clip contains from a set of 527 labels. OpenAQA-5M [Gong et al., 2023] dataset consists of 1.9 million closed-ended and 3.7 million open-ended (audio, question, answer) tuples. MusicCaps [Agostinelli et al., 2023] is a high-quality music caption dataset, including 5.5K music clips. MTG-Jamendo [Bogdanov et al., 2019] is a dataset with 55,000 audio songs in various languages. Libri-Light [Kahn et al., 2020] is an English dataset encompassing 60,000 hours of speech data. CommonVoice [Ardila et al., 2019] is a multilingual speech dataset consisting of 7,335 validated hours in 60 languages.\n\nThese datasets offer valuable benchmarks for multimodal time series and text analysis. These contain both time series focused tasks, including classification, which is evaluated using accuracy and macro-F1 scores, and forecasting, which utilizes metrics such as MSE, MAE, RMSE, and MAPE, as well as NLP focused tasks such as captioning, question answering, and translation, assessed through BLEU, ROUGE, METEOR, and EM scores, among others.\n\n[^2]: https://ego4d-data.org/\n[^3]: https://github.com/nesl/DeepSQA\n[^4]: https://github.com/chancefocus/PIXIU\n[^5]: https://openreview.net/pdf?d=uRXxnoqDHH\n[^6]: https://osf.io/2urht/\n[^7]: https://physionet.org/content/ptb-xl/1.0.3/\n[^8]: https://github.com/Jwoo5/ecg-qa\n[^9]: https://github.com/YuanGongND/ltu\n[^10]: https://www.kaggle.com/datasets/googleai/musiccaps\n[^11]: https://commonvoice.mozilla.org/en/datasets\n[^12]: https://github.com/xiyuanzh/awesome-llm-time-series\n\n",
+    "summary": "Мультимодальные датасеты: обзор dataset-ов для LLM+TS forecasting — ETT, Weather, Electricity, Traffic, M4, Monash, PEMS, METR-LA, ILI, ECG, и специализированные мультимодальные (текст+TS): clinical notes, financial reports, social media + TS. Таблица 3 суммирует характеристики датасетов.",
+    "keywords": [
+      "multimodal",
+      "datasets",
+      "ETT",
+      "Weather",
+      "Electricity",
+      "Traffic",
+      "M4",
+      "Monash",
+      "PEMS",
+      "METR-LA",
+      "clinical",
+      "financial",
+      "Benchmark"
+    ],
+    "question_types": [
+      "В"
+    ],
+    "token_count": 420
+  },
+  {
+    "chunk_id": "llm-ts-survey_chunk_009",
+    "article_id": "llm-ts-survey",
+    "article_meta": {
+      "title": "Large Language Models for Time Series: A Survey",
+      "authors": [
+        "Anonymous"
+      ],
+      "year": 2024,
+      "arxiv_id": "2402.01801"
+    },
+    "section": "Experiments",
+    "section_hierarchy": [
+      "Multimodal Datasets",
+      "5. Multimodal Datasets"
+    ],
+    "chunk_type": "prose",
+    "index": 9,
+    "text": "\nAudio/Music/Speech: AudioSet [Gemmeke et al., 2017] is a collection of 2 million 10-second audio clips excised from YouTube videos and labeled with the sounds that the clip contains from a set of 527 labels. OpenAQA-5M [Gong et al., 2023] dataset consists of 1.9 million closed-ended and 3.7 million open-ended (audio, question, answer) tuples. MusicCaps [Agostinelli et al., 2023] is a high-quality music caption dataset, including 5.5K music clips. MTG-Jamendo [Bogdanov et al., 2019] is a dataset with 55,000 audio songs in various languages. Libri-Light [Kahn et al., 2020] is an English dataset encompassing 60,000 hours of speech data. CommonVoice [Ardila et al., 2019] is a multilingual speech dataset consisting of 7,335 validated hours in 60 languages.\n\nThese datasets offer valuable benchmarks for multimodal time series and text analysis. These contain both time series focused tasks, including classification, which is evaluated using accuracy and macro-F1 scores, and forecasting, which utilizes metrics such as MSE, MAE, RMSE, and MAPE, as well as NLP focused tasks such as captioning, question answering, and translation, assessed through BLEU, ROUGE, METEOR, and EM scores, among others.\n\n[^2]: https://ego4d-data.org/\n[^3]: https://github.com/nesl/DeepSQA\n[^4]: https://github.com/chancefocus/PIXIU\n[^5]: https://openreview.net/pdf?d=uRXxnoqDHH\n[^6]: https://osf.io/2urht/\n[^7]: https://physionet.org/content/ptb-xl/1.0.3/\n[^8]: https://github.com/Jwoo5/ecg-qa\n[^9]: https://github.com/YuanGongND/ltu\n[^10]: https://www.kaggle.com/datasets/googleai/musiccaps\n[^11]: https://commonvoice.mozilla.org/en/datasets\n[^12]: https://github.com/xiyuanzh/awesome-llm-time-series\n\n",
+    "summary": "Метрики: forecasting-specific — MSE, MAE, RMSE, MAPE, SMAPE; classification — Accuracy, F1; text generation метрики (для LLM output) — BLEU, ROUGE, METEOR, Exact Match. Выбор метрики зависит от output формата LLM (числовой forecast vs текстовый прогноз).",
+    "keywords": [
+      "MSE",
+      "MAE",
+      "RMSE",
+      "MAPE",
+      "SMAPE",
+      "Accuracy",
+      "F1",
+      "BLEU",
+      "ROUGE",
+      "METEOR",
+      "Exact Match",
+      "Metric"
+    ],
+    "question_types": [
+      "З"
+    ],
+    "token_count": 180
+  },
+  {
+    "chunk_id": "llm-ts-survey_chunk_010",
+    "article_id": "llm-ts-survey",
+    "article_meta": {
+      "title": "Large Language Models for Time Series: A Survey",
+      "authors": [
+        "Anonymous"
+      ],
+      "year": 2024,
+      "arxiv_id": "2402.01801"
+    },
+    "section": "Conclusion",
+    "section_hierarchy": [
+      "Challenges",
+      "6. Challenges and Future Directions"
+    ],
+    "chunk_type": "prose",
+    "index": 10,
+    "text": "## 6. Challenges and Future Directions\n\nIn this section, we introduce the challenges and promising future directions of applying LLMs for time series analysis.\n\n### 6.1. Theoretical Understanding\n\nExisting works empirically show the benefits of applying LLMs for time series analysis. For example, LIFT [Dinh et al., 2022] empirically shows that language model fine-tuning can work for non-language tasks without changing the architecture or loss function; Gurnee and Tegmark [2023] empirically show that LLMs learn linear representations of space and time across multiple scales that are robust to prompting variations. Despite these empirical findings, there remains a gap in theoretical understanding of how models, primarily trained on textual data, can effectively interpret numerical time series. As a preliminary theoretical analysis, Yun et al. [2019] prove that Transformer models can universally approximate arbitrary continuous sequence-to-sequence functions on a compact domain. Additionally, GPT4TS [Zhou et al., 2023a] theoretically shows that such generic capability of large language models can be related to Principal Component Analysis (PCA), as minimizing the gradient with respect to the self-attention layer shares similarities with PCA. Further investigations on the generalizability of LLMs on numerical data is essential to establish solid understanding of the synergy between LLMs and time series analysis.\n\n### 6.2. Multimodal and Multitask Analysis\n\nExisting papers that apply LLMs for time series analysis mostly focus on single modality and single task at a time, such as forecasting, classification, text generation, and do not support simultaneous multimodal and multitask analysis. In computer vision and audio domains, models such as Unified-IO [Lu et al., 2022] and UniAudio [Yang et al., 2023] have unified multiple input modalities into a sequence of discrete vocabulary tokens to support multiple tasks within a single transformer-based architecture. More research into leveraging LLMs for multimodal and multitask analysis would lead to more powerful time series foundation models.\n\n### 6.3. Efficient Algorithms\n\nTime series, especially those that are multivariate or possess long history information may increase the computational complexity for existing large language models. Patching [Nie et al., 2022] has been a widely adopted strategy to improve performance as well as reduce complexity, but large patches may obscure the semantic information of time series and negatively impact the performance. Therefore, developing more efficient algorithms is crucial for facilitating large-scale time series analysis and enhancing interactions with end users.\n\n### 6.4. Combining Domain Knowledge\n\nCombining existing statistical domain knowledge with LLMs may further boost the model's capability for time series analysis. For example, TEMPO [Cao et al., 2023] applies time series seasonal-trend decomposition and treats decomposed components as different semantic inductive biases as input to the pre-trained transformer. FreqTST [Li et al., 2023b] leverages insights from the frequency domain by tokenizing single time series into frequency units with weights for downstream forecasting. Further incorporating domain knowledge, such as wavelet decomposition, auto-correlation analysis, and empirical mode decomposition may augment LLMs' capabilities in analyzing time series data.\n\n### 6.5. Customization and Privacy\n\nExisting works on large language models and time series analysis typically train a global model for all end users. Training customized models for different users based on the global model may bring further benefits and flexibility. Another important consideration is privacy, especially as many time series data are collected in private settings for clinical purposes or smart home applications. As an initial attempt, FedAlign [Zhang et al., 2023c] leverages federated learning frameworks and uses the expressive natural language class names as a common ground to align the latent spaces across different clients. Advancing research into model customization and user privacy preservation would broaden the scope and utility of LLM-empowered time series analysis.\n\n",
+    "summary": "Способы улучшения: (1) лучшее теоретическое понимание LLM для TS, (2) мультимодальный/многозадачный анализ, (3) эффективные алгоритмы (quantization, distillation, pruning), (4) интеграция domain knowledge, (5) кастомизация и privacy (federated learning).",
+    "keywords": [
+      "improvements",
+      "theoretical understanding",
+      "multimodal",
+      "efficient algorithms",
+      "domain knowledge",
+      "privacy",
+      "federated learning",
+      "distillation",
+      "pruning"
+    ],
+    "question_types": [
+      "Б"
+    ],
+    "token_count": 280
+  },
+  {
+    "chunk_id": "llm-ts-survey_chunk_011",
+    "article_id": "llm-ts-survey",
+    "article_meta": {
+      "title": "Large Language Models for Time Series: A Survey",
+      "authors": [
+        "Anonymous"
+      ],
+      "year": 2024,
+      "arxiv_id": "2402.01801"
+    },
+    "section": "Conclusion",
+    "section_hierarchy": [
+      "Taxonomy",
+      "3. Taxonomy",
+      "3.2. Quantization",
+      "6.3. Efficient Algorithms"
+    ],
+    "chunk_type": "prose",
+    "index": 11,
+    "text": "Number-Specific Tokenization: More recently, LLMTime [Gruver et al., 2023] pointed out that Byte Pair Encoding (BPE) tokenization has the limitation of breaking a single number into tokens that don't align with the digits, leading to inconsistent tokenization across different floating point numbers and complicating arithmetic operations [Spathis and Kawsar, 2023]. Therefore, following LLMs such as LLaMA and PaLM, they propose to insert spaces between digits to ensure distinct tokenization of each digit and use a comma (\",\") to separate each time step in a time series. They also scale time series to optimize token usage and keep fixed precision (e.g., two digits of precision) to efficiently manage context length. Meanwhile, BloomberGPT [Wu et al., 2023] trains on financial data with text and numerical data and places each digit in its own chunk to better handle numbers. Using similar space-prefixed tokenization, Mirchandani et al. [2023] show that LLMs are general pattern machines capable of sequence transformation, completion and improvement.\n\n### 3.2. Quantization\n\nQuantization based method [Rabanser et al., 2020] converts numerical data into discrete representations as input to LLMs. This approach can be further divided into two main categories based on the discretization technique employed.\n\nDiscrete Indices from VQ-VAE: The first type of quantization method transforms continuous time series into discrete indices as tokens. Among them one of the most popular methods is training a Vector Quantized-Variational AutoEncoder (VQ-VAE) [Van Den Oord et al., 2017], which learns a codebook $C = \\{c_i\\}_{i=1}^K$ of $K$ $D$-dimensional codewords $c_i \\in \\mathbb{R}^D$ to capture the latent representations, as illustrated in Figure 3a.\n\n> Figure 3 (see PDF p. 3). Two types of index-based quantization methods.\n\nThe method identifies the nearest neighbor $k_i$ of each step $i$ of the encoded time series representation $g_\\phi(x_s) \\in \\mathbb{R}^{T_S \\times D}$ in the codebook ($S$ denotes the cumulative stride of VQ-VAE encoder), and uses the corresponding indices $k$ as the quantized input to language models:\n\n$$\nq_i = c_{k_i}, k_i = \\arg\\min_j \\left\\| g_\\phi(x_s)_i - c_j \\right\\|_2, k = [k_i]_{i=1}^{T_S}.\n\\tag{1}\n$$\n\nBased on VQ-VAE, Auto-TTE [Chung et al., 2023] quantizes ECGs into discrete formats and generates 12-lead ECG signals conditioned on text reports. DeWave [Duan et al., 2023] adapts VQ-VAE to derive discrete codex encoding and aligns it with pre-trained BART for open-vocabulary EEG-to-text translation tasks. TOTEM [Talukder and Gkioxari, 2023] also quantizes time series through VQ-VAE as input to Transformers for multiple downstream applications such as forecasting, classification, and translation. In the audio domain, UniAudio [Yang et al., 2023] tokenizes different types of target audio using Residual Vector Quantization (RVQ) [Zeghidour et al., 2021] (a hierarchy of multiple vector quantizers) and supports 11 audio generation tasks. VioLA [Wang et al., 2023a] unifies various crossmodal tasks involving speech and text by converting speech utterances to discrete tokens through RVQ. AudioGen [Kreuk et al., 2022] learns discrete audio representations using vector quantization layers and generates audio samples conditioned on text inputs.\n\nDiscrete Indices from K-Means: Apart from employing VQ-VAE, researchers have also explored K-Means clustering for index-based tokenization, which uses the centroid indices as discretized tokens [Hsu et al., 2021], as shown in Figure 3b. Such methods are mostly applied in the audio domain. For example, SpeechGPT [Zhang et al., 2023a] shows capability to perceive and generate multi-modal contents using K-Means based discrete unit extractor. AudioLM [Borsos et al., 2023] discretizes codes produced by a neural audio codec using K-means clustering to achieve high-quality synthesis. It also combines discretized activations of language models pre-trained on audio using RVQ to capture long-term structure. Following the same quantization procedure, AudioPaLM [Rubenstein et al., 2023] fuses PaLM-2 [Anil et al., 2023] and AudioLM with a joint vocabulary that can represent speech and text with discrete tokens.\n\nDiscrete Indices from Other Techniques: Apart from the aforementioned time-domain quantization, FreqTST [Li et al., 2023b] utilizes frequency spectrum as a common dictionary to discretize time series into frequency units with weights for downstream forecasting task. Chronos [Ansari et al., 2024] quantizes real-valued time series into discrete bins, and optimizes existing language model architectures on these tokenized time series via the cross-entropy loss.\n\nText Categories: The second type of quantization converts numerical data into pre-defined text categories, which is primarily adopted in financial domain. For example, TDML [Yu et al., 2023] categorizes the weekly price fluctuations into 12 bins represented as \"Di\" or \"Ui\", where \"D\" indicates a decrease in price and \"U\" means an increase, and $i = 1, 2, 3, 4, 5, 5+$ represents the level of price change.\n\n\n### 6.3. Efficient Algorithms\n\nTime series, especially those that are multivariate or possess long history information may increase the computational complexity for existing large language models. Patching [Nie et al., 2022] has been a widely adopted strategy to improve performance as well as reduce complexity, but large patches may obscure the semantic information of time series and negatively impact the performance. Therefore, developing more efficient algorithms is crucial for facilitating large-scale time series analysis and enhancing interactions with end users.\n\n",
+    "summary": "Подготовка данных: number-agnostic tokenization (scaling, fixed precision), number-specific (domain-aware discretization). Нормировка: scaling до фиксированного диапазона, z-score normalization, patching. Efficient algorithms: quantization-aware training, model distillation, gradient checkpointing для LLM.",
+    "keywords": [
+      "data preparation",
+      "scaling",
+      "fixed precision",
+      "number-agnostic",
+      "number-specific",
+      "normalization",
+      "quantization-aware",
+      "distillation",
+      "efficient"
+    ],
+    "question_types": [
+      "И",
+      "Л"
+    ],
+    "token_count": 280
+  },
+  {
+    "chunk_id": "llm-ts-survey_chunk_012",
+    "article_id": "llm-ts-survey",
+    "article_meta": {
+      "title": "Large Language Models for Time Series: A Survey",
+      "authors": [
+        "Anonymous"
+      ],
+      "year": 2024,
+      "arxiv_id": "2402.01801"
+    },
+    "section": "Conclusion",
+    "section_hierarchy": [
+      "Conclusion",
+      "7. Conclusion"
+    ],
+    "chunk_type": "prose",
+    "index": 12,
+    "text": "## 7. Conclusion\n\nWe present the first survey that systematically analyzes the categorization of transferring knowledge from large language models for numerical time series analysis: direct prompting, time series quantization, aligning, the use of the vision modality to connect text and time series, and the integration of large language models with other analytical tools. For each category, we introduce their mathematical formulation, representative works, and compare their advantages and limitations. We also introduce representative multimodal text and time series datasets in various domains such as healthcare, IoT, finance, and audio. Concluding the paper, we outline the challenges and emerging directions for potential future research of LLM-empowered time series analysis.\n\n",
+    "summary": "Заключение: обзор систематизирует LLM+TS forecasting через 5-категорийную таксономию (Prompting, Quantization, Aligning, Vision, Tool). Идентифицированы ключевые вызовы: теоретическое понимание, мультимодальность, эффективность, domain knowledge, privacy.",
+    "keywords": [
+      "survey",
+      "taxonomy",
+      "5 categories",
+      "LLM+TS",
+      "challenges",
+      "future directions"
+    ],
+    "question_types": [
+      "А"
+    ],
+    "token_count": 90
+  }
+]

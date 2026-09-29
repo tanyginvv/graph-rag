@@ -1,0 +1,503 @@
+[
+  {
+    "chunk_id": "s2ip-llm_chunk_000",
+    "article_id": "s2ip-llm",
+    "article_meta": {
+      "title": "S2IP-LLM: Semantic Space Informed Prompt Learning with LLM for Time Series Forecasting",
+      "authors": [
+        "Pan",
+        "Jiang",
+        "Garg",
+        "Schneider",
+        "Nevmyvaka",
+        "Song"
+      ],
+      "year": 2024,
+      "arxiv_id": "2403.05798"
+    },
+    "section": "Abstract",
+    "section_hierarchy": [
+      "Abstract"
+    ],
+    "chunk_type": "prose",
+    "index": 0,
+    "text": "\n**Abstract.** Recently, there has been a growing interest in leveraging pre-trained large language models (LLMs) for various time series applications. However, the semantic space of LLMs, established through the pre-training, is still underexplored and may help yield more distinctive and informative representations to facilitate time series forecasting. To this end, we propose Semantic Space Informed Prompt learning with LLM (S²IP-LLM) to align the pre-trained semantic space with time series embedding space and perform time series forecasting based on learned prompts from the joint space. We first design a tokenization module tailored for cross-modality alignment, which explicitly concatenates patches of decomposed time series components to create embeddings that effectively encode the temporal dynamics. Next, we leverage the pre-trained word token embeddings to derive semantic anchors and align selected anchors with time series embeddings by maximizing the cosine similarity in the joint space. This way, S²IP-LLM can retrieve relevant semantic anchors as prompts to provide strong indicators (context) for time series that exhibit different temporal dynamics. With thorough empirical studies on multiple benchmark datasets, we demonstrate that the proposed S²IP-LLM can achieve superior forecasting performance over state-of-the-art baselines. Furthermore, our ablation studies and visualizations verify the necessity of prompt learning informed by semantic space.\n\n",
+    "summary": "S2IP-LLM: Semantic Space Informed Prompt learning — декомпозиция TS (trend+seasonal+residual) + patching → alignment с semantic anchors (предобученные word embeddings GPT-2) через cosine similarity → top-K prefix-prompts → GPT-2 с partial fine-tuning (pos emb + layer norm). SOTA на long-term/short-term/few-shot forecasting.",
+    "keywords": [
+      "S2IP-LLM",
+      "semantic anchors",
+      "decomposition",
+      "patching",
+      "GPT-2",
+      "prefix-prompts",
+      "partial fine-tuning"
+    ],
+    "question_types": [
+      "А"
+    ],
+    "token_count": 150
+  },
+  {
+    "chunk_id": "s2ip-llm_chunk_001",
+    "article_id": "s2ip-llm",
+    "article_meta": {
+      "title": "S2IP-LLM: Semantic Space Informed Prompt Learning with LLM for Time Series Forecasting",
+      "authors": [
+        "Pan",
+        "Jiang",
+        "Garg",
+        "Schneider",
+        "Nevmyvaka",
+        "Song"
+      ],
+      "year": 2024,
+      "arxiv_id": "2403.05798"
+    },
+    "section": "Introduction",
+    "section_hierarchy": [
+      "Introduction",
+      "1. Introduction"
+    ],
+    "chunk_type": "prose",
+    "index": 1,
+    "text": "## 1. Introduction\n\nOver the past few years, pre-trained large language models (LLMs) such as GPT-4 (Achiam & et al., 2023) and LLaMA (Touvron et al., 2023b;c) not only achieved great success across a diverse range of natural language processing (NLP) tasks, i.e., generate coherent and contextually relevant text, answer questions, and translate sentences between multiple languages, but also exhibited tremendous potential in tackling applications of more complex or structured domains, such as code generation, healthcare, finance, and autonomous systems, etc (Singhal et al., 2022; Cui et al., 2024; Li et al., 2023). As time series analysis is becoming increasingly important for strategic planning and operational efficiency in various real-world applications, e.g., energy load management, traffic forecasting, weather forecasting, health risk analysis, etc (Friedman, 1962; Courty & Li, 1999; Böse et al., 2017; Gao et al., 2020; Li et al., 2022; Liu et al., 2023a; Dimri et al., 2020), a natural question to ask is whether we should train a general purpose foundation model from scratch, or fine-tune pre-trained LLMs to perform time series forecasting?\n\nRecently, significant efforts have been made to build foundation models for general-purpose time series analysis (Wu et al., 2023; Garza & Mergenthaler-Canseco, 2023; Rasul et al., 2023). TimesNet (Wu et al., 2023) uses TimesBlock as a task-general backbone to capture multi-periodicity and extract complex intraperiod- and interperiod-variations via transformed 2D tensors. TimeGPT-1 describes a general pre-trained model for time series forecasting (Garza & Mergenthaler-Canseco, 2023). These approaches, however, are hindered by two main challenges. First, time series data can be acquired in various formats, such as univariate or multivariate, often in large volumes, and from different domains, like healthcare, finance, traffic, environmental sciences, etc. This escalates the complexity of model training and poses challenges in handling different scenarios. Second, time series data, in practice, often exhibit non-stationary characteristics, resulting in the underlying statistical properties, such as means, variances, and auto-correlations shifting during collection. This could also result in concept drift, where the statistical properties of target variables change over time. These realities present significant challenges for large models to be adapted and retrained effectively.\n\n> Figure 1 (see PDF p. 2). The demonstration of semantic space informed prompting in S²IP-LLM. The input time series is decomposed and mapped to obtain time series (TS) embedding. Next, the TS embedding is aligned with semantic anchors derived from the pre-trained word token embedding. Finally, top-K similar semantic anchors are retrieved and used as prefix-prompts with TS embedding.\n\nOn the other hand, LLMs trained on extensive and diverse text corpora can serve as a foundational knowledge base that can be applied to a variety of downstream tasks with minimal task-specific prompt learning or fine-tuning. Inspired by this, there has been a growing interest in leveraging existing LLMs to facilitate time series analysis. For instance, Tian Zhou & Jin (2023) utilizes a frozen pre-trained language model to attain state-of-the-art or equivalent performance. Jin et al. (2024) develop time-LLM to reprogram the input time series via text prototype representations by incorporating the embeddings of the dataset's text descriptions as context information. In real-world applications, however, dataset description information may not always be available or informative. In addition, the patching operation (i.e., tokenization), which splits a long time series sequence into overlapping segments over instance normalized time series input, may have limited expressibility as it could fail to capture the subtle variations of different components in time series.\n\nIn this paper, we argue that the semantic space in the form of word token embeddings (based on pre-trained LLMs) can already offer a more distinctive and informative representation space (Ethayarajh, 2019) to help align time series embeddings. Based on this, we develop Semantic Space Informed Prompt with LLM (S²IP-LLM) for time series forecasting. Specifically, as shown in Figure 1, we first design a tokenization module tailored to semantic space alignment, which explicitly concatenates patches of decomposed time series components (i.e., trend, seasonality, and residual) to create an embedding that effectively encodes the temporal dynamics more expressively. Next, we map the pre-trained word embeddings to obtain semantic anchors and align selected anchors with time series embeddings by maximizing the cosine similarity in the joint space. In this way, S²IP-LLM can retrieve relevant semantic anchors as prefix-prompts to provide strong indicators (context) for time series embeddings that exhibit different temporal dynamics. Our experiments over several standard benchmark datasets demonstrate that S²IP-LLM can achieve superior forecasting performance over state-of-the-art baselines. Moreover, our ablation studies and visualizations also verify the necessity of prompt learning in the joint space.\n\nTo summarize, our contributions include:\n\n- We design a specialized tokenization module that concatenates patches of decomposed time series components to provide more expressive local contexts and facilitate semantic space informed prompting.\n- We leverage semantic anchors derived from pre-trained word token embeddings (semantic space) to align time series embeddings and learn a distinctive and informative joint space. Moreover, aligned semantic anchors are used as prompt indicators (contexts) to enhance the representation of time series.\n- Our experiments and analysis on multiple benchmark datasets demonstrate the superiority of S²IP-LLM over state of the art and the necessity of prompt learning informed by semantic space.\n\n",
+    "summary": "Введение: методы LLM+TS (Time-LLM, OFA, TEST) используют reprogramming или fine-tuning, но игнорируют предобученное семантическое пространство LLM. S2IP-LLM использует semantic anchors — предобученные word token embeddings GPT-2 — для informed prompting через cosine similarity alignment, без текстовых промптов.",
+    "keywords": [
+      "S2IP-LLM",
+      "semantic space",
+      "Time-LLM",
+      "OFA",
+      "TEST",
+      "GPT-2",
+      "prompt learning",
+      "cosine similarity"
+    ],
+    "question_types": [
+      "А"
+    ],
+    "token_count": 600
+  },
+  {
+    "chunk_id": "s2ip-llm_chunk_002",
+    "article_id": "s2ip-llm",
+    "article_meta": {
+      "title": "S2IP-LLM: Semantic Space Informed Prompt Learning with LLM for Time Series Forecasting",
+      "authors": [
+        "Pan",
+        "Jiang",
+        "Garg",
+        "Schneider",
+        "Nevmyvaka",
+        "Song"
+      ],
+      "year": 2024,
+      "arxiv_id": "2403.05798"
+    },
+    "section": "Methodology",
+    "section_hierarchy": [
+      "Methodology",
+      "3. Methodology"
+    ],
+    "chunk_type": "prose",
+    "index": 2,
+    "text": "## 3. Methodology\n\nOverview: S²IP-LLM consists of three key components as shown in Figure 2. Given the input time series, we first tokenize it and obtain the time series (TS) embedding based on time series decomposition and patching. Next, we will align the TS embedding with semantic anchors derived from the pre-trained word token embedding. Finally, top-K similar semantic anchors will be retrieved to serve as prefix-prompts for the TS embedding and the concatenated vector will be leveraged as the query for pre-trained LLMs.\n\nIn this paper, GPT-2 is used as the backbone. During the training stage, we not only learn the mapping functions of input and output but also fine-tune the positional embedding and layer norm block of GPT-2.\n\n\n### 3.1. Problem Statement\n\nWe first formalize the time series forecasting problem. Let $X \\in \\mathbb{R}^{N \\times T}$ denote the time series data containing $N$ variables and $T$ time steps, where $X_{:,t} \\in \\mathbb{R}^{N \\times 1}$ denotes the $t$-th time step across all variables and $X_{i,:} \\in \\mathbb{R}^{1 \\times T}$ denotes the $i$-th variable. Given a historical $\\tau$-step window of time series, we aim to learn a forecasting module $F(\\cdot)$ that will predict the next $\\tau'$ time steps based on the input window. Mathematically, at a starting time step $t$, the corresponding forecast is given by $\\hat{Y} = \\hat{X}_{:,t:t+\\tau'-1} = F(X_{:,t-\\tau:t-1})$.\n\n",
+    "summary": "Пайплайн S2IP-LLM: (1) Tokenization — RevIN + seasonal-trend decomposition + overlapping patching → meta-token; (2) Semantic Space Prompting — alignment с semantic anchors через cosine similarity → top-K prefix-prompts; (3) GPT-2 backbone — partial fine-tuning (pos emb + layer norm), frozen attention/FFN; (4) Output — additive reconstruction.",
+    "keywords": [
+      "S2IP-LLM",
+      "pipeline",
+      "tokenization",
+      "semantic anchors",
+      "GPT-2",
+      "prefix-prompts",
+      "decomposition",
+      "RevIN"
+    ],
+    "question_types": [
+      "А",
+      "Е"
+    ],
+    "token_count": 200
+  },
+  {
+    "chunk_id": "s2ip-llm_chunk_003",
+    "article_id": "s2ip-llm",
+    "article_meta": {
+      "title": "S2IP-LLM: Semantic Space Informed Prompt Learning with LLM for Time Series Forecasting",
+      "authors": [
+        "Pan",
+        "Jiang",
+        "Garg",
+        "Schneider",
+        "Nevmyvaka",
+        "Song"
+      ],
+      "year": 2024,
+      "arxiv_id": "2403.05798"
+    },
+    "section": "Methodology",
+    "section_hierarchy": [
+      "Methodology",
+      "3. Methodology",
+      "3.2. Time Series Tokenization"
+    ],
+    "chunk_type": "formula_heavy",
+    "index": 3,
+    "text": "### 3.2. Time Series Tokenization\n\nIn real-world applications, non-stationary data is prevalent. To tackle this problem, we first apply the reversible instance normalization (Kim et al., 2021) on time series input such that the data has zero mean and unit standard deviation to mitigate the distribution shift in time series. Specifically, given the $i$-th time series input at time step $t$, i.e., $X_{i,t}$, the transformed value $X'_{i,t}$ can be given by:\n\n$$\nX'_{i,t} = \\gamma_T \\left( X_{i,t} - \\frac{\\mathbb{E}_t[X_{i,t}]}{\\sqrt{\\mathrm{Var}[X_{i,t}] + \\epsilon_T}} \\right) + \\beta_T\n\\tag{1}\n$$\n\nwhere $\\mathbb{E}_t[X_{i,t}]$ and $\\mathrm{Var}[X_{i,t}]$ are the instance-specific mean and variance, respectively. $\\gamma_T$ and $\\beta_T$ are trainable parameters. Next, we adopt an additive seasonal-trend decomposition method to decompose normalized time series into long-term trend, seasonal, and residual components. The additive seasonal-trend decomposition is given by $X'_{i,t} = X_{i,t}^{tre'} + X_{i,t}^{sea'} + X_{i,t}^{res'}$, where `tre`, `sea`, and `res` denote the long-term trend, seasonal, and residual component, respectively. There are several options for additive seasonal-trend decomposition. One option is the classical additive seasonal-trend decomposition that first obtains long-term trend components using moving averages. Then, the seasonal component is estimated by averaging the detrended time series with pre-defined season parameters. Finally, the residual component is obtained by subtracting the estimated trend and seasonal components from the normalized time series. Another option is the Seasonal-Trend decomposition using Loess (STL) (Cleveland et al., 1990). The choice of decomposition method will based on validation results.\n\n> Figure 2 (see PDF p. 4). The model architecture of S²IP-LLM. The input time series is normalized, decomposed, patched individually, and concatenated to represent the context of time series (TS). Semantic space informed prompting performs alignment between the contextual TS embeddings and the semantic anchors extracted from pre-trained word embeddings, and retrieves the most similar $K$ ones as prefix-prompts. The decomposed TS representations from pre-trained LLM are linearly projected and combined as the TS forecast.\n\nNext, we follow Nie et al. (2023) to encode temporal information and local contexts of input time series by aggregating consecutive time steps into overlapped patched tokens. Take the trend component as an example, the normalized component series, $X_{i,t-\\tau:t-1}^{tre'} \\in \\mathbb{R}^{1 \\times \\tau}$ is converted to patched token representation $P_{i,t-\\tau:t-1}^{tre} \\in \\mathbb{R}^{N_P \\times L_P}$, in which $L_P$ is the patch length, $N_P = \\left\\lfloor \\frac{\\tau - L_P}{S} \\right\\rfloor + 2$ is the number of patches and $S$ is the horizontal sliding stride. We apply patching to each variable component over the temporal dimension and then concatenate the tokens of these components into a single meta-token,\n\n$$\nP_{i,t-\\tau:t-1} = [P_{i,t-\\tau:t-1}^{tre}, P_{i,t-\\tau:t-1}^{sea}, P_{i,t-\\tau:t-1}^{res}] \\in \\mathbb{R}^{N_P \\times 3L_P}.\n$$\n\nWe then feed the meta-token into a projection layer $g(\\cdot)$ to get the time series embedding $P_{i,t-\\tau:t-1} = g(P_{i,t-\\tau:t-1}) \\in \\mathbb{R}^{N_P \\times D}$, where $D$ is the embedding size for the pre-trained LLMs.\n\n",
+    "summary": "Токенизация: RevIN нормализация → additive seasonal-trend decomposition (тренд, сезонность, остаток) → overlapping patching каждого компонента → конкатенация [tre, sea, res] в meta-token → проекция через g(·) в D-мерный TS embedding.",
+    "keywords": [
+      "RevIN",
+      "decomposition",
+      "trend",
+      "seasonal",
+      "residual",
+      "overlapping patching",
+      "meta-token",
+      "concatenation"
+    ],
+    "question_types": [
+      "Г",
+      "Б",
+      "Л"
+    ],
+    "token_count": 400
+  },
+  {
+    "chunk_id": "s2ip-llm_chunk_004",
+    "article_id": "s2ip-llm",
+    "article_meta": {
+      "title": "S2IP-LLM: Semantic Space Informed Prompt Learning with LLM for Time Series Forecasting",
+      "authors": [
+        "Pan",
+        "Jiang",
+        "Garg",
+        "Schneider",
+        "Nevmyvaka",
+        "Song"
+      ],
+      "year": 2024,
+      "arxiv_id": "2403.05798"
+    },
+    "section": "Methodology",
+    "section_hierarchy": [
+      "Methodology",
+      "3. Methodology",
+      "3.3. Semantic Space Informed Prompting"
+    ],
+    "chunk_type": "formula_heavy",
+    "index": 4,
+    "text": "### 3.3. Semantic Space Informed Prompting\n\nPrompting has emerged as an effective technique in various applications, enabling LLMs to utilize task-specific information to achieve enhanced reasoning capabilities (Yin et al., 2023). Existing works primarily focus on employing template-based and fixed prompts for pre-trained LLMs in time series analysis (Xue & Salim, 2022; Jin et al., 2024). While these methods are intuitive, straightforward, and yield satisfactory results, their rigid prompt contexts are in line with linguistic semantics. However, time series representation inherently lacks human semantics and is more closely tied to sequence patterns in the form of temporal dynamics. Conversely, Lester et al. (2021) demonstrate the effectiveness of soft prompts in enabling LLMs to comprehend inputs more effectively. In the realm of time series analysis with LLMs, recent works (Sun et al., 2023; Cao et al., 2023) start to consider soft prompts as task-specific, randomly initialized, trainable vectors that learn from the supervised loss between LLM's output and the ground truth. However, the semantic space of LLMs, established through the pre-training, is still underexplored and may help yield more distinctive and informative representations for time series data.\n\nBased on this intuition, we introduce a prompting mechanism informed by the pre-trained semantic space. Specifically, the pre-trained semantic word token embeddings, represented as $E \\in \\mathbb{R}^{V \\times D}$ where $V$ is the vocabulary size, are inevitably large and dense. For example, the vocabulary size of GPT-2 (Radford et al., 2019) reaches 50,257 and may raise computational deficiency. Instead of directly using the semantic word token embedding, we derive a small set of semantic anchors $E'$ in the hidden space using a generic mapping function $f(\\cdot)$ on $E$, which is denoted as $E' = f(E) \\in \\mathbb{R}^{V' \\times D}$, where $V'$ is the reduced number of semantic anchors and $V' \\ll V$. To properly retrieve relevant semantic anchors to enhance the time series embedding $P_{i,t-\\tau:t-1}$, we align the semantic anchors and time series embedding based on a score-matching function $\\gamma(\\cdot)$. In this paper, we implement the score-matching function based on cosine similarity:\n\n$$\n\\gamma(P_{i,t-\\tau:t-1}, e'_m) =\n\\frac{P_{i,t-\\tau:t-1} \\cdot e'_m}\n{\\|P_{i,t-\\tau:t-1}\\| \\, \\|e'_m\\|}\n\\tag{2}\n$$\n\nwhere $e'_m \\in E'$. We select top-$K$ relevant semantic anchors based on the similarity scores and utilize them as prefix-prompt to enhance the input time series embedding, i.e.,\n\n$$\nZ_{i,t-\\tau:t-1} = [e'_1; \\cdots; e'_K; P_{i,t-\\tau:t-1}]\n= [e'_{\\text{top-}K}; P_{i,t-\\tau:t-1}]\n\\tag{3}\n$$\n\nwhich will serve as the input for the pre-trained LLMs.\n\n",
+    "summary": "Semantic Space Prompting: из V=50257 word token embeddings GPT-2 через generic mapping f(·) формируются semantic anchors E' ∈ R^{V'×D}. Для каждого TS embedding вычисляется cosine similarity с anchors: γ(P, e'_m). Top-K наиболее похожих anchors конкатенируются с TS embedding как prefix-prompts перед подачей в GPT-2.",
+    "keywords": [
+      "semantic anchors",
+      "cosine similarity",
+      "top-K",
+      "prefix-prompts",
+      "word embeddings",
+      "GPT-2",
+      "alignment",
+      "mapping f"
+    ],
+    "question_types": [
+      "Г",
+      "Б"
+    ],
+    "token_count": 350
+  },
+  {
+    "chunk_id": "s2ip-llm_chunk_005",
+    "article_id": "s2ip-llm",
+    "article_meta": {
+      "title": "S2IP-LLM: Semantic Space Informed Prompt Learning with LLM for Time Series Forecasting",
+      "authors": [
+        "Pan",
+        "Jiang",
+        "Garg",
+        "Schneider",
+        "Nevmyvaka",
+        "Song"
+      ],
+      "year": 2024,
+      "arxiv_id": "2403.05798"
+    },
+    "section": "Methodology",
+    "section_hierarchy": [
+      "Methodology",
+      "3. Methodology",
+      "3.5. Backbone and Fine-tuning Strategy"
+    ],
+    "chunk_type": "prose",
+    "index": 5,
+    "text": "### 3.5. Backbone and Fine-tuning Strategy\n\nIn this paper, we employ GPT-2 (Radford et al., 2019) as our pre-trained large language model (LLM) backbone. We choose to keep a significant portion of the parameters frozen, especially those parameters related to the multi-headed attention and the feed-forward networks within the Transformer blocks. This strategy can not only reduce the computational burden but also align with existing literature (Lu et al., 2022; Houlsby et al., 2019; Tian Zhou & Jin, 2023). They suggest that maintaining most of the parameters in their non-trainable state can achieve better outcomes compared to completely retraining LLMs. For GPT-2, we only fine-tune the positional embedding layer and the layer-normalization layers.\n\n\n### 3.4. Optimization Objective\n\nWe can obtain the output embedding $Z_{out}$ after the forward path of the prompt enhanced time series embedding through LLMs. We will flatten it and use a linear mapping to project the representation to the forecasting horizon $Y_{out}$. The overall forecasting should also be the additive combination of the individual component predictions due to the decomposition step. We further split and express $Y_{out}$ into a concatenation form $Y_{out} = [Y_{out}^{tre}, Y_{out}^{sea}, Y_{out}^{res}]$ and obtain the forecasting results as $\\hat{Y} = Y_{out}^{tre} + Y_{out}^{sea} + Y_{out}^{res}$. At every training iteration, the overall training objective is:\n\n$$\n\\min \\mathcal{L}\\left(\\hat{Y}, X_{:,t:t+\\tau'-1}\\right)\n- \\lambda \\sum \\gamma\\!\\left(P_{i,t-\\tau:t-1}, e'_{\\text{top-}K}\\right)\n\\tag{4}\n$$\n\nwhere the first term is the forecasting loss in the form of mean squared error (MSE), and the second term is a score-matching function to align selected semantic anchors with the time series embedding obtained via decomposition and patching. In this way, we could obtain a more informative space to facilitate the underlying forecasting task. $\\lambda \\ge 0$ is a hyper-parameter to trade-off the alignment.\n\n",
+    "summary": "Backbone: GPT-2. Partial fine-tuning: multi-head attention и FFN слои заморожены, обучаются только positional embedding layer и layer normalization layers. Это сохраняет предобученные знания GPT-2 при минимальном количестве обучаемых параметров. Optimization: MSE loss с additive reconstruction (Y_tre+Y_sea+Y_res).",
+    "keywords": [
+      "GPT-2",
+      "partial fine-tuning",
+      "positional embedding",
+      "layer norm",
+      "frozen attention",
+      "frozen FFN",
+      "MSE",
+      "additive reconstruction"
+    ],
+    "question_types": [
+      "Д",
+      "К"
+    ],
+    "token_count": 180
+  },
+  {
+    "chunk_id": "s2ip-llm_chunk_006",
+    "article_id": "s2ip-llm",
+    "article_meta": {
+      "title": "S2IP-LLM: Semantic Space Informed Prompt Learning with LLM for Time Series Forecasting",
+      "authors": [
+        "Pan",
+        "Jiang",
+        "Garg",
+        "Schneider",
+        "Nevmyvaka",
+        "Song"
+      ],
+      "year": 2024,
+      "arxiv_id": "2403.05798"
+    },
+    "section": "Methodology",
+    "section_hierarchy": [
+      "Methodology",
+      "3. Methodology",
+      "3.2. Time Series Tokenization",
+      "3.5. Backbone"
+    ],
+    "chunk_type": "prose",
+    "index": 6,
+    "text": "### 3.2. Time Series Tokenization\n\nIn real-world applications, non-stationary data is prevalent. To tackle this problem, we first apply the reversible instance normalization (Kim et al., 2021) on time series input such that the data has zero mean and unit standard deviation to mitigate the distribution shift in time series. Specifically, given the $i$-th time series input at time step $t$, i.e., $X_{i,t}$, the transformed value $X'_{i,t}$ can be given by:\n\n\n### 3.5. Backbone and Fine-tuning Strategy\n\nIn this paper, we employ GPT-2 (Radford et al., 2019) as our pre-trained large language model (LLM) backbone. We choose to keep a significant portion of the parameters frozen, especially those parameters related to the multi-headed attention and the feed-forward networks within the Transformer blocks. This strategy can not only reduce the computational burden but also align with existing literature (Lu et al., 2022; Houlsby et al., 2019; Tian Zhou & Jin, 2023). They suggest that maintaining most of the parameters in their non-trainable state can achieve better outcomes compared to completely retraining LLMs. For GPT-2, we only fine-tune the positional embedding layer and the layer-normalization layers.\n\n\n### A.1. Implementation\n\nWe mainly follow the experimental configurations in (Wu et al., 2023) across all baselines within a unified evaluation pipeline, available at `https://github.com/thuml/Time-Series-Library`, for a fair comparison. We use GPT2-small (Radford et al., 2019) with the first 6 hidden layers enabled as the default backbone model. All our experiments are repeated three times and we report the averaged results. We implemented the model on PyTorch (Paszke et al., 2019) with all experiments conducted on NVIDIA RTX A6000 GPUs and NVIDIA A100 GPUs. We configure the patch length $P$ as 16 with a stride $S$ of 8. Our experimental results were obtained by performing a grid search over combinations within the following search spaces: long-term trend length `(24, 48, 96, 144)`, seasonal trend length `(2, 4, 8, 12, 24)`, prompt length `(2, 4, 8, 16, 32)`, and semantic space size `(1000, 2000, 5000)`. Our code is available at `https://github.com/panzijie825/S2IP-LLM`.\n\n",
+    "summary": "Подготовка данных: RevIN normalizes TS перед декомпозицией. Fine-tuning: GPT-2 backbone с замороженным attention/FFN, обучаются только positional embedding и layer norm (partial fine-tuning). Implementation: AdamW, lr=1e-4, batch=32, NVIDIA A100.",
+    "keywords": [
+      "RevIN",
+      "partial fine-tuning",
+      "AdamW",
+      "NVIDIA A100",
+      "positional embedding",
+      "layer norm",
+      "frozen backbone"
+    ],
+    "question_types": [
+      "И",
+      "К"
+    ],
+    "token_count": 150
+  },
+  {
+    "chunk_id": "s2ip-llm_chunk_007",
+    "article_id": "s2ip-llm",
+    "article_meta": {
+      "title": "S2IP-LLM: Semantic Space Informed Prompt Learning with LLM for Time Series Forecasting",
+      "authors": [
+        "Pan",
+        "Jiang",
+        "Garg",
+        "Schneider",
+        "Nevmyvaka",
+        "Song"
+      ],
+      "year": 2024,
+      "arxiv_id": "2403.05798"
+    },
+    "section": "Experiments",
+    "section_hierarchy": [
+      "Experiments",
+      "4. Experiments"
+    ],
+    "chunk_type": "prose",
+    "index": 7,
+    "text": "## 4. Experiments\n\nIn our experiments, we compare the proposed S²IP-LLM against a variety of baselines on 11 public datasets. We validate the effectiveness of S²IP-LLM over different time series tasks, including long-term forecasting (Section 4.1), short-term forecasting (Section 4.2), and few-shot forecasting (Section 4.3). We also provide the ablation studies and parameter sensitivity analysis in Section 4.4. Finally, we visualize the prompt enhanced time series embeddings to qualitatively assess the effectiveness of S²IP-LLM. We follow the experimental configurations (Wu et al., 2023) for all baselines using the unified pipeline.[^tslib]\n\n**Baselines.** The baselines include a set of Transformer-based methods, i.e., iTransformer (Liu et al., 2023b), PatchTST (Nie et al., 2023), FEDformer (Zhou et al., 2022), Autoformer (Wu et al., 2021), Non-Stationary Transformer (Liu et al., 2022), ETSformer (Woo et al., 2022) and Informer (Zhou et al., 2021). We also select a set of non-transformer based techniques, i.e., DLinear (Zeng et al., 2023), TimesNet (Wu et al., 2023), and LightTS (Zhang et al., 2022a) for comparison. Finally, two approaches based on LLMs, i.e., OFA (Tian Zhou & Jin, 2023) and Time-LLM (Jin et al., 2024).[^timellm]\n\n\n### A.3. Details of Datasets\n\nWe experiment the long-term forecasting on the widely adopted Electricity Transformer Temperature (ETT) datasets (Zhou et al., 2021), Weather, Electricity, and Traffic from (Wu et al., 2023). We also experiment the short-term forecasting using the M4 benchmark dataset (Makridakis et al., 2018).\n\nETT datasets are comprised of roughly two years of data from two locations in China. The data are further divided into four distinct datasets, each with different sampling rates: ETTh1 and ETTh2 are sampled hourly, and ETTm1 and ETTm2 are sampled every 15 minutes. Every ETT dataset includes six power load features and a target variable: the oil temperature. The Electricity dataset comprises records of electricity consumption from 321 customers and is measured with a 1-hour sampling rate. The Weather dataset contains one-year records from 21 meteorological stations located in Germany. The sampling rate for the Weather dataset is 10 minutes. The Traffic dataset includes the per-hour sampled occupancy rates of the freeway system, which were recorded from 862 sensors in California. The M4 benchmark dataset has 100 thousand time series, which were collected from various domains ranging from business to economic forecasting. The time series data are partitioned into six groups with varied sampling rates from yearly to hourly.\n\nThe full data statistics are summarized in Table 5.\n\n| Task | Dataset | Dim. | Series Length | Dataset Size | Frequency | Information |\n| --- | --- | ---: | --- | --- | --- | --- |\n| Long-term Forecasting | ETTm1 | 7 | {96, 192, 336, 720} | (34465, 11521, 11521) | 15 min | Temperature |\n| Long-term Forecasting | ETTm2 | 7 | {96, 192, 336, 720} | (34465, 11521, 11521) | 15 min | Temperature |\n| Long-term Forecasting | ETTh1 | 7 | {96, 192, 336, 720} | (8545, 2881, 2881) | 1 hour | Temperature |\n| Long-term Forecasting | ETTh2 | 7 | {96, 192, 336, 720} | (8545, 2881, 2881) | 1 hour | Temperature |\n| Long-term Forecasting | Electricity | 321 | {96, 192, 336, 720} | (18317, 2633, 5261) | 1 hour | Electricity |\n| Long-term Forecasting | Traffic | 862 | {96, 192, 336, 720} | (12185, 1757, 3509) | 1 hour | Transportation |\n| Long-term Forecasting | Weather | 21 | {96, 192, 336, 720} | (36792, 5271, 10540) | 10 min | Weather |\n| Short-term Forecasting | M4-Yearly | 1 | 6 | (23000, 0, 23000) | Yearly | Demographic |\n| Short-term Forecasting | M4-Quarterly | 1 | 8 | (24000, 0, 24000) | Quarterly | Finance |\n| Short-term Forecasting | M4-Monthly | 1 | 18 | (48000, 0, 48000) | Monthly | Industry |\n| Short-term Forecasting | M4-Weekly | 1 | 13 | (359, 0, 359) | Weekly | Macro |\n| Short-term Forecasting | M4-Daily | 1 | 14 | (4227, 0, 4227) | Daily | Micro |\n| Short-term Forecasting | M4-Hourly | 1 | 48 | (414, 0, 414) | Hourly | Other |\n\n> Table 5 (see PDF p. 14). Dataset statistics are from (Wu et al., 2023). The dimension indicates the number of time series variables, and the dataset size is organized in (training, validation, and testing).\n\n\n### A.4. Evaluation Metrics\n\nFor evaluation metrics, we use the mean square error (MSE) and mean absolute error (MAE) for long-term forecasting. For short-term forecasting on the M4 benchmark, we use the symmetric mean absolute percentage error (SMAPE), mean absolute scaled error (MASE), and overall weighted average (OWA) (Oreshkin et al., 2019), which is a specific metric for the M4 competition. We present the calculations of these metrics as follows:\n\n$$\n\\mathrm{MSE} = \\frac{1}{H}\\sum_{h=1}^{H}(Y_h - \\hat{Y}_h)^2\n$$\n\n$$\n\\mathrm{MAE} = \\frac{1}{H}\\sum_{h=1}^{H}|Y_h - \\hat{Y}_h|\n$$\n\n$$\n\\mathrm{SMAPE} = \\frac{200}{H}\\sum_{h=1}^{H}\\frac{|Y_h - \\hat{Y}_h|}{|Y_h| + |\\hat{Y}_h|}\n$$\n\n$$\n\\mathrm{MAPE} = \\frac{100}{H}\\sum_{h=1}^{H}\\frac{|Y_h - \\hat{Y}_h|}{|Y_h|}\n$$\n\n$$\n\\mathrm{MASE} = \\frac{1}{H}\\sum_{h=1}^{H}\n\\frac{|Y_h - \\hat{Y}_h|}{\\frac{1}{H-s}\\sum_{j=s+1}^{H}|Y_j - Y_{j-s}|}\n$$\n\n$$\n\\mathrm{OWA} = \\frac{1}{2}\\left[\n\\frac{\\mathrm{SMAPE}}{\\mathrm{SMAPE}_{\\mathrm{Naive2}}}\n+\n\\frac{\\mathrm{MASE}}{\\mathrm{MASE}_{\\mathrm{Naive2}}}\n\\right]\n$$\n\nwhere $s$ is the time series data periodicity. $H$ denotes the prediction intervals. $Y_h$ and $\\hat{Y}_h$ are the $h$-th ground truth and prediction where $h \\in \\{1, \\ldots, H\\}$. For the evaluation metrics in long-term forecasting, we clarify that the reported metrics are the normalized versions of MAE/MSE. Although we apply global standardization to the data, the information that the scaler used is from training data solely.\n\n",
+    "summary": "Экспериментальный setup: Long-term forecasting — Weather, Electricity, Traffic, ETTh1/2, ETTm1/2 (input=512, horizons={96,192,336,720}); Short-term — M4 (6 frequencies, horizons [6,48]); Few-shot — 10% и 5% данных. Метрики: MSE, MAE (long-term/few-shot), SMAPE, MASE, OWA (short-term).",
+    "keywords": [
+      "Weather",
+      "Electricity",
+      "Traffic",
+      "ETT",
+      "M4",
+      "MSE",
+      "MAE",
+      "SMAPE",
+      "MASE",
+      "OWA",
+      "horizon",
+      "few-shot",
+      "Benchmark"
+    ],
+    "question_types": [
+      "В",
+      "З",
+      "Ж"
+    ],
+    "token_count": 350
+  },
+  {
+    "chunk_id": "s2ip-llm_chunk_008",
+    "article_id": "s2ip-llm",
+    "article_meta": {
+      "title": "S2IP-LLM: Semantic Space Informed Prompt Learning with LLM for Time Series Forecasting",
+      "authors": [
+        "Pan",
+        "Jiang",
+        "Garg",
+        "Schneider",
+        "Nevmyvaka",
+        "Song"
+      ],
+      "year": 2024,
+      "arxiv_id": "2403.05798"
+    },
+    "section": "Experiments",
+    "section_hierarchy": [
+      "Experiments",
+      "4. Experiments",
+      "4.1. Long-term Forecasting"
+    ],
+    "chunk_type": "prose",
+    "index": 8,
+    "text": "### 4.1. Long-term Forecasting\n\n**Setup.** For long-term forecasting, we evaluate the effectiveness of S²IP-LLM on Weather, Electricity, Traffic, and four ETT datasets (i.e., ETTh1, ETTh2, ETTm1, and ETTm2), which have been widely adopted as benchmarking datasets for long-term forecasting tasks. Details of these datasets are shown in Appendix A.3, Table 5. The input time series length is 512, and we evaluate the performance on four different horizons `{96, 192, 336, 720}`. The evaluation metrics include the mean square error (MSE) and the mean absolute error (MAE).\n\n**Results.** We compare the forecasting results of S²IP-LLM to 6 selected baselines in Table 1. Due to the space limitation, the comparisons with the other 6 baselines are provided in Appendix B and Table 6. We can observe that LLMs based forecasting methods, i.e., Time-LLM and OFA, generally achieve better performance than other baseline methods. This should be attributed to the prevalent expressibility of LLMs and their associated prompt-tuning and fine-tuning strategies, respectively. Moreover, most of the time, S²IP-LLM outperforms Time-LLM and OFA over 7 different datasets. This is because (1) the unique way S²IP-LLM tokenized the input time series data can yield better time series representations, and (2) the semantic space informed prompting can help further enhance the time series representation which will be further demonstrated in Section 4.5.\n\n**Table 1.** Long-term forecasting results for `{96, 192, 336, 720}` horizons. Lower values indicate better performance. For Time-LLM variants, `L` denotes the LLaMA backbone (Touvron et al., 2023a), and `G` refers to the GPT-2 backbone (Radford et al., 2019). More results are in Appendix B, Table 6. Values are reported as `MSE / MAE`.\n\n<table>\n  <thead>\n    <tr>\n      <th colspan=\"2\">Methods</th>\n      <th colspan=\"2\">S²IP-LLM</th>\n\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td rowspan=\"5\">Weather</td>\n      <td>96</td>\n      <td>0.145</td>\n      <td>0.195</td>\n      <td>0.148</td>\n      <td>0.197</td>\n      <td>0.158</td>\n",
+    "summary": "Long-term forecasting результаты: S2IP-LLM превосходит бейзлайны (Time-LLM(L), Time-LLM(G), OFA, iTransformer, PatchTST, DLinear) на большинстве датасетов (Weather, Electricity, Traffic, ETT). Особенно силён на Electricity и Traffic благодаря decomposition tokenization и semantic anchors.",
+    "keywords": [
+      "S2IP-LLM",
+      "Time-LLM",
+      "OFA",
+      "iTransformer",
+      "PatchTST",
+      "DLinear",
+      "long-term",
+      "MSE",
+      "MAE",
+      "SOTA"
+    ],
+    "question_types": [
+      "А+",
+      "Ж"
+    ],
+    "token_count": 300
+  },
+  {
+    "chunk_id": "s2ip-llm_chunk_009",
+    "article_id": "s2ip-llm",
+    "article_meta": {
+      "title": "S2IP-LLM: Semantic Space Informed Prompt Learning with LLM for Time Series Forecasting",
+      "authors": [
+        "Pan",
+        "Jiang",
+        "Garg",
+        "Schneider",
+        "Nevmyvaka",
+        "Song"
+      ],
+      "year": 2024,
+      "arxiv_id": "2403.05798"
+    },
+    "section": "Experiments",
+    "section_hierarchy": [
+      "Experiments",
+      "4. Experiments",
+      "4.2. Short-term Forecasting",
+      "4.3. Few-shot Forecasting"
+    ],
+    "chunk_type": "prose",
+    "index": 9,
+    "text": "### 4.2. Short-term Forecasting\n\n**Setup.** We also evaluate the effectiveness of S²IP-LLM with the short-term forecasting setting based on the M4 datasets (Makridakis et al., 2018). It contains a collection of marketing data that are sampled at different frequencies. Details of these datasets can be found in Appendix A.3. The prediction horizons are significantly shorter than the long-term forecasting setting and are set between 6 and 48. The input lengths are twice the prediction horizons, similar to the experiment setting in (Jin et al., 2024; Tian Zhou & Jin, 2023). The evaluation metrics for short-term forecasting are symmetric mean absolute percentage error (SMAPE), mean absolute scaled error (MASE), and overall weighted average (OWA). The details of these evaluation metrics are provided in Appendix A.4.\n\n**Results.** Table 2 summarizes the short-term forecasting results and the full experiment results are shown in Appendix C, Table 7. We observe that S²IP-LLM outperforms all other baselines by a large margin and is slightly better than PatchTST. This could attribute to the tokenization design as well as the semantic space informed prompting within S²IP-LLM.\n\n<table>\n  <thead>\n    <tr>\n      <th rowspan=\"2\">Avg.</th>\n      <th rowspan=\"2\">Metric</th>\n      <th>S²IP-LLM</th>\n      <th>Time-LLM(G)</th>\n      <th>OFA</th>\n\n### 4.3. Few-shot Forecasting\n\n**Setup.** We follow the experimental settings in Tian Zhou & Jin (2023) to evaluate the performance in the few-shot forecasting setting, which allows us to examine whether the model can generate accurate forecasting with limited training data. We use the first 5% and 10% of the training data in these experiments.\n\n**Results.** To ensure a fair comparison in the long-term forecasting setting, we summarize the few-shot learning experiment results under 10% and 5% training data in Table 3 and Table 4, respectively. We also report the full experiment results in Table 8 and Table 9 of Appendix D, respectively. When trained with only 10% of the data, S²IP-LLM typically ranks as either the best or the second-best compared to other baseline models across different datasets. Meanwhile, we also observe that LLMs based methods, S²IP-LLM, Time-LLM, and OFA significantly outperform other baseline methods. This is because other baseline methods are trained from scratch and they only have limited training data in this case. On the other hand, LLMs based methods can adapt/align the pre-trained knowledge with the time series embedding to enhance its representation. Even with only 5% of training data, S²IP-LLM still exhibits, if not superior, comparable performance to time-LLM and OFA.\n\n<table>\n  <thead>\n    <tr>\n      <th rowspan=\"2\">Dataset</th>\n      <th colspan=\"2\">S²IP-LLM</th>\n      <th colspan=\"2\">Time-LLM(G)</th>\n      <th colspan=\"2\">OFA</th>\n      <th colspan=\"2\">iTransformer</th>\n      <th colspan=\"2\">DLinear</th>\n",
+    "summary": "Short-term (M4): S2IP-LLM значительно превосходит OFA и Time-LLM. Few-shot (10%/5% данных): S2IP-LLM сохраняет competitive performance с минимальной деградацией, превосходя OFA и Time-LLM при ограниченных данных.",
+    "keywords": [
+      "short-term",
+      "M4",
+      "few-shot",
+      "SMAPE",
+      "MASE",
+      "OWA",
+      "S2IP-LLM",
+      "OFA",
+      "Time-LLM"
+    ],
+    "question_types": [
+      "Ж"
+    ],
+    "token_count": 250
+  },
+  {
+    "chunk_id": "s2ip-llm_chunk_010",
+    "article_id": "s2ip-llm",
+    "article_meta": {
+      "title": "S2IP-LLM: Semantic Space Informed Prompt Learning with LLM for Time Series Forecasting",
+      "authors": [
+        "Pan",
+        "Jiang",
+        "Garg",
+        "Schneider",
+        "Nevmyvaka",
+        "Song"
+      ],
+      "year": 2024,
+      "arxiv_id": "2403.05798"
+    },
+    "section": "Experiments",
+    "section_hierarchy": [
+      "Experiments",
+      "4. Experiments",
+      "4.4. Ablation Studies and Parameter Sensitivity"
+    ],
+    "chunk_type": "prose",
+    "index": 10,
+    "text": "### 4.4. Ablation Studies and Parameter Sensitivity\n\nWe conduct ablation studies on the ETTh2 and ETTm2 datasets to evaluate the parameter sensitivity for S²IP-LLM. Figure 3 (1) and (4) presents the experiment results when the length of the prompt varies on ETTh2 and ETTm2, respectively. Within a limited range, i.e. 2 to 8, an increase in the prompt length tends to improve the forecasting performance. However, excessive prompt length, such as lengths of 16 or 32, results in a significant decline in the forecasting accuracy. A similar pattern can be observed in the hyper-parameter analysis of the $\\lambda$, which controls the strength of alignment. As shown in Figure 3 (2) and (5), when $\\lambda$ varies from 0 to 0.05, slightly larger $\\lambda$ is beneficial for representation learning within the joint space, showing better forecasting results. On the other hand, larger $\\lambda$ tends to lead to indistinguishable time series representation and the forecasting performance will thus decrease. Finally, Figure 3 (3) and (6) show the effects of choosing different numbers of semantic anchors. Generally, an increased number of semantic anchors improves the forecasting results. We conjecture that the small number hinders the learning of highly representative semantic anchors in the joint space and thus will generate less informed prompts for time series embedding. We visualize the prompted time series embeddings with the different number of semantic anchors in Appendix E, Figure 6. We notice that a smaller quantity of semantic anchors leads to a less dispersed distribution in the joint space, indicating that the generated prompts could be less informative for time series embedding. We also perform ablation studies by incrementally adding the \"alignment & prompting\" and \"decomposition\" modules. In Appendix E Table 10, we observe the forecasting performance increases when we sequentially activate the prompting & alignment component and the decomposition component, which implies the importance of these modules in S²IP-LLM.\n\n> Figure 3 (see PDF p. 8). Parameter sensitivity analysis in predicting 96 and 192 steps: (1) and (4) show the effect of prompt length on ETTh2 and ETTm2 datasets; (2) and (5) show the effect of alignment coefficient $\\lambda$ on ETTh2 and ETTm2 datasets; (3) and (6) show the effect of semantic space size $V'$ on ETTh2 and ETTm2 datasets.\n\n\n## Appendix E. Ablation Studies and Parameter Sensitivity\n\nWe provide the t-SNE and PCA visualization of semantic anchor and prefix-prompted time series embeddings with different $V'$ in Figure 6. We observe semantic anchor embeddings display a continued spanning pattern among the joint space, whereas the prompted time series representation shows only a slight visual difference. It is reasonable since it is primarily controlled by the scaling factor $\\lambda$.\n\n<table>\n  <thead>\n    <tr>\n      <th rowspan=\"2\">Ablation Setting</th>\n      <th colspan=\"4\">Long-term Forecasting</th>\n",
+    "summary": "Абляция: (1) prompt length K — оптимально K=8, дальнейшее увеличение не даёт выигрыша; (2) alignment strength λ — moderate λ лучше; (3) semantic anchors count V' — moderate; (4) decomposition on/off — decomposition критичен, его удаление значительно ухудшает качество.",
+    "keywords": [
+      "ablation",
+      "prompt length",
+      "alignment strength",
+      "semantic anchors",
+      "decomposition",
+      "parameter sensitivity",
+      "K=8"
+    ],
+    "question_types": [
+      "А+",
+      "Б"
+    ],
+    "token_count": 250
+  },
+  {
+    "chunk_id": "s2ip-llm_chunk_011",
+    "article_id": "s2ip-llm",
+    "article_meta": {
+      "title": "S2IP-LLM: Semantic Space Informed Prompt Learning with LLM for Time Series Forecasting",
+      "authors": [
+        "Pan",
+        "Jiang",
+        "Garg",
+        "Schneider",
+        "Nevmyvaka",
+        "Song"
+      ],
+      "year": 2024,
+      "arxiv_id": "2403.05798"
+    },
+    "section": "Conclusion",
+    "section_hierarchy": [
+      "Conclusion",
+      "5. Conclusion"
+    ],
+    "chunk_type": "prose",
+    "index": 11,
+    "text": "## 5. Conclusion\n\nIn this paper, we present S²IP-LLM, a novel framework for time series forecasting utilizing pre-trained language models. S²IP-LLM introduces a time series tokenization module that provides expressive local contexts by the concatenation of decomposed time series patches. It creates informative joint space by aligning time series contexts with semantics anchors derived from the pre-trained word token embeddings. The selected aligned semantic anchors are retrieved as prompt indicators to enhance the time series representation and facilitate underlying forecasting tasks. Our thorough empirical studies justified the effectiveness of S²IP-LLM.\n\n",
+    "summary": "Заключение: S2IP-LLM — метод Semantic Space Informed Prompt learning для TS forecasting, использующий decomposition tokenization, semantic anchors из предобученного пространства GPT-2 и partial fine-tuning. Достигает SOTA на long-term, short-term и few-shot forecasting.",
+    "keywords": [
+      "S2IP-LLM",
+      "semantic anchors",
+      "decomposition",
+      "GPT-2",
+      "partial fine-tuning",
+      "SOTA"
+    ],
+    "question_types": [
+      "А"
+    ],
+    "token_count": 100
+  }
+]

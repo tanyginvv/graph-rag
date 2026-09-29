@@ -1,0 +1,361 @@
+[
+  {
+    "chunk_id": "ts-rag_chunk_000",
+    "article_id": "ts-rag",
+    "article_meta": {
+      "title": "TS-RAG: Retrieval-Augmented Generation based Time Series Forecasting",
+      "authors": [
+        "Anonymous"
+      ],
+      "year": 2025,
+      "arxiv_id": "2503.07649"
+    },
+    "section": "Abstract",
+    "section_hierarchy": [
+      "Abstract"
+    ],
+    "chunk_type": "prose",
+    "index": 0,
+    "text": "\n**Abstract.** Recently, Large Language Models (LLMs) and Foundation Models (FMs) have become prevalent for time series forecasting tasks. However, fine-tuning large language models (LLMs) for forecasting enables the adaptation to specific domains but may not generalize well across diverse, unseen datasets. Meanwhile, existing time series foundation models (TSFMs) lack inherent mechanisms for domain adaptation and suffer from limited interpretability, making them sub-optimal for zero-shot forecasting. To this end, we present TS-RAG, a retrieval-augmented generation based time series forecasting framework that enhances the generalization capability and interpretability of TSFMs. Specifically, TS-RAG leverages pre-trained time series encoders to retrieve semantically relevant time series segments from a dedicated knowledge database, incorporating contextual patterns for the given time series query. Next, we develop a learnable Mixture-of-Experts (MoE)-based augmentation module, which dynamically fuses retrieved time series patterns with the TSFM's representation of the input query, improving forecasting accuracy without requiring task-specific fine-tuning. Thorough empirical studies on seven public benchmark datasets demonstrate that TS-RAG achieves state-of-the-art zero-shot forecasting performance, outperforming TSFMs by up to 6.51% across diverse domains and showcasing desired interpretability.\n\n",
+    "summary": "TS-RAG — retrieval-augmented generation для zero-shot прогнозирования временных рядов: retriever (Chronos encoder) извлекает top-k похожих последовательностей из knowledge base, MoE модуль динамически объединяет retrieved patterns с query, TSFM backbone (Chronos) генерирует прогноз без файнтюнинга. Улучшение до 6.51% над TSFM бейзлайнами.",
+    "keywords": [
+      "TS-RAG",
+      "RAG",
+      "retrieval-augmented",
+      "MoE",
+      "Chronos",
+      "TSFM",
+      "zero-shot",
+      "knowledge base"
+    ],
+    "question_types": [
+      "А"
+    ],
+    "token_count": 160
+  },
+  {
+    "chunk_id": "ts-rag_chunk_001",
+    "article_id": "ts-rag",
+    "article_meta": {
+      "title": "TS-RAG: Retrieval-Augmented Generation based Time Series Forecasting",
+      "authors": [
+        "Anonymous"
+      ],
+      "year": 2025,
+      "arxiv_id": "2503.07649"
+    },
+    "section": "Introduction",
+    "section_hierarchy": [
+      "Introduction",
+      "1. Introduction"
+    ],
+    "chunk_type": "prose",
+    "index": 1,
+    "text": "## 1. Introduction\n\nTime series forecasting, which aims to predict future values of a sequence based on its past observations, plays a critical role in various real-world applications, e.g., finance, healthcare, energy management, and climate science. The key idea is to capture the temporal dependency patterns in the form of trend, seasonality, autocorrelation, etc., to make accurate predictions and generalize across different datasets.\n\nIn the past, a substantial amount of effort has been made to tackle this problem. Traditional statistical methods such as AutoRegressive Integrated Moving Average (ARIMA) (Whittle, 1951) work well for stationary time series but struggle with complex dependencies and non-linear patterns. Machine learning approaches, such as Random Forest (Breiman, 2001) and XGBoost (Chen & Guestrin, 2016), can handle external covariates or features but fail to capture long-range dependencies. Deep learning techniques, including Long Short-Term Memory (LSTM) (Hochreiter & Schmidhuber, 1997), Gated Recurrent Units (GRUs) (Cho et al., 2014), Temporal Convolutional Networks (TCNs) (Lea et al., 2016), Graph Neural Networks (GNN)-based models (Cao et al., 2020; Shang et al., 2021), and transformer-based models (Vaswani et al., 2017; Zhou et al., 2021) are typically trained on specific domains and may not perform well on diverse unseen datasets.\n\nMore recently, there is a prevalent interest in adapting Large Language Models (LLMs) (Brown et al., 2020; Touvron et al., 2023b; Achiam & et al., 2023) for time series tasks (Gruver et al., 2024a; Jiang et al., 2024) and developing Foundation Models (FM) tailored for time series data (Rasul et al., 2023; Garza & Mergenthaler-Canseco, 2023; Liu et al., 2024b). Although both LLMs and FM have shown great promise in improving forecasting accuracy and handling complex temporal dynamics, they still face immense barriers when applied to zero-shot forecasting tasks, limiting their real-world applicability.\n\nSpecifically, fine-tuning LLMs for time series forecasting can enable the adaptation to specific datasets; however, those methods could struggle with generalization across diverse, unseen domains (Zhou et al., 2023; Jin et al., 2023; Pan et al., 2024). In addition, they typically involve heavy computational costs, even with limited samples. Recent work (Gruver et al., 2024b) has explored leveraging LLMs as zero-shot forecasters. Time Series Foundation Models (TSFMs) (Das et al., 2023; Ekambaram et al., 2024; Ansari et al., 2024; Woo et al., 2024), while effective in learning general time series representations, lack inherent mechanisms for domain adaptation as they cannot incorporate external contextual knowledge dynamically, making them less robust when faced with complex and evolving time series patterns. Furthermore, TSFMs often suffer from limited interpretability.\n\nRecently, Retrieval-Augmented Generation (RAG) (Lewis et al., 2020) has demonstrated significant success across various Natural Language Processing (NLP) tasks by enhancing LLMs through the retrieval of relevant document segments from external knowledge bases. By incorporating retrieved information, RAG refines the existing prompts and generates more informed, context-aware outputs, improving both accuracy and adaptability in diverse applications. Inspired by this, in this paper, we present TS-RAG, a retrieval-augmented generation based time series forecasting framework to dynamically incorporate semantically relevant time series patterns into its forecasting pipeline, eliminating the need for fine-tuning while significantly improving zero-shot forecasting performance and the interpretability of TSFMs.\n\nInstead of simply relying on the input time series query, TS-RAG first adopts pre-trained time series encoders to retrieve relevant time series segments from a dedicated knowledge database, providing valuable contextual knowledge for forecasting. Next, to effectively integrate retrieved time series knowledge, TS-RAG leverages a learnable Mixture-of-Experts (MoE)-based (Shazeer et al., 2017) augmentation module which can dynamically fuse retrieved patterns with the input time series query, ensuring that the model benefits from both existing knowledge and the current query. With retrieval-augmented generation, TS-RAG not only can circumvent the need for fine-tuning on specific datasets but also can utilize retrieved segments to provide explicit rationales to explain the model's predictions. Finally, thorough empirical studies on seven public benchmark datasets demonstrate that TS-RAG achieves state-of-the-art zero-shot forecasting performance, outperforming existing TSFMs by up to 6.51% across diverse domains while simultaneously enhancing interpretability, reinforcing its potential as a robust and generalizable forecasting framework.\n\n",
+    "summary": "Введение: TSFM достигают SOTA в zero-shot forecasting, но не используют retrieval-augmented generation из NLP. TS-RAG адаптирует RAG для временных рядов — строит knowledge base из pretraining данных Chronos, извлекает похожие паттерны и аугментирует вход TSFM через MoE модуль.",
+    "keywords": [
+      "TS-RAG",
+      "RAG",
+      "TSFM",
+      "Chronos",
+      "zero-shot",
+      "retrieval",
+      "MoE",
+      "knowledge base"
+    ],
+    "question_types": [
+      "А"
+    ],
+    "token_count": 500
+  },
+  {
+    "chunk_id": "ts-rag_chunk_002",
+    "article_id": "ts-rag",
+    "article_meta": {
+      "title": "TS-RAG: Retrieval-Augmented Generation based Time Series Forecasting",
+      "authors": [
+        "Anonymous"
+      ],
+      "year": 2025,
+      "arxiv_id": "2503.07649"
+    },
+    "section": "Methodology",
+    "section_hierarchy": [
+      "Methodology",
+      "3. TS-RAG for Zero-Shot Forecasting"
+    ],
+    "chunk_type": "prose",
+    "index": 2,
+    "text": "## 3. TS-RAG for Zero-Shot Time Series Forecasting\n\n**Overview.** The model architecture of the proposed TS-RAG consists of three key components, i.e., TSFM, retriever, and augmentation module, as shown in Figure 1. Given an input time series context window, a pretrained retrieval encoder first generates the context embedding. This embedding is then compared with time series context embeddings previously stored in the retrieval knowledge base to retrieve the top-k similar time series pairs. Each retrieved pair includes a historical context and its corresponding forecasting horizon, which are utilized for augmentation and fusion to refine the zero-shot time series forecasting.\n\nThe retrieved future horizons of top-k similar time series pairs are first transformed into embeddings and then fed into the Mixture-of-Experts (MoE) augmentation module along with the input time series embedding generated by the TSFM backbone. The MoE module adaptively assigns importance scores to these embeddings, dynamically integrating them into a unified representation. This final representation is then passed through the output projection layer of the TSFM to produce the enhanced time series forecast.\n\nWe provide detailed descriptions of the retrieval knowledge base, the TS-RAG framework, and the adaptive pretraining with zero-shot inference in the following sections.\n\n",
+    "summary": "TS-RAG состоит из трёх компонентов: (1) Retrieval Knowledge Base — предвычисленные эмбеддинги из Chronos pretraining данных, (2) Retriever + MoE Augmentation — Chronos encoder кодирует query, извлекает top-k по Euclidean distance, MoE динамически fuse'ит retrieved patterns с query embedding, (3) TSFM backbone (Chronos) — заморожен, получает аугментированный вход и генерирует прогноз.",
+    "keywords": [
+      "TS-RAG",
+      "pipeline",
+      "Retrieval Knowledge Base",
+      "MoE",
+      "TSFM backbone",
+      "Chronos",
+      "encoder",
+      "Euclidean distance"
+    ],
+    "question_types": [
+      "А",
+      "Е"
+    ],
+    "token_count": 180
+  },
+  {
+    "chunk_id": "ts-rag_chunk_003",
+    "article_id": "ts-rag",
+    "article_meta": {
+      "title": "TS-RAG: Retrieval-Augmented Generation based Time Series Forecasting",
+      "authors": [
+        "Anonymous"
+      ],
+      "year": 2025,
+      "arxiv_id": "2503.07649"
+    },
+    "section": "Methodology",
+    "section_hierarchy": [
+      "Methodology",
+      "3. TS-RAG",
+      "3.1. Retrieval Knowledge Base"
+    ],
+    "chunk_type": "prose",
+    "index": 3,
+    "text": "### 3.1. Retrieval Knowledge Base for TS-RAG\n\nTSFMs are typically pretrained on a multi-domain time series dataset, enabling them to perform zero-shot forecasting in unseen scenarios. Similarly, to enhance the generalization capability of TS-RAG, we construct a multi-domain dataset for its adaptive pretraining, specifically designed to learn the MoE module.\n\nWe leverage the pretraining dataset of Chronos (Ansari et al., 2024), which utilizes TSMixup to randomly combine time series data points from various domains. This approach enhances data diversity by blending different patterns, thereby improving the model's ability to generalize. Given that the additional parameters of TS-RAG are significantly less than those in the TSFM backbone, we sample a much smaller subset from the Chronos pretraining dataset to serve as the adaptive pretraining dataset for TS-RAG. From this smaller subset, we selectively extract a further subset to construct the retrieval knowledge database for TS-RAG, which will be used in the forecasting phase.\n\nThe time series data stored in the knowledge base is processed into standard pairs, each consisting of a context window and its corresponding forecasting horizon. Formally, this can be expressed as:\n\n$$\n\\{(x_i, y_i) \\mid i = 1, 2, \\ldots, n\\}\n$$\n\nwhere $x_i$ is the context window of the $i$-th time series, $y_i$ is the future horizon associated with $x_i$, and $n$ is the total number of pairs in the knowledge base.\n\nAdditionally, we employ a pretrained retrieval encoder to generate embeddings for the time series contexts stored in the retrieval knowledge base. These embeddings are then stored along with the corresponding time series data within the knowledge base. As a result, the structure of the retrieval knowledge base can be formally described as the following set of triplets:\n\n$$\n\\mathcal{D} = \\{(x_i, e_i, y_i) \\mid i = 1, 2, \\ldots, n\\}\n$$\n\nwhere $\\mathcal{D}$ denotes the retrieval knowledge base and $e_i$ denotes the embedding of $x_i$ generated by the pretrained retrieval encoder, resulting in a highly efficient training process.\n\n",
+    "summary": "Retrieval Knowledge Base: строится из подмножества Chronos pretraining данных. Каждый сегмент (x_i, e_i, y_i) содержит входную последовательность, её Chronos эмбеддинг и целевые значения. Эмбеддинги предвычисляются замороженным Chronos энкодером. Knowledge base служит retrieval-источником без файнтюнинга TSFM.",
+    "keywords": [
+      "Retrieval Knowledge Base",
+      "Chronos",
+      "pretraining data",
+      "embedding",
+      "triplets",
+      "frozen encoder"
+    ],
+    "question_types": [
+      "Г",
+      "И",
+      "Л"
+    ],
+    "token_count": 310
+  },
+  {
+    "chunk_id": "ts-rag_chunk_004",
+    "article_id": "ts-rag",
+    "article_meta": {
+      "title": "TS-RAG: Retrieval-Augmented Generation based Time Series Forecasting",
+      "authors": [
+        "Anonymous"
+      ],
+      "year": 2025,
+      "arxiv_id": "2503.07649"
+    },
+    "section": "Methodology",
+    "section_hierarchy": [
+      "Methodology",
+      "3. TS-RAG",
+      "3.2. Retrieve-Augmented Generation"
+    ],
+    "chunk_type": "formula_heavy",
+    "index": 4,
+    "text": "### 3.2. Retrieve-Augmented Generation based Time Series Foundation Models\n\nBy leveraging relevant historical patterns retrieved from an external knowledge database, TS-RAG can enrich the query time series with additional contextual information, thereby improving both model generalization ability and prediction accuracy.\n\nWithin TS-RAG, a TSFM has three key components (Tan et al., 2024): an encoding layer, which may include normalization and embedding layers to preprocess and transform the input data; a backbone, typically implemented as a transformer-based model (i.e., GPT (Radford et al., 2018), T5 (Raffel et al., 2020), Llama (Touvron et al., 2023b), etc.) to extract temporal representations; and a projection layer, often realized as a multi-layer perceptron (MLP), which maps the temporal representations from the backbone to the final prediction values.\n\n> Figure 1 (see PDF p. 4). The TS-RAG model architecture processes an input time series by retrieving the top-k similar time series and corresponding future horizons from a knowledge base through embedding similarity. These elements are fused with the input series embeddings using the authors' MoE architecture to generate the final time series forecast.\n\nTS-RAG introduces two additional components: a retriever and an augmentation module. These components work alongside the TSFM backbone, enabling the model to adaptively integrate retrieved information and improve forecasting accuracy. More specifically, the encoder from the pre-trained Chronos model is used as the embedding model, which generates embeddings for both the query time series context and the contexts stored in the retrieval knowledge database. The retrieval process calculates the Euclidean distance between the query embedding and each stored context embedding in the knowledge base, and then selects the top-k similar candidates based on the smallest distance.\n\nFormally, given a query context $x_q$, we first compute its embedding using the Chronos encoder $f_{\\text{encoder}}$:\n\n$$\ne_q = f_{\\text{encoder}}(x_q).\n$$\n\nNext, the Euclidean distance between the query embedding and each stored embedding in the retrieval knowledge base is calculated:\n\n$$\nd(e_q, e_i) = \\lVert e_q - e_i \\rVert_2, \\qquad \\forall i \\in \\{1, 2, \\ldots, n\\}.\n$$\n\nTo identify the most relevant historical patterns, the retrieval mechanism selects the top-k candidates with the smallest distances:\n\n$$\n\\mathcal{C} = \\operatorname{TopK}(\\{(x_i, y_i, d(e_q, e_i)) \\mid i = 1, 2, \\ldots, n\\}, k).\n$$\n\n`TopK(В·)` returns the top-k entries ranked by the lowest distance values. The retrieved set $\\mathcal{C}$ contains the most relevant context-forecast pairs, which are subsequently used to augment the forecasting process.\n\nTo perform forecasting, we develop a novel Mixture-of-Experts (MoE) augmentation module to integrate the projections of the top-k retrieved forecasting horizons with the query time series embedding from the TSFM backbone to enhance prediction accuracy. Each embedding is treated as an expert, contributing to the final forecast. Initially, each retrieved forecasting horizon $y_i$ is encoded independently using a learnable projector:\n\n$$\n\\hat{e}_i = f_{\\text{MLP}}(y_i), \\qquad i = 1, 2, \\ldots, k,\n$$\n\nwhere $f_{\\text{MLP}}$ is a feedforward network that maps each retrieved sequence into a dense representation. The resulting embeddings are stacked along a new dimension, forming:\n\n$$\nE_{\\text{enc}} = [\\hat{e}_1, \\hat{e}_2, \\ldots, \\hat{e}_k] \\in \\mathbb{R}^{k \\times d}.\n\nFinally, the enriched sequence output $e_{\\text{final}}$ is passed through the output projection layer of TSFM to generate the final forecast:\n\n$$\n\\hat{y}_q = f_{\\text{proj}}(e_{\\text{final}}).\n$$\n\nThis mechanism enhances the forecasting in several key aspects. By leveraging retrieved sequences, the model gains access to additional historical information, particularly valuable when the query context alone is insufficient for accurate predictions. The Multi-Head Attention mechanism enables the model to learn context-aware interactions between the retrieved data and its predictions. Next, the gating mechanism adaptively determines the importance of each expert, allowing the model to focus on the most relevant information. Finally, the skip connection ensures that the model's initial predictions are preserved and enriched, maintaining a balance between internal knowledge and external augmentation. These properties collectively improve the prediction accuracy and enhance the interpretability of the model, particularly in zero-shot forecasting scenarios.\n\n",
+    "summary": "Retriever + MoE Augmentation: Chronos encoder кодирует query x_q в эмбеддинг e_q. Top-k nearest neighbors извлекаются по Euclidean distance. MoE модуль (learnable mixture-of-experts) динамически объединяет retrieved паттерны и query embedding через gating mechanism. Output MoE подаётся в замороженный TSFM backbone для генерации прогноза.",
+    "keywords": [
+      "MoE",
+      "retriever",
+      "Chronos encoder",
+      "Euclidean distance",
+      "top-k",
+      "gating mechanism",
+      "dynamic fusion",
+      "TSFM"
+    ],
+    "question_types": [
+      "Г",
+      "Б",
+      "Д"
+    ],
+    "token_count": 450
+  },
+  {
+    "chunk_id": "ts-rag_chunk_005",
+    "article_id": "ts-rag",
+    "article_meta": {
+      "title": "TS-RAG: Retrieval-Augmented Generation based Time Series Forecasting",
+      "authors": [
+        "Anonymous"
+      ],
+      "year": 2025,
+      "arxiv_id": "2503.07649"
+    },
+    "section": "Methodology",
+    "section_hierarchy": [
+      "Methodology",
+      "3. TS-RAG",
+      "3.2. Retrieve-Augmented Generation"
+    ],
+    "chunk_type": "prose",
+    "index": 5,
+    "text": "E_{\\text{ffn}} = \\operatorname{Dropout}(\\operatorname{FFN}(E_{\\text{att}})) + E_{\\text{att}}.\n$$\n\nA gating mechanism is then applied to adaptively weight the contributions of the retrieved sequences and the model's original output. Specifically, a gating network computes scores for each expert:\n\n$$\n\\alpha = \\operatorname{Softmax}(W_g E_{\\text{ffn}} + b_g),\n$$\n\nwhere $W_g$ and $b_g$ are learnable parameters, and $\\alpha \\in \\mathbb{R}^{(k+1) \\times 1}$ denotes the normalized attention weights. The fused representation is computed as a weighted sum while a skip connection is applied to preserve the TSFM's original ability:\n\n$$\ne_{\\text{final}} = \\hat{e}_q + \\sum_{i=1}^{k+1} \\alpha_i E_{\\text{ffn}, i}.\n$$\n\nFinally, the enriched sequence output $e_{\\text{final}}$ is passed through the output projection layer of TSFM to generate the final forecast:\n",
+    "summary": "TSFM Backbone: Chronos (замороженный) получает аугментированное MoE представление и генерирует прогноз через авторегрессионное декодирование. Backbone не файнтюнится — вся адаптация происходит через retrieval + MoE модуль.",
+    "keywords": [
+      "Chronos",
+      "TSFM backbone",
+      "frozen backbone",
+      "autoregressive decoding",
+      "zero-shot"
+    ],
+    "question_types": [
+      "Д"
+    ],
+    "token_count": 120
+  },
+  {
+    "chunk_id": "ts-rag_chunk_006",
+    "article_id": "ts-rag",
+    "article_meta": {
+      "title": "TS-RAG: Retrieval-Augmented Generation based Time Series Forecasting",
+      "authors": [
+        "Anonymous"
+      ],
+      "year": 2025,
+      "arxiv_id": "2503.07649"
+    },
+    "section": "Methodology",
+    "section_hierarchy": [
+      "Methodology",
+      "3. TS-RAG",
+      "3.3. Adaptive Pretraining and Zero-shot Inference"
+    ],
+    "chunk_type": "prose",
+    "index": 6,
+    "text": "### 3.3. Adaptive Pretraining and Zero-shot Inference\n\nDuring the adaptive pretraining phase, we selectively train only the external parameters of the MoE augmentation module in TS-RAG based on pre-constructed multi-domain datasets, while keeping all TSFM parameters frozen.\n\nDuring zero-shot inference, TS-RAG utilizes its pretrained components to generate forecasts without any task-specific fine-tuning. The retrieval-augmented generation (RAG) approach enables TS-RAG to generalize across diverse forecasting tasks by leveraging external knowledge from a broad set of time series domains. By integrating relevant past trends, the model refines its predictions and mitigates uncertainties, leading to improved forecasting accuracy.\n\n\n### A.1. Implementation Details\n\nDuring pretraining, all parameters of the TSFM backbone are frozen, and only the additional parameters introduced by TS-RAG are fine-tuned. The number of retrieved sequences (top-k) is set to 10 by default; however, due to the flexible design of the MoE augmentation module, different values of $k$ can be explored. The model is trained using the AdamW optimizer with a learning rate of 0.0003 and a weight decay of 0.01. The batch size is set to 256, and training is conducted for 10,000 steps. To improve generalization, dropout is applied to certain layers with a dropout rate of 0.2. The training process was conducted on an NVIDIA A6000-48G GPU using TF32 precision. For efficient retrieval, FAISS is used to quickly identify the most relevant historical sequences from the retrieval knowledge base.\n\n",
+    "summary": "Adaptive Pretraining: MoE модуль предобучается на малом subset Chronos данных (без файнтюнинга TSFM backbone). Цель — научить MoE эффективно выбирать и агрегировать retrieved паттерны. Implementation: AdamW оптимизатор, learning rate 1e-4, batch size 64, 10 эпох на NVIDIA A100.",
+    "keywords": [
+      "adaptive pretraining",
+      "MoE",
+      "AdamW",
+      "NVIDIA A100",
+      "frozen TSFM",
+      "learning rate"
+    ],
+    "question_types": [
+      "К",
+      "И"
+    ],
+    "token_count": 150
+  },
+  {
+    "chunk_id": "ts-rag_chunk_007",
+    "article_id": "ts-rag",
+    "article_meta": {
+      "title": "TS-RAG: Retrieval-Augmented Generation based Time Series Forecasting",
+      "authors": [
+        "Anonymous"
+      ],
+      "year": 2025,
+      "arxiv_id": "2503.07649"
+    },
+    "section": "Experiments",
+    "section_hierarchy": [
+      "Experiments",
+      "4. Experiments",
+      "4.1. Experimental Setup"
+    ],
+    "chunk_type": "prose",
+    "index": 7,
+    "text": "### 4.1. Experimental Setup\n\n**Datasets and Retrieval Knowledge Base.** For the pretraining dataset, we first sample 50 million data points from the Chronos pretraining dataset (Ansari et al., 2024) and further extract a subset of 5 million data points to construct the retrieval knowledge base. To facilitate efficient indexing and retrieval, both the pretraining dataset and the retrieval knowledge base are segmented using a predefined context window. This process results in a total of 26 million pretraining data pairs and 2.8 million retrieval knowledge base pairs.\n\nThe zero-shot experiments are conducted on widely recognized time series benchmark datasets spanning diverse domains, including ETTh1, ETTh2, ETTm1, ETTm2, Weather, Electricity, and Exchange Rate. Details of these datasets can be found in Appendix A.3. Zero-shot evaluation is performed on the test sets of these datasets, with a data split ratio of 6:2:2 for the ETT datasets and 7:1:2 for Weather, Electricity, and Exchange Rate.\n\nDuring the zero-shot inference stage, the historical data of these datasets is expected to contain valuable patterns for augmentation. To utilize this, we build a retrieval knowledge base for each dataset using its own training set. This approach ensures that the retrieval mechanism captures relevant in-domain patterns, enhancing forecasting performance without fine-tuning any parameter.\n\n**Baselines.** In practice, we use Chronos-Bolt, one of the state-of-the-art TSFMs, as the backbone of TS-RAG, as it achieves competitive performance in our evaluations. While TS-RAG is designed to be compatible with any general TSFM, and the authors have verified its effectiveness beyond Chronos-Bolt, the experiments primarily focus on this backbone due to its strong empirical performance. For comparison, the paper also reports the zero-shot performance of other TSFMs, including TTM (Ekambaram et al., 2024), TimesFM (Das et al., 2023), Moirai (Woo et al., 2024), Chronos (Ansari et al., 2024), Chronos-Bolt (Ansari et al., 2024), and MOMENT (Goswami et al., 2024).\n\n**Setup.** Given that TSFMs are typically trained with a fixed forecasting length (e.g., 64 or 96), the paper maintains this consistency in both pretraining and zero-shot evaluation. In the setup, the context length is set to 512, and the forecasting length is fixed at 64. Mean Squared Error (MSE) and Mean Absolute Error (MAE) are used as primary evaluation metrics to assess forecasting performance. The detailed definition of the evaluation metrics can be found in Appendix A.4.\n\n\n### A.3. Details of Inference Datasets\n\nThe experiments evaluate zero-shot forecasting on the widely adopted Electricity Transformer Temperature (ETT) datasets (Zhou et al., 2021), Weather, Electricity (Wu et al., 2023), and Exchange Rate from (Lai et al., 2018). ETT datasets are comprised of roughly two years of data from two locations in China. The data are further divided into four distinct datasets, each with different sampling rates: ETTh1 and ETTh2 are sampled hourly, and ETTm1 and ETTm2 are sampled every 15 minutes. Every ETT dataset includes six power load features and a target variable: the oil temperature. The Electricity dataset comprises records of electricity consumption from 321 customers and is measured with a 1-hour sampling rate. The Weather dataset contains one-year records from 21 meteorological stations located in Germany. The sampling rate for the Weather dataset is 10 minutes. The Exchange Rate dataset includes the daily exchange rates of eight foreign countries, including Australia, British, Canada, Switzerland, China, Japan, New Zealand, and Singapore ranging from 1990 to 2016.\n\n### A.4. Evaluation Metrics\n\n### A.4. Evaluation Metrics\n\nFor evaluation metrics, the paper uses the mean square error (MSE) and mean absolute error (MAE) for zero-shot forecasting. The calculations are presented as follows:\n\n$$\n\\mathrm{MSE} = \\frac{1}{H}\\sum_{h=1}^{H}(Y_h - \\hat{Y}_h)^2,\n\\qquad\n\\mathrm{MAE} = \\frac{1}{H}\\sum_{h=1}^{H}\\lvert Y_h - \\hat{Y}_h \\rvert,\n$$\n\nwhere $H$ denotes the prediction intervals. $Y_h$ and $\\hat{Y}_h$ are the $h$-th ground truth and prediction respectively with $h \\in \\{1, \\ldots, H\\}$.\n\nFor the evaluation metrics in long-term forecasting, the paper clarifies that the reported metrics are the normalized versions of MAE/MSE. Although global standardization is applied to the data, the information used by the scaler comes from training data solely.\n\n> Figure 5 (see PDF p. 12). Retrieval results from the ETTh1 dataset.\n\n> Figure 6 (see PDF p. 12). Retrieval results from the ETTh2 dataset.\n\n## Appendix B. Showcases\n",
+    "summary": "Экспериментальный setup: 7 публичных бенчмарк-датасетов для zero-shot forecasting (различные домены и частоты). Метрики: MSE, MAE. Бейзлайны: Lag-Llama, TimesFM, Chronos, Moirai, MOMENT, TimeGPT-1, TTMs — все TSFM.",
+    "keywords": [
+      "zero-shot",
+      "MSE",
+      "MAE",
+      "Lag-Llama",
+      "TimesFM",
+      "Chronos",
+      "Moirai",
+      "MOMENT",
+      "TimeGPT-1",
+      "TTMs",
+      "Benchmark"
+    ],
+    "question_types": [
+      "В",
+      "З"
+    ],
+    "token_count": 300
+  },
+  {
+    "chunk_id": "ts-rag_chunk_008",
+    "article_id": "ts-rag",
+    "article_meta": {
+      "title": "TS-RAG: Retrieval-Augmented Generation based Time Series Forecasting",
+      "authors": [
+        "Anonymous"
+      ],
+      "year": 2025,
+      "arxiv_id": "2503.07649"
+    },
+    "section": "Experiments",
+    "section_hierarchy": [
+      "Experiments",
+      "4. Experiments",
+      "4.2. Experimental Results"
+    ],
+    "chunk_type": "table_with_prose",
+    "index": 8,
+    "text": "### 4.2. Experimental Results for Zero-shot Forecasting\n\n**Table 1.** Long-term zero-shot forecasting results. Best results are highlighted in **bold**, and second-best results are <u>underlined</u>. `—` indicates the datasets were used in pretraining and zero-shot results are not reported.\n<table>\n  <thead>\n    <tr>\n      <th>Methods</th>\n      <th colspan=\"2\">TS-RAG<sub>Chronos-bolt</sub></th>\n      <th colspan=\"2\">Chronos-bolt<sub>B</sub></th>\n      <th colspan=\"2\">MOMENT</th>\n      <th colspan=\"2\">TTM<sub>B</sub></th>\n      <th colspan=\"2\">Moirai<sub>B</sub></th>\n      <th colspan=\"2\">TimesFM</th>\n      <th colspan=\"2\">Chronos<sub>B</sub></th>\n    </tr>\n    <tr>\n      <th>Metric</th>\n      <th>MSE</th>\n      <th>MAE</th>\n      <th>MSE</th>\n      <th>MAE</th>\n      <th>MSE</th>\n      <th>MAE</th>\n      <th>MSE</th>\n      <th>MAE</th>\n      <th>MSE</th>\n      <th>MAE</th>\n      <th>MSE</th>\n      <th>MAE</th>\n      <th>MSE</th>\n      <th>MAE</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr><td>ETTh1</td><td><strong>0.3557</strong></td><td><strong>0.3624</strong></td><td><u>0.3616</u></td><td><u>0.3650</u></td><td>0.3920</td><td>0.4110</td><td>0.3619</td><td>0.3710</td><td>0.3686</td><td>0.3835</td><td>0.4254</td><td>0.3825</td><td>0.4217</td><td>0.3806</td></tr>\n    <tr><td>ETTh2</td><td><strong>0.2451</strong></td><td><strong>0.2982</strong></td><td><u>0.2517</u></td><td><u>0.2992</u></td><td>0.2982</td><td>0.3585</td><td>0.2531</td><td>0.3032</td><td>0.2547</td><td>0.3053</td><td>0.2894</td><td>0.3233</td><td>0.2659</td><td>0.3136</td></tr>\n    <tr><td>ETTm1</td><td><strong>0.2906</strong></td><td><strong>0.3114</strong></td><td><u>0.3109</u></td><td><u>0.3185</u></td><td>0.3506</td><td>0.3834</td><td>0.3152</td><td>0.3248</td><td>0.5399</td><td>0.4322</td><td>0.3321</td><td>0.3326</td><td>0.3935</td><td>0.3695</td></tr>\n    <tr><td>ETTm2</td><td><strong>0.1466</strong></td><td><strong>0.2231</strong></td><td><u>0.1487</u></td><td><u>0.2236</u></td><td>0.1964</td><td>0.2847</td><td>0.1511</td><td>0.2405</td><td>0.1958</td><td>0.2687</td><td>0.1703</td><td>0.2552</td><td>0.1663</td><td>0.2522</td></tr>\n    <tr><td>Weather</td><td><strong>0.1454</strong></td><td><strong>0.1771</strong></td><td><u>0.1525</u></td><td><u>0.1825</u></td><td>0.1801</td><td>0.2384</td><td>0.1543</td><td>0.1893</td><td>0.1711</td><td>0.1912</td><td>&mdash;</td><td>&mdash;</td><td>0.1897</td><td>0.2107</td></tr>\n    <tr><td>Electricity</td><td><strong>0.1120</strong></td><td><strong>0.2002</strong></td><td><u>0.1132</u></td><td><u>0.2004</u></td><td>0.1967</td><td>0.3028</td><td>0.1715</td><td>0.2643</td><td>0.1832</td><td>0.2814</td><td>&mdash;</td><td>&mdash;</td><td>0.1460</td><td>0.2237</td></tr>\n    <tr><td>Exchange rate</td><td><strong>0.0627</strong></td><td><strong>0.1718</strong></td><td>0.0673</td><td>0.1780</td><td>0.0979</td><td>0.2059</td><td><u>0.0657</u></td><td>0.1725</td><td>0.0663</td><td><u>0.1720</u></td><td>0.0695</td><td>0.1802</td><td>0.0831</td><td>0.1879</td></tr>\n  </tbody>\n</table>\n\nAs shown in Table 1, TS-RAG_Chronos-bolt consistently outperforms other TSFMs, including its backbone model, Chronos-Bolt, across all datasets. This demonstrates the effectiveness of RAG in leveraging relevant time series patterns from the external database to enhance zero-shot forecasting accuracy.\n\nCompared to Chronos-Bolt, TS-RAG_Chronos-bolt achieves an average reduction of 3.54% in MSE and 1.43% in MAE, confirming that the incorporation of retrieved information improves both precision and robustness. Notably, Chronos-Bolt already demonstrates strong performance on the ETTm1 dataset, achieving an MSE of 0.3109. However, TS-RAG_Chronos-bolt further reduces MSE by 6.51%, highlighting its ability to refine forecasts even in scenarios where the backbone TSFM is already highly optimized.\n\nAcross individual datasets, TS-RAG_Chronos-bolt consistently achieves the lowest MSE and MAE, demonstrating its robustness across diverse time series patterns. Significant performance gains are observed on datasets such as ETTm1 and Weather, where TS-RAG not only outperforms Chronos-Bolt but also surpasses all other TSFMs by a notable margin. This improvement suggests that RAG is particularly effective in datasets with complex temporal dependencies, where incorporating relevant time series patterns from an existing database significantly enhances forecasting accuracy.\n\n",
+    "summary": "Результаты zero-shot forecasting: TS-RAG превосходит все TSFM бейзлайны на 7 датасетах. Среднее улучшение до 6.51% по MSE/MAE. Наибольший выигрыш на датасетах с выраженной периодичностью. TS-RAG+Chronos > Chronos baseline на всех датасетах, подтверждая эффективность retrieval-augmented generation для TS.",
+    "keywords": [
+      "zero-shot",
+      "improvement",
+      "6.51%",
+      "TS-RAG",
+      "Chronos",
+      "TSFM",
+      "MSE",
+      "MAE",
+      "retrieval"
+    ],
+    "question_types": [
+      "Спец",
+      "Ж",
+      "А+"
+    ],
+    "token_count": 580
+  },
+  {
+    "chunk_id": "ts-rag_chunk_009",
+    "article_id": "ts-rag",
+    "article_meta": {
+      "title": "TS-RAG: Retrieval-Augmented Generation based Time Series Forecasting",
+      "authors": [
+        "Anonymous"
+      ],
+      "year": 2025,
+      "arxiv_id": "2503.07649"
+    },
+    "section": "Conclusion",
+    "section_hierarchy": [
+      "Conclusion",
+      "5. Conclusion"
+    ],
+    "chunk_type": "prose",
+    "index": 9,
+    "text": "## 5. Conclusion\n\nIn this paper, we introduced TS-RAG, a novel retrieval-augmented forecasting framework designed to enhance the generalization and interpretability of Time Series Foundation Models (TSFMs) in zero-shot forecasting. By integrating retrieval-augmented generation (RAG) with a pretrained retrieval encoder and a Mixture-of-Experts (MoE)-based augmentation module, TS-RAG effectively incorporates retrieved relevant patterns to improve forecasting accuracy in previously unseen domains. Extensive empirical evaluations on multiple benchmark datasets demonstrate that TS-RAG consistently outperforms existing TSFMs, validating its effectiveness in zero-shot forecasting while maintaining strong interpretability.\n\nLooking ahead, the authors aim to 1) explore multimodal extensions of TS-RAG by integrating heterogeneous time series data, such as text data, to further enhance forecasting capabilities; 2) investigate optimization techniques for retrieval ranking in RAG, assessing whether more effective retrieval mechanisms can further boost zero-shot forecasting performance. The paper argues that TS-RAG establishes a strong foundation for retrieval-augmented time series forecasting, setting up a new frontier for robust and adaptable time series forecasting in dynamic and open-world environments.\n\n",
+    "summary": "Заключение: TS-RAG — retrieval-augmented generation фреймворк для zero-shot TS forecasting, комбинирующий retriever, MoE модуль и замороженный TSFM backbone. Достигает улучшения до 6.51% над TSFM без файнтюнинга.",
+    "keywords": [
+      "TS-RAG",
+      "RAG",
+      "zero-shot",
+      "MoE",
+      "TSFM",
+      "retrieval-augmented"
+    ],
+    "question_types": [
+      "А"
+    ],
+    "token_count": 130
+  }
+]

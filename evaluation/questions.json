@@ -1,0 +1,26 @@
+[
+  {
+    "question": "How does a frozen LLM use text prototypes and Prompt-as-Prefix?",
+    "article_id": "time-llm"
+  },
+  {
+    "question": "How does vocabulary inversion improve forecasting?",
+    "article_id": "vitro"
+  },
+  {
+    "question": "Which probabilistic foundation model uses lagged covariates?",
+    "article_id": "lag-llama"
+  },
+  {
+    "question": "How does the DCATS agent clean time series data?",
+    "article_id": "llm-agents"
+  },
+  {
+    "question": "What are semantic anchors used for in prompt learning?",
+    "article_id": "s2ip-llm"
+  },
+  {
+    "question": "How does Gaussian Rank-Stabilized LoRA reduce trainable parameters?",
+    "article_id": "one-for-all"
+  }
+]

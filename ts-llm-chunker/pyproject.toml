@@ -1,0 +1,52 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ts-llm-chunker"
+version = "0.2.0"
+description = "Structure-aware chunker for arxiv papers on LLM for Time Series Forecasting (GraphRAG pipeline)"
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [{ name = "Nikita Belov" }]
+dependencies = [
+    "pydantic>=2.0",
+    "markdown-it-py>=3.0",
+    "tiktoken>=0.5",
+    "pyyaml>=6.0",
+    "python-frontmatter>=1.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+    "ruff>=0.1",
+    "mypy>=1.0",
+]
+
+[project.scripts]
+ts-preprocess = "src.preprocess.run_preprocess:main"
+ts-chunk = "src.chunker.run_chunking:main"
+ts-build = "src.pipeline:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["src*"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP"]
+ignore = ["E501"]
+
+[tool.mypy]
+python_version = "3.10"
+strict = true
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]

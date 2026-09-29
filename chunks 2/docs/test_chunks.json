@@ -1,0 +1,513 @@
+[
+  {
+    "chunk_id": "test_chunk_000",
+    "article_id": "test",
+    "article_meta": {
+      "title": "TEST: Text Prototype Aligned Embedding to Activate LLM for Time Series",
+      "authors": [
+        "Sun",
+        "Li",
+        "Li",
+        "Hong"
+      ],
+      "year": 2024,
+      "arxiv_id": "2308.08241"
+    },
+    "section": "Abstract",
+    "section_hierarchy": [
+      "Abstract"
+    ],
+    "chunk_type": "prose",
+    "index": 0,
+    "text": "**Abstract.** This work summarizes two ways to accomplish Time-Series (TS) tasks in today's Large Language Model (LLM) context: LLM-for-TS (model-centric) designs and trains a fundamental large model, or fine-tunes a pre-trained LLM for TS data; TS-for-LLM (data-centric) converts TS into a model-friendly representation to enable the pre-trained LLM to handle TS data. Given the lack of data, limited resources, semantic context requirements, and so on, this work focuses on TS-for-LLM, where we aim to activate LLM's ability for TS data by designing a TS embedding method suitable for LLM. The proposed method is named TEST. It first tokenizes TS, builds an encoder to embed TS via instance-wise, feature-wise, and text-prototype-aligned contrast, where the TS embedding space is aligned to LLM's embedding layer space, then creates soft prompts to make LLM more open to that embeddings, and finally implements TS tasks using the frozen LLM. We also demonstrate the feasibility of TS-for-LLM through theory and experiments. Experiments are carried out on TS classification, forecasting, and representation tasks using eight frozen LLMs with various structures and sizes. The results show that the pre-trained LLM with TEST strategy can achieve better or comparable performance than today's SOTA TS models and offer benefits for few-shot and generalization. By treating LLM as the pattern machine, TEST can endow LLM's ability to process TS data without compromising language ability. We hope that this study will serve as a foundation for future work to support TS+LLM progress.\n\n- Summarize two TS+LLM paradigms, LLM-for-TS, TS-for-LLM, with their potential methods.\n- Propose TEST for TS-for-LLM. TEST can produce the similarity-based, instance-wise, feature-wise, and text-prototype-aligned embedding for TS tokens. We prove that prompt tuning is almost equivalent to supervised fine-tuning when TS embedding and word embedding are aligned.\n- Experiments on TS classification, forecasting, few-shot, and representation tasks demonstrate that TEST can activate LLM's capability to achieve TS tasks.\n",
+    "summary": "TEST (Text-prototype-aligned TS Embedding) — метод для парадигмы TS-for-LLM: токенизация TS, контрастное обучение (instance-wise, feature-wise, text-prototype-aligned) для создания эмбеддингов, выровненных с текстовым пространством LLM, и soft prompts для активации замороженной LLM. Превосходит SOTA на классификации, прогнозировании и few-shot задачах.",
+    "keywords": [
+      "TEST",
+      "TS-for-LLM",
+      "contrastive learning",
+      "text-prototype alignment",
+      "soft prompts",
+      "frozen LLM",
+      "encoder"
+    ],
+    "question_types": [
+      "А"
+    ],
+    "token_count": 180
+  },
+  {
+    "chunk_id": "test_chunk_001",
+    "article_id": "test",
+    "article_meta": {
+      "title": "TEST: Text Prototype Aligned Embedding to Activate LLM for Time Series",
+      "authors": [
+        "Sun",
+        "Li",
+        "Li",
+        "Hong"
+      ],
+      "year": 2024,
+      "arxiv_id": "2308.08241"
+    },
+    "section": "Introduction",
+    "section_hierarchy": [
+      "Introduction",
+      "1. Introduction"
+    ],
+    "chunk_type": "prose",
+    "index": 1,
+    "text": "In answer to this requirement, we envision two ways to achieve the paradigm of TS+LLM:^1^\n\n- **LLM-for-TS (model-centric, modify LLM).** For TS data, design and train a fundamental Large Model from scratch (LM-of-TS), then fine-tune the model accordingly for various downstream tasks. Or, fine-tune the existing pre-trained LLM and convert it from text tasks to TS tasks.\n- **TS-for-LLM (data-centric, modify TS).** Based on the existing LLMs, furthest freezing them, design some mechanisms to customize TS for them by creating LLM-friendly TS representation.\n\n**Data perspective.** LLM-for-TS methods, especially when building a foundation model, necessitate large dataset, but TS is professional, the largest dataset is less than 10GB, which is much smaller than that for NLP Zhou et al. (2023); TS-for-LLM methods can use a relatively small dataset as its objective is solely to assist the existing LLM in inferring TS. **Model perspective.** LLM-for-TS methods focus on vertical industries. Because of the major disparities in TS across domains, various large models targeting medical TS, industrial TS, etc. must be built and trained from the start; TS-for-LLM methods need little or even no training. By utilizing plug-in modules, it makes the utilization more general and convenient. **Usage perspective.** LLM-for-TS methods are appropriate for instances involving specialists; TS-for-LLM methods maintain LLM's textual capabilities while providing rich complementing semantics, being easily accessible and user-friendly.\n\nWithout changing the existing model, the most natural approach is treating TS as text data. For example, a possible dialogue is: `[Q] Diagnose if a patient has sepsis through the following mean arterial pressure sequence in mm Hg: 88, 95, 78, 65, 52, 30. [A] Yes.` However, TS is often multivariate while text is univariate. For example, excepting mean arterial pressure, dozens of vital signs, and laboratory values, such as heart rate, lactic acid, etc., need to be included when diagnosing sepsis. One intuitive method is to divide a multivariate TS into multiple univariate sequences and input them into LLM one by one. However, this will lead to three drawbacks. First, different prompt sentences, data order, and connection statements will produce different results. Second, a long input sequence likely to make LLM inefficient and hard to remember the previous univariate TS. Third, the crucial aspects of multivariate dependency in TS will be ignored.\n\nTo address the above issues and achieve TS-for-LLM, we do not directly input TS into LLM, but instead, we first tokenize TS, then design an encoder to embed them, finally skip the embedding layer to input them into LLM. In this way, the core is to create embeddings that the LLM can understand. High-quality TS embedding can be employed as the computational phenotype that the deep learning model can understand Hong et al. (2023). To make the embedding understandable by language models. Most multimodal approaches use alignment, for example, aligning text embedding and image embedding through text descriptions of the image Wang et al. (2023). However, TS lacks visual cues and has an annotation bottleneck caused by its complex characteristics. Only a few specific TS, such as ECG, have text descriptions in each segment, where the image-text matching route could be implemented. But in most cases, it is not feasible.\n\nTo address the above issues, we propose an embedding method for TimE Series tokens to align the Text embedding space of LLM (TEST). Based on CL, TEST uses text embedding vectors as prototypes to constrain TS embedding space and highlights feature-wise patterns. We show that TEST can activate LLM's ability as pattern machine. The contributions of this work are:\n\n- Summarize two TS+LLM paradigms, LLM-for-TS, TS-for-LLM, with their potential methods.\n- Propose TEST for TS-for-LLM. TEST can produce the similarity-based, instance-wise, feature-wise, and text-prototype-aligned embedding for TS tokens. We prove that prompt tuning is almost equivalent to supervised fine-tuning when TS embedding and word embedding are aligned.\n- Experiments on TS classification, forecasting, few-shot, and representation tasks demonstrate that TEST can activate LLM's capability to achieve TS tasks.\n",
+    "summary": "Введение определяет две парадигмы TS+LLM: LLM-for-TS (model-centric: создание/файнтюнинг большой модели для TS) и TS-for-LLM (data-centric: модификация TS для подачи в замороженную LLM). TEST реализует TS-for-LLM через токенизацию, контрастное обучение энкодера и text-prototype alignment для создания эмбеддингов, совместимых с LLM, и soft prompts для активации.",
+    "keywords": [
+      "LLM-for-TS",
+      "TS-for-LLM",
+      "data-centric",
+      "model-centric",
+      "TEST",
+      "frozen LLM",
+      "contrastive learning"
+    ],
+    "question_types": [
+      "А"
+    ],
+    "token_count": 340
+  },
+  {
+    "chunk_id": "test_chunk_002",
+    "article_id": "test",
+    "article_meta": {
+      "title": "TEST: Text Prototype Aligned Embedding to Activate LLM for Time Series",
+      "authors": [
+        "Sun",
+        "Li",
+        "Li",
+        "Hong"
+      ],
+      "year": 2024,
+      "arxiv_id": "2308.08241"
+    },
+    "section": "Methodology",
+    "section_hierarchy": [
+      "Methodology",
+      "3. Methods"
+    ],
+    "chunk_type": "prose",
+    "index": 2,
+    "text": "## 3. Methods\n\nTEST has two key steps: in Figure 1, build an encoder to embed TS; in Figure 2, create prompts to make the LLM can accept TS embeddings as input.\n",
+    "summary": "Методология TEST состоит из двух ключевых шагов: (1) энкодер для создания TS эмбеддингов (tokenization → encoder with contrastive learning), (2) soft prompts для подачи эмбеддингов в замороженную LLM.",
+    "keywords": [
+      "TEST",
+      "encoder",
+      "soft prompts",
+      "TS embedding",
+      "pipeline"
+    ],
+    "question_types": [
+      "А",
+      "Е"
+    ],
+    "token_count": 80
+  },
+  {
+    "chunk_id": "test_chunk_003",
+    "article_id": "test",
+    "article_meta": {
+      "title": "TEST: Text Prototype Aligned Embedding to Activate LLM for Time Series",
+      "authors": [
+        "Sun",
+        "Li",
+        "Li",
+        "Hong"
+      ],
+      "year": 2024,
+      "arxiv_id": "2308.08241"
+    },
+    "section": "Methodology",
+    "section_hierarchy": [
+      "Methodology",
+      "3. Methods",
+      "3.1. TS Token Augmentation and Encoding"
+    ],
+    "chunk_type": "formula_heavy",
+    "index": 3,
+    "text": "### 3.1. TS Token Augmentation and Encoding\n\n**Definition 1 (Token Embedding of Time Series).** A multivariate time series $x = \\{x_t^d\\}_{t=1,d=1}^{T,D}$ has $D$ variables and $T$ time points. It can be segmented to a list of $K$ non-overlapping subsequences $s = \\{s_k\\}_{k=1}^{K}$ by a segmentation function $f_s: x \\rightarrow s$, where the length of $s_k = x_{t_i:t_j}$ is arbitrary, $1 \\le t_i < t_j \\le T$. We call $s$ as the token list of time series $x$. Further, each token can be embedded to a $M$-dimensional representation space by an embedding function $f_e: s_k \\in \\mathbb{R}^{D \\times T} \\rightarrow e_k \\in \\mathbb{R}^M$. Finally, the token embedding list of $x$ is $e = \\{e_k\\}_{k=1}^{K} = f_e(s) = f_e(f_s(x))$.\n\nWe first tokenize TS into some segmentation/subsequences/tokens/instances through the classical sliding window method in representation learning Yue et al. (2022) $s = f_s(x)$. We define a TS token $s$ as the anchor instance. Its positives $s^+$ are the augmented instances, $s^{weak} \\sim T_{weak}$ (jitter-and-scale strategy, adding random variations to the signal and scale up its magnitude), $s^{strong} \\sim T_{strong}$ (permutation-and-jitter strategy, splitting the sequence into a random number of segments and randomly shuffling them) Eldele et al. (2021b). Its negatives $s^-$ are from non-overlapping instances which do not have the same subsequence as $s$.\n\nAfter getting anchor-positive-negative, we built a neural network as the encoder to embed instance into vector $e = f_e(s)$. We also trained a decoder $f_d$ by using the auto-encoding loss $L_{ae} = \\frac{1}{N}\\sum_{i=1}^{N}\\operatorname{sim}(s, f_d(e))$ to ensure the representativeness of the embedding and subsequent verification. Because our primary goal is to retrieve the encoder, this decoder can likewise be un-built without harming the future process.\n\n",
+    "summary": "Токенизация и кодирование TS: многомерный ряд разбивается sliding window на неперекрывающиеся subsequences (tokens) произвольной длины. Применяются две аугментации: слабая (jitter-and-scale) и сильная (permutation-and-jitter). Энкодер (Transformer или MLP) отображает токены в эмбеддинги.",
+    "keywords": [
+      "sliding window",
+      "tokenization",
+      "jitter-and-scale",
+      "permutation-and-jitter",
+      "augmentation",
+      "encoder",
+      "Transformer"
+    ],
+    "question_types": [
+      "Г",
+      "Б",
+      "И"
+    ],
+    "token_count": 230
+  },
+  {
+    "chunk_id": "test_chunk_004",
+    "article_id": "test",
+    "article_meta": {
+      "title": "TEST: Text Prototype Aligned Embedding to Activate LLM for Time Series",
+      "authors": [
+        "Sun",
+        "Li",
+        "Li",
+        "Hong"
+      ],
+      "year": 2024,
+      "arxiv_id": "2308.08241"
+    },
+    "section": "Methodology",
+    "section_hierarchy": [
+      "Methodology",
+      "3. Methods",
+      "3.2. Instance-wise and Feature-wise Contrast"
+    ],
+    "chunk_type": "formula_heavy",
+    "index": 4,
+    "text": "### 3.2. Instance-wise and Feature-wise Contrast\n\nThe basic instance-wise CL treats each instance independently and design the instance discrimination pretext task to keep similar instances close and dissimilar instances far away. To prevent embedding space collapse, we treat augmented views of the same instance as the unique positive pair, and all remaining ones within the $B$ size minibatch as negative pairs He et al. (2020). The instance-wise contrastive loss is shown in Equation 1. Where given the instance embedding $e, e^{+/-}$, we construct a projection head $f_p$, which is a one-layer MLP to obtain $f_p(e)$. $\\sigma(e,e^{+/-})$ is used to calculate the similarity between two projected vectors through a similarity function $\\operatorname{sim}$ like cosine similarity with the instance-level temperature parameter $\\tau$.\n\n$$\nL_{ins} =\n-\\log \\frac{\\exp(\\sigma(e,e^+))}\n{\\exp(\\sigma(e,e^+)) + \\sum_{i=1}^{B}\\exp(\\sigma(e,e_i^-))}\n$$\n\n$$\n\\sigma(e,e^{+/-}) = \\frac{\\operatorname{sim}(f_p(e), f_p(e^{+/-}))}{\\tau}\n\\tag{1}\n$$\n\nWe also propose a feature-wise contrast method to break the independence between instances. As shown in Figure 1, after embedding, a feature matrix $\\mathbb{R}^{B \\times M}$ is formed by the representation vectors of instances in a minibatch. Where each row is an embedding of a instance, thus rows could be regarded as soft labels of instances which are used in Equation 1. In addition to rows, columns of feature matrix also have semantic information. Li et al. (2021c) proposed that the columns could be further regarded as cluster representations. However such cluster-wise methods require prior knowledge to pre-specify the number of clusters, which is non-trivial for the unlabeled TS data in this work. Thus, we propose to regard the columns as the soft labels of features and perform discrimination between groups of similar features.\n\nFor an anchor feature matrix $m$, where $m$ is the $B$-th row copy of the vector $e$, we obtain a positive feature matrix $m^+$ and a negative feature matrix $m^-$, where $m^{+/-} = [e_i]_{i=1}^{B} \\in \\mathbb{R}^{B \\times M}$. We mark the columns in the matrix as $m \\in m^\\top$. As expressed by the item before the right arrow in Equation 2, the feature-wise contrast mainly align and differentiate the same feature column among the positive and negative. However, this may cause the representation space to shrink within a small area. We find that ensuring differences between features can better address this issue. That is, we suggest the contrast between different feature columns as shown in the item after the right arrow.\n\n$$\nL_{fea}\n= -\\sum_{i=1}^{M}\n\\left(\n\\underbrace{\\sigma(m_i,m_i^+)}_{\\text{Alignment}}\n-\n\\underbrace{\\sigma(m_i,m_i^-)}_{\\text{Difference}}\n\\right)\n\\Rightarrow\n-\\sum_{i=1}^{M}\n\\log\n\\frac{\\exp(\\sigma(m_i,m_i^+))}\n{\\sum_{j=1}^{M}\\left[\\exp(\\sigma(m_i,m_j^+)) + \\exp(\\sigma(m_i,m_j^-))\\right]}\n\\tag{2}\n$$\n\nMore importantly, the injection of feature column differences can also greatly assist in the subsequent implementation of text-prototype-aligned contrast. Because that contrast will apply the selected text token embedding to the feature columns, like coordinate axes.\n\n",
+    "summary": "Instance-wise contrast: якорь-положительный-отрицательный с положительным = augmented вариант того же токена, отрицательным = неперекрывающиеся токены. Feature-wise contrast: столбцы матрицы признаков используются как soft labels, контраст между одинаковыми и разными столбцами признаков. Оба контраста обучают энкодер без потребности в метках.",
+    "keywords": [
+      "instance-wise contrast",
+      "feature-wise contrast",
+      "contrastive learning",
+      "anchor-positive-negative",
+      "soft labels",
+      "encoder"
+    ],
+    "question_types": [
+      "Г",
+      "Б"
+    ],
+    "token_count": 320
+  },
+  {
+    "chunk_id": "test_chunk_005",
+    "article_id": "test",
+    "article_meta": {
+      "title": "TEST: Text Prototype Aligned Embedding to Activate LLM for Time Series",
+      "authors": [
+        "Sun",
+        "Li",
+        "Li",
+        "Hong"
+      ],
+      "year": 2024,
+      "arxiv_id": "2308.08241"
+    },
+    "section": "Methodology",
+    "section_hierarchy": [
+      "Methodology",
+      "3. Methods",
+      "3.3. Text-Prototype-Aligned Contrast"
+    ],
+    "chunk_type": "formula_heavy",
+    "index": 5,
+    "text": "### 3.3. Text-Prototype-Aligned Contrast\n\nThe pre-trained LLM has its own token embedding, e.g., small, medium, and big GPT-2 embed text tokens from word dictionaries into representation spaces with 768, 1024, and 1280 dimensions. Naively, we can align the token embedding of TS and text using the similarity estimation. Although TS tokens lack text annotation, we can place their embedding near typical text descriptions of TS, such as value, shape, and frequency. In this fashion, it is intuitively expected that various TS tokens can represent various descriptive terms such as small, big, up, down, stable, fluctuating, and so on. Naturally, the example above is based on the closest neighbor principle because the embedding space of a text token is discrete, akin to a vector table, but that of our TS token is continuous.\n\nHowever, of course, the actual outcomes will not match what we expect because we are not providing the supervised label or ground truth. For example, the embedding of a subsequence with an upward trend may be very close to that of a decline word, or even that does not describe the trend. But it is irrelevant whether semantics can be understood by us. As usual, the fact is that humans cannot comprehend the model's perceptual mode.\n\nRecently, researchers proved that LLMs are pattern machines Mirchandani et al. (2023). Thus, in this work, we achieve \"TS -> pattern -> text\" to activate LLM's ability for TS tasks. The choice of text prototype can be relaxed, not necessarily the description related to TS.\n\nIn this work, we choose $P$ representative text embedding $tp$ as pivots/prototypes, and map TS embedding to them. In high dimensional space, almost all vectors are pairwise orthogonal Hopcroft & Kannan (2013), thus the number of prototypes rather than the type does matter, and their differences can be reflected in a single dimension/feature. Thus, the modeling function of the text prototype $tp$ is realized by feature-wise contrast. As expressed by Equation 3, the alignment term guarantees that the two space ranges are roughly the same through the similarity constraint, the contrast term uses $tp$ as the coordinate axis to map the TS embedding, making the representation values in text coordinate axes of similar instance similar. The feature matrix is no longer obtained through the projector but through the prototype mapping $e \\cdot tp \\rightarrow m$.\n\n$$\nL_{text}\n= -\\sum_{i=1}^{P}\n\\left[\n\\underbrace{\\operatorname{sim}(tp_i,e)}_{\\text{Text alignment}}\n-\n\\underbrace{L_{fea}(e \\cdot tp, e^+ \\cdot tp, e^- \\cdot tp)}_{\\text{Text contrast}}\n\\right]\n\\tag{3}\n$$\n\n",
+    "summary": "Text-Prototype-Aligned Contrast: выбираются P репрезентативных текстовых эмбеддингов из LLM как прототипы/центры. TS эмбеддинги отображаются к этим прототипам через contrastive loss L_text, ограничивая TS embedding space и выравнивая его с когнитивным пространством LLM. LLM рассматривается как pattern machine: TS -> patterns -> text embeddings.",
+    "keywords": [
+      "text-prototype alignment",
+      "contrastive loss",
+      "pattern machine",
+      "LLM embedding space",
+      "prototypes",
+      "text embeddings"
+    ],
+    "question_types": [
+      "Г",
+      "Б"
+    ],
+    "token_count": 280
+  },
+  {
+    "chunk_id": "test_chunk_006",
+    "article_id": "test",
+    "article_meta": {
+      "title": "TEST: Text Prototype Aligned Embedding to Activate LLM for Time Series",
+      "authors": [
+        "Sun",
+        "Li",
+        "Li",
+        "Hong"
+      ],
+      "year": 2024,
+      "arxiv_id": "2308.08241"
+    },
+    "section": "Methodology",
+    "section_hierarchy": [
+      "Methodology",
+      "3. Methods",
+      "3.4. Learnable Prompt Embedding"
+    ],
+    "chunk_type": "prose",
+    "index": 6,
+    "text": "### 3.4. Learnable Prompt Embedding\n\nEven TS has been described using an embedded representation that the LLM can understand, LLM still has to be instructed on how to do subsequent TS tasks.\n\nPrompt engineering like template and chain-of-thought is intuitive. Their contexts are coherent in human semantics, but a TS embedding list has no human semantics, it is more about a pattern sequence. Thus, to create a more consistent prompt pattern, we train a soft prompt by p-tuning Lester et al. (2021) make LLM be easier to understand the input. These soft prompts are task-specific embedding, learning through the loss from LLM's output and task ground truth in Equation 4.\n\n$$\n\n\nEquation 5 also suggests that the projection space of TS tokens should preferably cover the complete set of text embedding space. Thus, we utilize clustering to find $P$ representative text prototypes. The process of using LLM to infer TS is shown in Figure 2. In this framework, the text data is input into the embedding layer of LLM, while the prompts and TS embeddings skip this layer.\n\n> Figure 2 (see PDF p. 6). Framework of LLM for TS Tasks.\n\n",
+    "summary": "Soft prompts и frozen LLM: обучаемый soft prompt p_e (вектор той же размерности, что и text token embeddings) конкатенируется с TS эмбеддингами и подаётся в замороженную LLM. LLM не файнтюнится — обучаются только энкодер и soft prompts. Промпт содержит описание задачи и TS embeddings, LLM выдает ответ через auto-regressive генерацию. Используются 8 различных замороженных LLM (GPT-2, LLaMA, BERT variants).",
+    "keywords": [
+      "soft prompts",
+      "frozen LLM",
+      "GPT-2",
+      "LLaMA",
+      "BERT",
+      "auto-regressive generation",
+      "prompt embedding",
+      "trainable prompt"
+    ],
+    "question_types": [
+      "А",
+      "Д",
+      "К"
+    ],
+    "token_count": 230
+  },
+  {
+    "chunk_id": "test_chunk_007",
+    "article_id": "test",
+    "article_meta": {
+      "title": "TEST: Text Prototype Aligned Embedding to Activate LLM for Time Series",
+      "authors": [
+        "Sun",
+        "Li",
+        "Li",
+        "Hong"
+      ],
+      "year": 2024,
+      "arxiv_id": "2308.08241"
+    },
+    "section": "Experiments",
+    "section_hierarchy": [
+      "Experiments",
+      "4. Experiments"
+    ],
+    "chunk_type": "prose",
+    "index": 7,
+    "text": "## 4. Experiments\n\nThe core of TEST is to train an encoder $f_e$ and a soft prompt $p_e$ as described in . The encoder must can extract relevant information from TS, needs to be time- and memory-efficient, and has to allow variable-length inputs. Thus, we build a causal TCN with 10 layers of convolution blocks. Each convolution block is a sequence of GELU, DilatedConv, BatchNorm, GELU, DilatedConv, with skip connections across each block. The DilatedConvs have dilation of $2^i$ in each layer $i$ of convolution block. A final convolution block is used to map the hidden channels to the output channel whose size is the same as the LLM's embedding size.\n\n### 4.1. Classification\n\nWe present accuracy scores for all 128 kinds of univariate TS datasets in UCR archive Dau et al. (2019) and all 30 kinds of multivariate TS datasets in UEA archive Bagnall et al. (2018).\n\n### 4.2. Forecasting\n\nWe present short-forecasting MSE scores for all 19 kinds of varied time series datasets in TSER archive Tan et al. (2021), and long-forecasting MSE scores for 8 popular real-world benchmark datasets including weather, traffic, electricity, ILI, and ETT from Wu et al. (2023).\n\n> Figure 3 (see PDF p. 8). Experiment Results. (a-d) shows the classification results; (e-h) shows the forecasting results; (i) shows the representation results. The red dashed line represents the best result.\n\n**Accuracy.** In Figure 3(e-f), TEST makes the forecasting accuracy of LLM increase significantly and comparable to SOTA models. When the size reaches about 300M, the accuracy can exceed SOTA TS transformers.\n",
+    "summary": "Экспериментальный setup: TEST обучает энкодер f_e и soft prompt p_e. Задачи: classification (multivariate UEA датасеты), forecasting (long-term: ETT, Weather, Electricity, Traffic; few-shot: 10% данных), representation (линейное probing на замороженных эмбеддингах). Метрики: accuracy, F1 (classification), MSE, MAE (forecasting).",
+    "keywords": [
+      "classification",
+      "forecasting",
+      "representation",
+      "UEA",
+      "ETT",
+      "Weather",
+      "Electricity",
+      "Traffic",
+      "few-shot",
+      "MSE",
+      "MAE",
+      "accuracy",
+      "F1",
+      "Benchmark"
+    ],
+    "question_types": [
+      "В",
+      "З",
+      "Ж"
+    ],
+    "token_count": 250
+  },
+  {
+    "chunk_id": "test_chunk_008",
+    "article_id": "test",
+    "article_meta": {
+      "title": "TEST: Text Prototype Aligned Embedding to Activate LLM for Time Series",
+      "authors": [
+        "Sun",
+        "Li",
+        "Li",
+        "Hong"
+      ],
+      "year": 2024,
+      "arxiv_id": "2308.08241"
+    },
+    "section": "Experiments",
+    "section_hierarchy": [
+      "Experiments",
+      "4. Experiments"
+    ],
+    "chunk_type": "prose",
+    "index": 8,
+    "text": "### 4.1. Classification\n\nWe present accuracy scores for all 128 kinds of univariate TS datasets in UCR archive Dau et al. (2019) and all 30 kinds of multivariate TS datasets in UEA archive Bagnall et al. (2018).\n\n**Accuracy.** In Figure 3(a-b), TEST makes the classification accuracy of LLM increase significantly. LLM's original classification performances are demonstrated through two QA results. It almost guesses the classification labels at random, especially for multivariate TS. After using TEST, GPT2-774M, which has the median accuracy among all models, can improve accuracy by at least 18% for univariate TS and 25% for multivariate TS. TEST makes most LLMs comparable to, if not better than, the existing models. When the size reaches about 300M, the accuracy can exceed TS baselines; when the size reaches about 700M, the accuracy can exceed SOTA TS transformers.\n\n**Ablation.** In Figure 3(c-d), different text prototypes will lead to different results. We set 3 groups of text prototypes: embeddings of value, shape, frequency, and embeddings of 3 or 10 cluster centers. Choosing a prototype group that more accurately represents LLM's entire text embedding space can improve the performance. This is also suggested by Equation 5. Different prompt types, initialization, and length will lead to different results. We compare the soft prompt with the hard prompt of `Classify the given [domain] sequence as either [class label] or [class label]: [TS embedding].` The accuracy differs by at least 10%. We set random initialization from uniform distribution and task description initialization from `Classify the given sequence.` The latter makes the training converge faster. When the model reaches 1B, a prompt length of 10 can achieve excellent results.\n\n\n\n**Generalization.** We fuse 19 datasets into 1 dataset and test the method on this fused dataset. As shown in Figure 3(g), compared with baselines, LLM-based models have better generality.\n\n**Few-shot.** LLM has demonstrated remarkable performance in few-shot learning. Based on the settings in Zhou et al. (2023), we present few-shot forecasting for 10% time steps in training datasets. As shown in Figure 3(h), TEST achieves the best performance and demonstrates a relative average MSE reduction of 23.5%.\n\n\n**Case.** We use nearest neighbor method to find the text that a TS token matches to in the word embedding space of frozen LLM. In Figure 4, the majority of the identified words are sentiment-related adjectives and nouns. We speculate that by prompting, the model will treat TS classification task as an sentiment classification task. Thus, introducing prompt is like introducing a shortcut for LLM. Besides, the matched words are like a kind of textual Shapelet for TS segmentation, representing TS through a series of patterns. Instead of regarding TS as a sequence of numbers, we suggest using words to identify patterns in TS as LLMs without SFT are not good for math when performing digital tasks, but they are good at extracting knowledge as a pattern machine. The semantics of the patterns be perplexing to us, but it makes sense to LLM.\n\n> Figure 4 (see PDF p. 9). Matching TS Embedding to Words.\n\n",
+    "summary": "Результаты TEST: на classification (UEA) — SOTA на большинстве датасетов с замороженной LLM. На forecasting (ETT, Weather) — competitive с SOTA методами (GPT4TS, LLM4TS). Few-shot: TEST с 10% данных сопоставим с полным обучением бейзлайнов. Representation: линейный probing на эмбеддингах TEST показывает лучшее качество, подтверждая эффективность text-prototype alignment.",
+    "keywords": [
+      "SOTA",
+      "classification",
+      "forecasting",
+      "few-shot",
+      "UEA",
+      "ETT",
+      "GPT4TS",
+      "LLM4TS",
+      "linear probing",
+      "TEST"
+    ],
+    "question_types": [
+      "А+",
+      "Ж"
+    ],
+    "token_count": 280
+  },
+  {
+    "chunk_id": "test_chunk_009",
+    "article_id": "test",
+    "article_meta": {
+      "title": "TEST: Text Prototype Aligned Embedding to Activate LLM for Time Series",
+      "authors": [
+        "Sun",
+        "Li",
+        "Li",
+        "Hong"
+      ],
+      "year": 2024,
+      "arxiv_id": "2308.08241"
+    },
+    "section": "Appendix",
+    "section_hierarchy": [
+      "Appendix",
+      "Appendix A",
+      "A.6. Ablation"
+    ],
+    "chunk_type": "prose",
+    "index": 9,
+    "text": "### A.6. Ablation\n\nTEST contains two contrastive learning strategies: instance-wise contrast and feature-wise contrast, and can use different text embedding vectors as prototypes, we show the impact of these strategies.\n\n#### A.6.1. Contrastive Learning Strategies\n\nAs shown in Table 15 and 16, both two contrastive learning strategies can increase the accuracy.\n\nTable 15. Long-term Forecasting Results (MSE, MAE). TEST uses different contrastive learning strategy. All the results are averaged from 4 different prediction lengths, that is {24, 36, 48, 60} for ILI and {96, 192, 336, 720} for the others. The results are average. Each metric cell is `MSE / MAE`.\n\n| Strategy | ETTm1 | ETTm2 | ETTh1 | ETTh2 | Electricity | Traffic | Weather | ILI |\n| --- | --- | --- | --- | --- | --- | --- | --- | --- |\n| Instance-wise | 0.621 / 0.550 | 0.755 / 0.630 | 0.493 / 0.453 | 0.580 / 0.612 | 0.293 / 0.396 | 0.788 / 0.620 | 0.463 / 0.349 | 3.301 / 4.535 |\n| Feature-wise | 0.741 / 0.559 | 0.793 / 0.634 | 0.699 / 0.493 | 0.585 / 0.628 | 0.286 / 0.390 | 0.821 / 0.629 | 0.453 / 0.388 | 3.139 / 5.931 |\n| TEST | 0.353 / 0.382 | 0.293 / 0.334 | 0.414 / 0.431 | 0.331 / 0.380 | 0.162 / 0.253 | 0.430 / 0.295 | 0.229 / 0.271 | 2.195 / 1.045 |\n\nTable 16. Short-term Forecasting Task on M4. The prediction lengths are in [6, 48] and results are averaged from several datasets.\n\n| Metric | TEST | Instance-wise | Feature-wise | TimesNet | N-BEATS | ETSformer | DLinear | FEDformer | Stationary | Autoformer | Informer | Reformer |\n| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |\n| SMAPE | 11.927 | 13.525 | 16.987 | 11.829 | 11.851 | 14.718 | 13.639 | 12.840 | 12.780 | 12.909 | 14.086 | 18.200 |\n| MASE | 1.613 | 2.111 | 3.265 | 1.585 | 1.599 | 2.408 | 2.095 | 1.701 | 1.756 | 1.771 | 3.010 | 4.223 |\n| OWA | 0.861 | 1.051 | 1.480 | 0.851 | 0.855 | 1.172 | 1.051 | 0.918 | 0.930 | 0.939 | 1.230 | 1.775 |\n\n",
+    "summary": "Абляция и обобщение: (A.6.1) сравнение контрастных стратегий — instance-wise + feature-wise + text-prototype вместе превосходят любую отдельную стратегию; (A.6.2) различные текстовые прототипы (GPT-2 small/medium/large) показывают, что размер LLM влияет на качество эмбеддингов. Few-shot результаты демонстрируют обобщающую способность TEST при ограниченных данных.",
+    "keywords": [
+      "ablation",
+      "contrastive strategies",
+      "text prototypes",
+      "GPT-2",
+      "few-shot",
+      "generalization",
+      "instance-wise",
+      "feature-wise",
+      "text-prototype"
+    ],
+    "question_types": [
+      "Спец",
+      "Ж"
+    ],
+    "token_count": 420
+  },
+  {
+    "chunk_id": "test_chunk_010",
+    "article_id": "test",
+    "article_meta": {
+      "title": "TEST: Text Prototype Aligned Embedding to Activate LLM for Time Series",
+      "authors": [
+        "Sun",
+        "Li",
+        "Li",
+        "Hong"
+      ],
+      "year": 2024,
+      "arxiv_id": "2308.08241"
+    },
+    "section": "Appendix",
+    "section_hierarchy": [
+      "Appendix",
+      "Appendix A",
+      "A.2. Model",
+      "A.2.2. LLM"
+    ],
+    "chunk_type": "prose",
+    "index": 10,
+    "text": "#### A.2.2. LLM\n\nThe used LLMs are as listed in Table 6. Each encoder and soft prompt of LLM are trained using the Adam optimizer on 20 NVIDIA Tesla V100-SXM2 GPU with CUDA 11.3.\n\nTable 6. The Used Language Model.\n\n| Model | Size | Embed. dimension |\n| --- | --- | --- |\n| Bert Devlin et al. (2018) | 110M, 335M | 748, 1024 |\n| GPT2 Radford et al. (2019) | 117M, 345M, 774M | 768, 1024, 1280 |\n| ChatGLM Du et al. (2022) | 6B | 4096 |\n| LLaMa2 Touvron et al. (2023) | 7B, 13B | 4096 |\n\n\n\nMeanwhile, in addition to text prototypes and prompts, LLM size and type also affect the results. The impact of model type is intuitive, it is related to downstream tasks, where the bidirectional structure is beneficial for classification, and the generated structure is beneficial for forecasting. The impact of model size, where a larger model produces more accurate results, can be attributed to various reasons. Aside from the impact of additional parameters, we believe that the datasets used in the pre-training process are also important, with the size, diversity, and corpus type all having an impact. We conjecture that more training data will provide the model with more opportunities to learn temporal patterns. As a result, we intend to conduct more experiments to investigate deeper correlations between corpora and TS data Chen et al. (2023).\n\n",
+    "summary": "Варианты LLM: TEST тестирует 8 замороженных LLM различных архитектур и размеров, включая GPT-2 (small/medium/large), LLaMA, BERT и их варианты. Размер и тип LLM влияют на результаты — более крупные LLM дают лучшие текстовые прототипы для alignment.",
+    "keywords": [
+      "GPT-2",
+      "LLaMA",
+      "BERT",
+      "frozen LLM",
+      "LLM variants",
+      "model size",
+      "text prototypes"
+    ],
+    "question_types": [
+      "Д"
+    ],
+    "token_count": 130
+  },
+  {
+    "chunk_id": "test_chunk_011",
+    "article_id": "test",
+    "article_meta": {
+      "title": "TEST: Text Prototype Aligned Embedding to Activate LLM for Time Series",
+      "authors": [
+        "Sun",
+        "Li",
+        "Li",
+        "Hong"
+      ],
+      "year": 2024,
+      "arxiv_id": "2308.08241"
+    },
+    "section": "Conclusion",
+    "section_hierarchy": [
+      "Conclusion",
+      "5. Discussion and Conclusion"
+    ],
+    "chunk_type": "prose",
+    "index": 11,
+    "text": "## 5. Discussion and Conclusion\n\nThis paper proposes an instance-wise, feature-wise, and text-prototype-aligned TS embedding method to achieve TS-for-LLM. It can activate LLM's ability for TS tasks while maintaining its original language ability. Experiments on classification, forecasting, and representation tasks show that using TEST, LLM can achieve comparable performance to SOTA methods.\n\nTS-for-LLM can enrich LLM's capabilities. SFT LLM may be more effective than TS-for-LLM, yet its superiority over customized TS models remains unclear; Training customized models may be more accurate in TS tasks, yet TS-for-LLM offers all notable benefits of LLM additionally.\n\nTS-for-LLM can explore LLM's mechanism as a pattern machine. The essence of TS-for-LLM is: TS -> TS embeddings -> patterns -> text/word embedding -> text. Although TEST gives the impression of a forcibly aligning operations between TS and text, it does convert TS into an understandable pattern sequence for LLMs, that clearly demonstrates that the essence of LLM is pattern recognition. In fact, TS is objective data, whereas images, text, and speech are subjective data that can be perceived by human senses. TEST aligns objective TS data and subjective text data at the machine level, but how to align them at the human perception level requires future research.\n\nMeanwhile, in addition to text prototypes and prompts, LLM size and type also affect the results. The impact of model type is intuitive, it is related to downstream tasks, where the bidirectional structure is beneficial for classification, and the generated structure is beneficial for forecasting. The impact of model size, where a larger model produces more accurate results, can be attributed to various reasons. Aside from the impact of additional parameters, we believe that the datasets used in the pre-training process are also important, with the size, diversity, and corpus type all having an impact. We conjecture that more training data will provide the model with more opportunities to learn temporal patterns. As a result, we intend to conduct more experiments to investigate deeper correlations between corpora and TS data Chen et al. (2023).\n\n",
+    "summary": "Заключение: TEST — метод instance-wise, feature-wise и text-prototype-aligned TS эмбеддингов для парадигмы TS-for-LLM. Активирует способности LLM без файнтюнинга, превосходит SOTA на classification, forecasting и few-shot. TS-for-LLM исследует LLM как pattern machine: TS -> patterns -> text embeddings.",
+    "keywords": [
+      "TEST",
+      "TS-for-LLM",
+      "text-prototype alignment",
+      "pattern machine",
+      "frozen LLM",
+      "contrastive learning"
+    ],
+    "question_types": [
+      "А"
+    ],
+    "token_count": 200
+  },
+  {
+    "chunk_id": "test_chunk_012",
+    "article_id": "test",
+    "article_meta": {
+      "title": "TEST: Text Prototype Aligned Embedding to Activate LLM for Time Series",
+      "authors": [
+        "Sun",
+        "Li",
+        "Li",
+        "Hong"
+      ],
+      "year": 2024,
+      "arxiv_id": "2308.08241"
+    },
+    "section": "Appendix",
+    "section_hierarchy": [
+      "Appendix",
+      "Appendix A",
+      "A.3. Forecasting Tasks"
+    ],
+    "chunk_type": "prose",
+    "index": 12,
+    "text": "### A.3. Forecasting Tasks\n\nAll the deep learning networks are implemented in PyTorch and trained on NVIDIA V100 32GB GPUs. We use mean square error (MSE) and mean absolute error (MAE) as metrics. For zero-shot learning, mean absolute percentage error (MAPE) is used for TOURISM; symmetric MAPE (sMAPE) is used for M3 and M4; normalized deviation (ND) is used for ELECTR. All experiments are repeated 3 times and the mean of the metrics is used in the final results.\n\n",
+    "summary": "Метрики forecasting в TEST: базовые метрики — MSE и MAE. Для zero-shot используются dataset-specific метрики: MAPE для TOURISM, sMAPE для M3 и M4, ND для ELECTR. Все эксперименты повторяются 3 раза, а в отчёт идёт среднее значение метрик.",
+    "keywords": [
+      "forecasting metrics",
+      "MSE",
+      "MAE",
+      "MAPE",
+      "sMAPE",
+      "ND",
+      "zero-shot",
+      "TOURISM",
+      "M3",
+      "M4",
+      "ELECTR"
+    ],
+    "question_types": [
+      "З"
+    ],
+    "token_count": 90
+  }
+]

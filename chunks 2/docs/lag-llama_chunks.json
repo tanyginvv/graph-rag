@@ -1,0 +1,541 @@
+[
+  {
+    "chunk_id": "lag-llama_chunk_000",
+    "article_id": "lag-llama",
+    "article_meta": {
+      "title": "Lag-Llama: Towards Foundation Models for Probabilistic Time Series Forecasting",
+      "authors": [
+        "Rasul",
+        "Ashok",
+        "Williams",
+        "Khorasani",
+        "Adamskyy",
+        "Darakjian",
+        "Fraser",
+        "Hasson",
+        "Schneider",
+        "Nevmyvaka"
+      ],
+      "year": 2024,
+      "arxiv_id": "2310.08278"
+    },
+    "section": "Abstract",
+    "section_hierarchy": [
+      "Abstract"
+    ],
+    "chunk_type": "prose",
+    "index": 0,
+    "text": "## Abstract\n\nOver the past years, foundation models have caused a paradigm shift in machine learning due to their unprecedented capabilities for zero-shot and few-shot generalization. However, despite the success of foundation models in modalities such as natural language processing and computer vision, the development of foundation models for time series forecasting has lagged behind. We present Lag-Llama, a general-purpose foundation model for univariate probabilistic time series forecasting based on a decoder-only transformer architecture that uses lags as covariates. Lag-Llama is pretrained on a large corpus of diverse time series data from several domains, and demonstrates strong zero-shot generalization capabilities compared to a wide range of forecasting models on downstream datasets across domains. Moreover, when fine-tuned on relatively small fractions of such previously unseen datasets, Lag-Llama achieves state-of-the-art performance, outperforming prior deep learning approaches, emerging as the best general-purpose model on average. Lag-Llama serves as a strong contender to the current state-of-art in time series forecasting and paves the way for future advancements in foundation models tailored to time series data.\n\n",
+    "summary": "Lag-Llama — foundation model для вероятностного прогнозирования временных рядов, обученная с нуля (from scratch). Decoder-only архитектура на базе LLaMA с lag features, distribution head (Student's t), robust value scaling. Превосходит или сравнивается с SOTA в zero-shot и после файнтюнинга на 27 датасетах.",
+    "keywords": [
+      "Lag-Llama",
+      "foundation model",
+      "from scratch",
+      "LLaMA",
+      "decoder-only",
+      "probabilistic forecasting",
+      "lag features",
+      "CRPS"
+    ],
+    "question_types": [
+      "А",
+      "Ж"
+    ],
+    "token_count": 140
+  },
+  {
+    "chunk_id": "lag-llama_chunk_001",
+    "article_id": "lag-llama",
+    "article_meta": {
+      "title": "Lag-Llama: Towards Foundation Models for Probabilistic Time Series Forecasting",
+      "authors": [
+        "Rasul",
+        "Ashok",
+        "Williams",
+        "Khorasani",
+        "Adamskyy",
+        "Darakjian",
+        "Fraser",
+        "Hasson",
+        "Schneider",
+        "Nevmyvaka"
+      ],
+      "year": 2024,
+      "arxiv_id": "2310.08278"
+    },
+    "section": "Introduction",
+    "section_hierarchy": [
+      "Introduction",
+      "1. Introduction"
+    ],
+    "chunk_type": "prose",
+    "index": 1,
+    "text": "## 1. Introduction\n\nProbabilistic time series forecasting is an important practical problem arising in a wide range of applications, from finance and weather forecasting to brain imaging and computer systems performance management [Peterson, 2017]. Accurate probabilistic forecasting is usually an essential step towards the subsequent decision-making in such practical domains. The probabilistic nature of such forecasting endows decision-makers with a notion of uncertainty, allowing them to consider a variety of future scenarios, along with their respective likelihoods. Various methods have been proposed for this task, ranging from classical autoregressive models [Hyndman and Athanasopoulos, 2021] to the more recent neural forecasting methods based on deep learning architectures [Torres et al., 2021]. Note that the overwhelming majority of these previous approaches are focused on building dataset-specific models, i.e. models tested on the same dataset in which training is performed.\n\nRecently, however, machine learning is witnessing a paradigm shift due to the rise of foundation models [Bommasani et al., 2022] — large-scale, general-purpose neural networks pretrained in an unsupervised manner on large amounts of diverse data across various data distributions. Such models demonstrate remarkable few-shot generalization capabilities on a wide range of downstream datasets [Brown et al., 2020a], often outperforming dataset-specific models. Following the successes of foundation models in language and image processing domains [OpenAI, 2023; Radford et al., 2021], we aim to develop foundation models for time series, investigate their behaviour at scale, and push the limits of transfer achievable across diverse time series domains.\n\nIn this paper, we present Lag-Llama — a foundation model for probabilistic time series forecasting trained on a large collection of open time series data, and evaluated on unseen time series datasets. We investigate the performance of Lag-Llama across several settings where unseen time series datasets are encountered downstream with different levels of data history being available, and show that Lag-Llama performs comparably or better against state-of-the-art dataset-specific models.\n\nOur contributions:\n\n- We present Lag-Llama, a foundation model for univariate probabilistic time series forecasting based on a simple decoder-only transformer architecture that uses lags as covariates.\n- We show that Lag-Llama, when pretrained from scratch on a broad, diverse corpus of datasets, has strong zero-shot performance on unseen datasets, and performs comparably to models trained on the specific datasets.\n- Lag-Llama also demonstrates state-of-the-art performance across diverse datasets from different domains after finetuning, and emerges as the best general-purpose model without any knowledge of downstream datasets.\n- We demonstrate the strong few-shot adaptation performance of Lag-Llama on previously unseen datasets, across varying fractions of data history being available.\n- We investigate the diversity of the pretraining corpus used to train Lag-Llama, and present the scaling laws of Lag-Llama with respect to the pretraining data.\n\n",
+    "summary": "Введение: Lag-Llama — первая open-source foundation model для univariate probabilistic TS forecasting. Обучена с нуля на 352M токенах из diverse корпуса. Ключевые инновации: lag features как токены, robust value scaling (median+IQR), distribution head (Student's t), stratified sampling.",
+    "keywords": [
+      "Lag-Llama",
+      "foundation model",
+      "from scratch",
+      "univariate",
+      "probabilistic",
+      "lag features",
+      "robust scaling",
+      "Student's t"
+    ],
+    "question_types": [
+      "А"
+    ],
+    "token_count": 370
+  },
+  {
+    "chunk_id": "lag-llama_chunk_002",
+    "article_id": "lag-llama",
+    "article_meta": {
+      "title": "Lag-Llama: Towards Foundation Models for Probabilistic Time Series Forecasting",
+      "authors": [
+        "Rasul",
+        "Ashok",
+        "Williams",
+        "Khorasani",
+        "Adamskyy",
+        "Darakjian",
+        "Fraser",
+        "Hasson",
+        "Schneider",
+        "Nevmyvaka"
+      ],
+      "year": 2024,
+      "arxiv_id": "2310.08278"
+    },
+    "section": "RelatedWork",
+    "section_hierarchy": [
+      "RelatedWork",
+      "2. Related Work"
+    ],
+    "chunk_type": "prose",
+    "index": 2,
+    "text": "## 2. Related Work\n\nStatistical models have been the cornerstone of time series forecasting for decades, evolving continuously to address complex forecasting challenges. Traditional models such as ARIMA (Autoregressive Integrated Moving Average) set the foundation by using autocorrelation to forecast future values. ETS (Error, Trend, Seasonality) models advanced this by decomposing a time series into its fundamental components, allowing for more nuanced forecasting that captures trends and seasonal patterns. Theta models, introduced by Assimakopoulos and Nikolopoulos [2000], represented another significant advancement in time series forecasting. By applying a decomposition technique combining both long-term trend and seasonality, these models offer a simple yet effective method for forecasting. Despite the considerable successes of these statistical models and more advanced ones [Croston, 1972; Syntetos and Boylan, 2005; Hyndman and Athanasopoulos, 2018], these models share common limitations. Their primary shortfall lies in their inherent assumption of linear relationships and stationarity in time series data, which is often not the case in real-world scenarios marked by abrupt changes and non-linear dynamics. Furthermore, they may require extensive manual tuning and domain knowledge to select appropriate models and parameters for specific forecasting tasks.\n\nNeural forecasting is a rapidly developing research area following the explosion of machine learning [Benidis et al., 2022]. Various architectures have been developed for this setting, starting with RNN-based and LSTM-based models [Salinas et al., 2020; Wen et al., 2018]. More recently in light of the recent success of transformers [Vaswani et al., 2017] for sequence-to-sequence modelling for natural language processing, many variations of transformers have been proposed for time series forecasting. Different models [Nie et al., 2023a; Wu et al., 2020a; Wu et al., 2020b] process the input time series in different ways to be digestible by a vanilla transformer, then re-process the output of a transformer for a point forecast or a probabilistic forecast. On the other hand, various other works propose alternative strategies to vanilla attention and build off the transformer architecture, for better models tailored for time series [Lim et al., 2021; Li et al., 2023; Ashok et al., 2023; Oreshkin et al., 2020a; Zhou et al., 2021a; Wu et al., 2021; Woo et al., 2023; Liu et al., 2022b; Zhou et al., 2022; Liu et al., 2022a; Ni et al., 2023; Li et al., 2019; Gulati et al., 2020].\n\nFoundation models are an emerging paradigm of self-supervised (or) unsupervised learning on large datasets [Bommasani et al., 2022]. Many such models [Devlin et al., 2019; OpenAI, 2023; Chowdhery et al., 2022; Radford et al., 2021; Wang et al., 2022] have demonstrated adaptability across modalities, extending beyond web data to scientific domains such as protein design [Robert Verkuil, 2022]. Scaling the model, dataset size and data diversity have also been shown to result in remarkable transfer capabilities and excellent few-shot learning on novel datasets and tasks [Thrun and Pratt, 1998; Brown et al., 2020b]. Self-supervised learning techniques have also been proposed for time series [Li et al., 2023; Woo et al., 2022a; Yeh et al., 2023]. Most related to our work is Yeh et al. [2023] who train on a corpus of time series datasets. The key difference is that they validate their model only on the downstream classification tasks, and do not validate on forecasting tasks. Works such as Time-LLM [Jin et al., 2023], LLM4TS [Chang et al., 2023], GPT2(6) [Zhou et al., 2023a], UniTime [Liu et al., 2023], and TEMPO [Anonymous, 2024] freeze LLM encoder backbones while simultaneously fine-tuning/adapting the input and distribution heads for forecasting. The main goal of our work is to apply the foundation model approach to time series data and to investigate the extent of the transfer achievable across a wide range of time series domains.\n\n",
+    "summary": "Related Work: LLM-based TS методы — Time-LLM (reprogramming), LLM4TS (fine-tuning), GPT4TS (GPT-2 fine-tuned), UniTime (cross-domain LLM), TEMPO (prompt-based). Lag-Llama отличается: from scratch обучение, а не адаптация NLP LLM.",
+    "keywords": [
+      "Time-LLM",
+      "LLM4TS",
+      "GPT4TS",
+      "UniTime",
+      "TEMPO",
+      "LLM-based",
+      "from scratch",
+      "foundation model"
+    ],
+    "question_types": [
+      "А"
+    ],
+    "token_count": 420
+  },
+  {
+    "chunk_id": "lag-llama_chunk_003",
+    "article_id": "lag-llama",
+    "article_meta": {
+      "title": "Lag-Llama: Towards Foundation Models for Probabilistic Time Series Forecasting",
+      "authors": [
+        "Rasul",
+        "Ashok",
+        "Williams",
+        "Khorasani",
+        "Adamskyy",
+        "Darakjian",
+        "Fraser",
+        "Hasson",
+        "Schneider",
+        "Nevmyvaka"
+      ],
+      "year": 2024,
+      "arxiv_id": "2310.08278"
+    },
+    "section": "Methodology",
+    "section_hierarchy": [
+      "Methodology",
+      "4. Lag-Llama",
+      "4.1. Tokenization: Lag Features"
+    ],
+    "chunk_type": "prose",
+    "index": 3,
+    "text": "### 4.1. Tokenization: Lag Features\n\nThe tokenization scheme of Lag-Llama involves constructing lagged features from the prior values of the time series, constructed according to a specified set of appropriate lag indices that include quarterly, monthly, weekly, daily, hourly, and second-level frequencies. Given a sorted set of positive lag indices $\\mathcal{L} = \\{1, \\ldots, L\\}^{*}$, we define the lag operation on a particular time value as $x_t \\mapsto k_t \\in \\mathbb{R}^{|\\mathcal{L}|}$ where each entry $j$ of $k_t$ is given by $k_t[j] = x_{t-\\mathcal{L}[j]}$. Thus to create lag features for some context-length window $x_{1:C}$ we need to sample a larger window with $L$ more historical points denoted by $x_{-L:C}^{i}$. In addition to these lagged features, we add date-time features of all the frequencies in our corpus, namely second-of-minute, hour-of-day, etc. up till the quarter-of-year from the time index $t$. Note that while the primary goal of these date-time features is to provide additional information, for any time series, all except one date-time feature will remain constant from one timestep to the next, and from the model can implicitly make sense of the frequency of the time series as well. Assuming we employ a total of $F$ date-time features, each of our tokens is of size $|\\mathcal{L}| + F$. Figure 1 shows an example tokenization. We note that a downside to using lagged features in tokenization is that it requires an $L$-sized or larger context window.\n\n`*` Note that $\\mathcal{L}$ refers to the list of lag indices, while $L$ is the last lag index in the sorted list $\\mathcal{L}$.  \n`¶` This is since a history of $L$ points in time is needed for all points in the context, starting from the first point in the context.\n\n",
+    "summary": "Токенизация через lag features: для каждого временного шага создаётся вектор из lagged values (предыдущие значения ряда на заданных лагах) + date-time features (день недели, час и т.д.). Лаги выбираются для capture различных периодичностей.",
+    "keywords": [
+      "lag features",
+      "tokenization",
+      "lag indices",
+      "date-time features",
+      "frequency-specific",
+      "lookback window"
+    ],
+    "question_types": [
+      "Г"
+    ],
+    "token_count": 250
+  },
+  {
+    "chunk_id": "lag-llama_chunk_004",
+    "article_id": "lag-llama",
+    "article_meta": {
+      "title": "Lag-Llama: Towards Foundation Models for Probabilistic Time Series Forecasting",
+      "authors": [
+        "Rasul",
+        "Ashok",
+        "Williams",
+        "Khorasani",
+        "Adamskyy",
+        "Darakjian",
+        "Fraser",
+        "Hasson",
+        "Schneider",
+        "Nevmyvaka"
+      ],
+      "year": 2024,
+      "arxiv_id": "2310.08278"
+    },
+    "section": "Methodology",
+    "section_hierarchy": [
+      "Methodology",
+      "4. Lag-Llama",
+      "4.2. Lag-Llama Architecture"
+    ],
+    "chunk_type": "prose",
+    "index": 4,
+    "text": "### 4.2. Lag-Llama Architecture\n\nLag-Llama's architecture is based on the decoder-only transformer-based architecture LLaMA [Touvron et al., 2023].\n\nFigure 2 shows a general schematic of this model with $M$ decoder layers. A univariate sequence of length $x_{-L:C}^{i}$ along with its covariates is tokenized by concatenating the covariate vectors to a sequence of $C$ tokens $x_{1:C}^{i}$. These tokens are passed through a shared linear projection layer that maps the features to the hidden dimension of the attention module. Similar to in Touvron et al. [2023], Lag-Llama incorporates pre-normalization via the RMSNorm [Zhang and Sennrich, 2019] and Rotary Positional Encoding (RoPE) [Su et al., 2021] at each attention layer's query and key representations as in LLaMA [Touvron et al., 2023].\n\n> Figure 2 (see PDF p. 4). The Lag-Llama architecture. Lag-Llama learns to output a distribution over the values of the next time step based on lagged input features. The input to the model is the token of a univariate time series $i$ at a given timestep, $x_t^i$, constructed as described in Sec. 4.1. Here, we use $c_t^i$ to refer to all additional covariates used along with the value at a timestep $t$, which include the $|\\mathcal{L}|$ lags, $F$ date-time features, and summary statistics. The inputs are projected through $M$ masked decoder layers. The features are then passed through the distribution head and trained to predict the parameters of the forecast distribution of the next timestep.\n\nAfter passing through the causally masked transformer layers, the model predicts the parameters $\\phi$ of the forecast distribution of the next timestep, where the parameters are output by a parametric distribution head, as described in Sec. 4.3. The negative log-likelihood of the predicted distribution of all predicted timesteps is minimized.\n\nAt inference time, given a time series of size at least $L$, we can construct a feature vector that is passed to the model to obtain the distribution of the next time point. In this fashion, via greedy autoregressive decoding, we can obtain many simulated trajectories of the future up to our chosen prediction horizon $P \\ge 1$. From these empirical samples, we can calculate the uncertainty intervals for downstream decision-making tasks and metrics with respect to held-out data.\n\n\n### 4.3. Choice of Distribution Head\n\nThe last layer of Lag-Llama is a distinct layer known as the distribution head, which projects the model's features to the parameters of a probability distribution. We can combine different distribution heads with the representational capacity of the model to output the parameters $\\phi$ of any parametric probability distribution. For our experiments, we adopt a Student's t-distribution [Student, 1908] and output the three parameters corresponding to this distribution, namely its degrees of freedom, mean, and scale, with appropriate non-linearities to ensure the appropriate parameters stay positive. More expressive choices of distributions, such as normalizing flows [Rasul et al., 2021b] and copulas [Salinas et al., 2019a; Drouin et al., 2022; Ashok et al., 2023] are potential choices of distribution heads, however with the potential overhead of difficulties in model training and optimization. The goal of our work was to keep the model as simple as possible, which led us to adopt a simple parametric distributional head. We leave the exploration of such distribution heads for future work.\n\n",
+    "summary": "Архитектура: decoder-only на базе LLaMA с RMSNorm, RoPE (rotary position embeddings). Пайплайн: lag features → linear projection → M decoder layers → distribution head (Student's t с параметрами μ, σ, ν) → autoregressive decoding. Distribution head генерирует вероятностный прогноз (mean, scale, degrees of freedom).",
+    "keywords": [
+      "LLaMA",
+      "decoder-only",
+      "RMSNorm",
+      "RoPE",
+      "distribution head",
+      "Student's t",
+      "autoregressive decoding",
+      "probabilistic",
+      "linear projection"
+    ],
+    "question_types": [
+      "Д",
+      "Е"
+    ],
+    "token_count": 350
+  },
+  {
+    "chunk_id": "lag-llama_chunk_005",
+    "article_id": "lag-llama",
+    "article_meta": {
+      "title": "Lag-Llama: Towards Foundation Models for Probabilistic Time Series Forecasting",
+      "authors": [
+        "Rasul",
+        "Ashok",
+        "Williams",
+        "Khorasani",
+        "Adamskyy",
+        "Darakjian",
+        "Fraser",
+        "Hasson",
+        "Schneider",
+        "Nevmyvaka"
+      ],
+      "year": 2024,
+      "arxiv_id": "2310.08278"
+    },
+    "section": "Methodology",
+    "section_hierarchy": [
+      "Methodology",
+      "4. Lag-Llama",
+      "4.4. Value Scaling"
+    ],
+    "chunk_type": "prose",
+    "index": 5,
+    "text": "### 4.4. Value Scaling\n\nWhen training on a large corpus of time series data from different datasets and domains, each time series can be of different numerical magnitude. Since we pretrain a foundation model over such data, we utilize the scaling heuristic [Salinas et al., 2019b] where for each univariate window, we calculate its mean value $\\mu^i = \\sum_{t=1}^{C} x_t^i / C$ and variance $\\sigma^i$. We can then replace the time series $x_{1:C}^{i}$ in the window by $\\{(x_t^i - \\mu^i)/\\sigma^i\\}_{t=1}^{C}$. We also incorporate $\\mu^i$ and $\\sigma^i$ as time independent real-valued covariates for each token, to give the model information of the statistics of the inputs, which we call summary statistics.\n\nDuring training and obtaining likelihood, the values are transformed using the mean and variance, while sampling, every timestep of data that is sampled is de-standardized using the same mean and variance. In practice, instead of the standard scaler, we find the following standardization strategy works well when pretraining our model.\n\n**Robust Standardization** ensures that our time series processing is robust to outliers. This procedures normalizes the series by removing the median and scaling according to the Interquartile Range (IQR) [Dekking et al., 2005]. For a context-window sized series $x_{1:C} = \\{x_1, x_2, \\ldots, x_C\\}$ we standardize each time point as:\n\n$$\nx_t' = \\frac{x_t - \\mathrm{Med}(x_{1:C})}{\\mathrm{IQR}(x_{1:C})},\n\\tag{3}\n$$\n\nwhere\n\n$$\n\\mathrm{IQR}(x_{1:C}) = \\mathrm{Med}(\\{x_{\\lceil C/2 \\rceil:C}\\}) - \\mathrm{Med}(\\{x_{1:\\lfloor C/2 \\rfloor}\\}).\n\\tag{4}\n$$\n\n\n### 4.5. Training Strategies\n\nWe employ a series of training strategies to effectively pretrain Lag-Llama on the corpus of datasets. Firstly, we find that employing a stratified sampling approach where the datasets in the corpus are weighed by the amount of total number of series is useful when sampling random windows from the pretraining corpus. Further, we find that employing time series augmentation techniques of Freq-Mix and Freq-Mask [Chen et al., 2023] serve useful to reduce overfitting. We search the hyperparameters of these augmentation strategies as part of our hyperparameter search.\n\n",
+    "summary": "Value Scaling: Robust Standardization — нормализация через median и IQR (inter-quartile range) вместо mean/std для устойчивости к выбросам. Summary statistics (median, IQR) подаются как ковариаты. Training: stratified sampling по domain, Freq-Mix и Freq-Mask аугментации для улучшения обобщения.",
+    "keywords": [
+      "robust standardization",
+      "median",
+      "IQR",
+      "value scaling",
+      "summary statistics",
+      "stratified sampling",
+      "Freq-Mix",
+      "Freq-Mask",
+      "outliers"
+    ],
+    "question_types": [
+      "Л",
+      "И"
+    ],
+    "token_count": 320
+  },
+  {
+    "chunk_id": "lag-llama_chunk_006",
+    "article_id": "lag-llama",
+    "article_meta": {
+      "title": "Lag-Llama: Towards Foundation Models for Probabilistic Time Series Forecasting",
+      "authors": [
+        "Rasul",
+        "Ashok",
+        "Williams",
+        "Khorasani",
+        "Adamskyy",
+        "Darakjian",
+        "Fraser",
+        "Hasson",
+        "Schneider",
+        "Nevmyvaka"
+      ],
+      "year": 2024,
+      "arxiv_id": "2310.08278"
+    },
+    "section": "Methodology",
+    "section_hierarchy": [
+      "Methodology",
+      "5. Experimental Setup",
+      "5.3. Hyperparameter Search"
+    ],
+    "chunk_type": "prose",
+    "index": 6,
+    "text": "### 5.3. Hyperparameter Search and Model Training Setups\n\nWe perform a random search of 100 different hyperparameter configurations and use the validation loss of the pretraining corpus to select our model. We elaborate on our hyperparameter search and model selection in Appendix D. During pretraining, we use the batch size of 256 and a learning rate of $10^{-4}$. Each epoch consists of 100 randomly sampled windows, each of length $L + C$ as described in Sec. 4.1. We use an early stopping criterion of 50 epochs based on the average validation loss of the training datasets in our pretraining corpus. When finetuning for a specific dataset, we train our models with the same batch size and learning rate, and each epoch consists of 100 randomly sampled windows from the specific dataset, each of length $L + (C + P)$, where $P$ now is the prediction length of the specific dataset. Since our model is decoder-only, and since prediction length is not fixed, the model can therefore work for any downstream prediction length. We use an early stopping criterion of 50 epochs during finetuning, based on the validation loss of the dataset being finetuned on. We elaborate on our training procedure in Appendix B. For all the models trained in this paper, we use a single Nvidia Tesla-P100 GPU with 12 GB of memory, 4 CPU cores, and 24 GB of RAM.\n\n\n## B. Protocol Details\n\nFor all datasets used in the paper, we have a training and test split that are non-overlapping based on the timestamps, as defined in the dataset. During pretraining, for each such dataset, we exclude the 14 last overlapping windows of the train split, and use it as the dataset's validation set. When pretraining, we train on a combined dataset formed out of the train split of each dataset, after every epoch, we obtain the validation loss on the validation sets of all datasets used in the pretraining corpus. We use the average validation loss for early stopping criterion (this is referred to as \"validation loss\" in the paper). When fine-tuning on a specific dataset, we exclude the single last window of the train split, and use it as the dataset's validation set. We train on the train split of the dataset, and use the validation split for early stopping. We use the same setup as fine-tuning Lag-Llama, for all supervised baselines that we produce results for in the paper. Following typical evaluation setups [Shchur et al., 2023], all results reported in the paper are on the last prediction window of the test splits defined in Appendix A.\n\n",
+    "summary": "Обучение: Lag-Llama предобучена с нуля на 352M токенах из корпуса временных рядов (6 domains, diverse frequencies). Hyperparameter search: learning rate, batch size, number of layers tuned. Protocol: early stopping по validation CRPS.",
+    "keywords": [
+      "pretraining",
+      "from scratch",
+      "352M tokens",
+      "CRPS",
+      "hyperparameter search",
+      "early stopping",
+      "diverse domains"
+    ],
+    "question_types": [
+      "И",
+      "К"
+    ],
+    "token_count": 170
+  },
+  {
+    "chunk_id": "lag-llama_chunk_007",
+    "article_id": "lag-llama",
+    "article_meta": {
+      "title": "Lag-Llama: Towards Foundation Models for Probabilistic Time Series Forecasting",
+      "authors": [
+        "Rasul",
+        "Ashok",
+        "Williams",
+        "Khorasani",
+        "Adamskyy",
+        "Darakjian",
+        "Fraser",
+        "Hasson",
+        "Schneider",
+        "Nevmyvaka"
+      ],
+      "year": 2024,
+      "arxiv_id": "2310.08278"
+    },
+    "section": "Experiments",
+    "section_hierarchy": [
+      "Experiments",
+      "5. Experimental Setup",
+      "5.1. Datasets"
+    ],
+    "chunk_type": "prose",
+    "index": 7,
+    "text": "### 5.1. Datasets\n\nWe collate a diverse corpus of 27 time series datasets from several sources across six different semantically grouped domains such as energy, transportation, economics, nature, air quality and cloud operations; each dataset has a different set of characteristics, such as prediction lengths, number of series, lengths of each series, and frequencies. We leave out a few datasets from each domain for testing the few-shot generalization abilities of the pretrained model, while using the remaining datasets for pretraining the foundation model. Furthermore, we set aside datasets from entirely different domains to assess our model's performance on data that may lack any potential similarity to the datasets in pretraining. Such a setup mimics the real-world use of our model, where one may adapt it for datasets that fall closely within the distribution of domains that the model has been trained on, as well as datasets in completely different domains. Our pretraining corpus comprises a total of 7,965 different univariate time series, each of different lengths, when put together, comprising a total of around 352 million data windows (tokens) for our model to train on. Appendix A lists the datasets we use, along with their sources and properties, their respective domains, and the dataset split used in our experiments.\n\nNote that the term \"domain\" used here is just a label used to group several datasets, which does not represent a common source or data distribution; each of the pretraining and test datasets possesses very different general characteristics (patterns, seasonalities), apart from having other distinct properties. We use the default prediction length of each dataset for evaluation and ensure that there is a wide variety of prediction horizons in our unseen corpus of datasets, to evaluate models on short-term, medium-term, and long-term forecasting setups. Appendix A lists the different datasets used in this work, along with the sources and properties of each dataset. Sec. 7.1 analyses the diversity of our corpus of datasets.\n\n\n## A. Details of Datasets\n\nWe use the following datasets in our experiments, the statistics of which are in Table 4, and their domains in Table 3. Table 3 further presents if a dataset was present in the pretraining or downstream testing corpora in our work.\n\nThe Air Quality UC Irvine Repository dataset (UCI) contains 9358 instances of hourly averaged responses from 5 metal oxide chemical sensors embedded in an Air Quality Chemical Multisensor Device in a polluted area [Vito, 2016].\n\nThe Australian Electricity Demand dataset comprises five half-hourly time series of the electricity demand across five Australian states: Victoria, New South Wales, Queensland, Tasmania, and South Australia [Godahewa et al., 2021].\n\n",
+    "summary": "Датасеты: 27 datasets из 6 доменов (energy, transport, economics, nature, health, web). Включают Monash benchmark, ETT, Weather, Electricity, Traffic, M4 и другие. Разнообразие частот: от минутных до годовых.",
+    "keywords": [
+      "Monash",
+      "ETT",
+      "Weather",
+      "Electricity",
+      "Traffic",
+      "M4",
+      "27 datasets",
+      "6 domains",
+      "Benchmark"
+    ],
+    "question_types": [
+      "В"
+    ],
+    "token_count": 300
+  },
+  {
+    "chunk_id": "lag-llama_chunk_008",
+    "article_id": "lag-llama",
+    "article_meta": {
+      "title": "Lag-Llama: Towards Foundation Models for Probabilistic Time Series Forecasting",
+      "authors": [
+        "Rasul",
+        "Ashok",
+        "Williams",
+        "Khorasani",
+        "Adamskyy",
+        "Darakjian",
+        "Fraser",
+        "Hasson",
+        "Schneider",
+        "Nevmyvaka"
+      ],
+      "year": 2024,
+      "arxiv_id": "2310.08278"
+    },
+    "section": "Experiments",
+    "section_hierarchy": [
+      "Experiments",
+      "5. Experimental Setup",
+      "5.4. Inference and Model Evaluation"
+    ],
+    "chunk_type": "prose",
+    "index": 8,
+    "text": "### 5.4. Inference and Model Evaluation\n\nInference for a specific dataset is performed by sampling from the Lag-Llama model autoregressively, starting with conditioning on the context of length $C$, until a prediction length $P$, which is defined for a given dataset. We use the Continuous Ranked Probability Score (CRPS) [Gneiting and Raftery, 2007; Matheson and Winkler, 1976], a common metric in the probabilistic forecasting literature [Rasul et al., 2021b; Rasul et al., 2021a; Salinas et al., 2019a; Shchur et al., 2023], for evaluating our model's performance. We use 100 empirical samples and report the CRPS averaged over the prediction horizon and across all the time series of a dataset. We further assess how well each method we benchmark on does as a general-purpose forecasting algorithm, rather than a dataset-specific one, by measuring the average rank of each method, with respect to all others, over all the datasets.\n\n",
+    "summary": "Метрики: Continuous Ranked Probability Score (CRPS) — основная метрика вероятностного прогнозирования. Average Rank — агрегированный ранговый показатель across datasets. Lag-Llama генерирует 100 sample траекторий для оценки CRPS через empirical CDF.",
+    "keywords": [
+      "CRPS",
+      "Average Rank",
+      "probabilistic",
+      "empirical CDF",
+      "sample trajectories",
+      "Metric"
+    ],
+    "question_types": [
+      "З"
+    ],
+    "token_count": 130
+  },
+  {
+    "chunk_id": "lag-llama_chunk_009",
+    "article_id": "lag-llama",
+    "article_meta": {
+      "title": "Lag-Llama: Towards Foundation Models for Probabilistic Time Series Forecasting",
+      "authors": [
+        "Rasul",
+        "Ashok",
+        "Williams",
+        "Khorasani",
+        "Adamskyy",
+        "Darakjian",
+        "Fraser",
+        "Hasson",
+        "Schneider",
+        "Nevmyvaka"
+      ],
+      "year": 2024,
+      "arxiv_id": "2310.08278"
+    },
+    "section": "Experiments",
+    "section_hierarchy": [
+      "Experiments",
+      "6. Results",
+      "6.1. Zero-Shot and Finetuning Performance"
+    ],
+    "chunk_type": "prose",
+    "index": 9,
+    "text": "### 6.1. Zero-Shot and Finetuning Performance on New Data\n\nTable 1 presents the results comparing the performance of supervised baselines trained on specific datasets to the pretrained Lag-Llama zero-shot performance on the unseen datasets, and to finetuned Lag-Llama on the respective unseen datasets. In the zero-shot setting, Lag-Llama achieves comparable performance to all baselines, with an average rank of 6.714. On fine-tuning, Lag-Llama achieves state-of-the-art performance in 3 datasets, while performance increases significantly in all other datasets. Most importantly, on fine-tuning, Lag-Llama achieves the best average rank of 2.786, with a significant difference of 2 points over the best supervised model, which suggests that if one had to choose a method to use without prior knowledge of the data, Lag-Llama would be the best option. This clearly establishes Lag-Llama as a strong foundation model that can be used on a wide range of downstream datasets, without prior knowledge of these data distributions — a key property that a foundation model should satisfy.\n\nWe now take a deeper dive into Lag-Llama's performance analysis. Evaluated zero-shot, Lag-Llama achieves strong performance, notably in the platform-delay and weather datasets, where it is especially close to baselines. With fine-tuning, Lag-Llama consistently improves performance compared to inferring zero-shot. In 3 datasets — namely, ETT-M2, weather, and requests — finetuned version of Lag-Llama achieves a significantly lower error than all the baselines, becoming the state-of-the-art. On the exchange-rate dataset coming from an entirely new domain, exhibiting a new unseen frequency, Lag-Llama has comparable zero-shot performance, and when finetuned achieves performance similar to the state-of-the-art. This establishes that Lag-Llama performs well across frequencies and domains from which the model may or may not have seen similar data on during pretraining. Lag-Llama achieves a better average rank both in the zero-shot and finetuned setups compared to the Informer, AutoFormer, and ETSFormer models, all of which use complex inductive biases to model time series, compared to Lag-Llama which uses a simple architecture, lags and covariates, along with large-scale pretraining. Our observations suggest that at scale, when used similarly to Lag-Llama, vanilla decoder-only transformers outperform other transformer architectures. We point out that similar results have been shown in the NLP community [Tay et al., 2022] studying the influence of inductive bias at scale, however, we emphasize that we are the first to point out such a result for time series, potentially opening doors to further studies in time series that analyse the influence of inductive bias at scale. Next, compared to the OneFitsAll model [Zhou et al., 2023b] which adapts a pretrained LLM for forecasting, Lag-Llama achieves significantly better performance in all datasets, except for the dataset `beijing-pm2.5`, where it performs similarly to the baseline, while achieving a much better average rank than this model. These results demonstrate the potential of foundation models trained from scratch on a large and diverse collection of time series datasets when compared to the adaptation of pretrained LLMs, as in the OneFitsAll model [Zhou et al., 2023b]. A detailed investigation of the advantages and disadvantages of adapting LLMs versus training time series foundation models from scratch is left as a direction for future work.\n\nWe further visualize the forecasts produced by Lag-Llama on the unseen datasets qualitatively in Appendix E. Lag-Llama produces forecasts that closely match the ground truth. Further, comparing the forecasts produced by the model in the zero-shot (Figure 8) and fine-tuned (Figure 11) settings, one can clearly see that the quality of forecasts increase significantly when the model is fine-tuned.\n\n\n## 6. Results\n\nWe first evaluate zero-shot performance of our pretrained Lag-Llama on the unseen datasets (subsection 6.1), when no samples from the new downstream domain are available for possible fine-tuning of the model. Note that such zero-shot forecasting scenarios are common in time series forecasting literature (see, for example, the cold-start problem [Wikipedia, 2024; Fatemi et al., 2023]). We then fine-tune our pretrained Lag-Llama on each unseen dataset and evaluate the model after fine-tuning, to study how our pretrained model adapts to different unseen datasets and domains when there is considerable history available in the dataset to train on. We then evaluate the few-shot adaptation performance of our foundation model — a well-known scenario in other modalities (e.g., text) where foundation models are expected to demonstrate strong generalization capabilities. We vary the amount of history available for fine-tuning on each dataset, and present the few-shot adaptation performance of our model at various levels of history (section 6.2).\n\nTable 2. CRPS of Lag-Llama on few-shot adaptation on the unseen datasets with different amounts of data history being available, compared to supervised baselines trained solely on the respective datasets. Lower is better. A mean or standard deviation of `0.0000` signifies that the first non-zero digit is beyond 3 decimal places. The original PDF marks the best results in bold.\n\n| Data % | Model | Weather | Ped-Counts | Exchange-Rate | ETT-M2 | Platform-Delay | Requests | Beijing-PM2.5 | Average Rank |\n| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |\n| 20% | DeepAR | 0.156±0.004 | 0.241±0.002 | 0.033±0.000 | 0.089±0.000 | 0.094±0.002 | 0.065±0.000 | 0.176±0.006 | 3.429 |\n| 20% | PatchTST | 0.169±0.017 | 0.259±0.008 | 0.012±0.000 | 0.035±0.001 | 0.088±0.001 | 0.025±0.000 | 0.153±0.003 | 2.714 |\n| 20% | TFT | 0.154±0.002 | 0.296±0.027 | 0.009±0.000 | 0.038±0.000 | 0.087±0.002 | 0.017±0.000 | 0.144±0.004 | 2.000 |\n| 20% | Lag-Llama | 0.136±0.001 | 0.239±0.016 | 0.017±0.001 | 0.016±0.001 | 0.108±0.005 | 0.011±0.001 | 0.147±0.008 | 1.857 |\n| 40% | DeepAR | 0.159±0.022 | 0.237±0.022 | 0.011±0.002 | 0.053±0.000 | 0.100±0.000 | 0.030±0.003 | 0.158±0.000 | 3.071 |\n| 40% | PatchTST | 0.171±0.017 | 0.253±0.007 | 0.011±0.001 | 0.035±0.000 | 0.092±0.000 | 0.025±0.002 | 0.162±0.000 | 2.929 |\n",
+    "summary": "Результаты: в zero-shot Lag-Llama конкурентоспособна с SOTA (TimesFM, Chronos). После файнтюнинга — average rank 2.786 (лучший general-purpose forecaster). Особенно сильна на данных с выраженной сезонностью. Few-shot: Lag-Llama адаптируется с минимальным количеством примеров.",
+    "keywords": [
+      "zero-shot",
+      "finetuning",
+      "average rank",
+      "2.786",
+      "TimesFM",
+      "Chronos",
+      "SOTA",
+      "few-shot",
+      "CRPS"
+    ],
+    "question_types": [
+      "А+",
+      "Ж"
+    ],
+    "token_count": 350
+  },
+  {
+    "chunk_id": "lag-llama_chunk_010",
+    "article_id": "lag-llama",
+    "article_meta": {
+      "title": "Lag-Llama: Towards Foundation Models for Probabilistic Time Series Forecasting",
+      "authors": [
+        "Rasul",
+        "Ashok",
+        "Williams",
+        "Khorasani",
+        "Adamskyy",
+        "Darakjian",
+        "Fraser",
+        "Hasson",
+        "Schneider",
+        "Nevmyvaka"
+      ],
+      "year": 2024,
+      "arxiv_id": "2310.08278"
+    },
+    "section": "Experiments",
+    "section_hierarchy": [
+      "Experiments",
+      "7. Analysis",
+      "7.1. Data Diversity",
+      "7.2. Scaling Analysis"
+    ],
+    "chunk_type": "prose",
+    "index": 10,
+    "text": "### 7.1. Data Diversity\n\nAlthough loss has been found to scale with pre-training dataset size [Kaplan et al., 2020], it remains unclear what other properties of pre-training datasets lead to desirable model behaviour, despite some initial research in this direction [Chan et al., 2022]. Notably, diversity in the pretraining data has contributed to improved zero-shot performance and few-shot adaptation [Brown et al., 2020b], notwithstanding the absence of an adequate definition.\n\nTo quantify the diversity of the pretraining corpus, we analyze the properties of its datasets through 22 Canonical time series Characteristics (\"catch22 features\"), a set of quickly computable time series features selected for their classification ability [Lubba et al., 2019] from the features of the Highly Comparable Time Series Analysis (hctsa) library [Fulcher et al., 2013]. To assess diversity across datasets, we apply PCA to the features averaged per-dataset and plot the top 2 components. We find that having multiple datasets within domains and across domains increases the diversity of AC22 features in the top 2-component space (see Figure 12 in Appendix).\n\n### 7.2. Scaling Analysis\n\nDataset size has been shown empirically to improve performance [Kaplan et al., 2020]. Constructing neural scaling laws [Kaplan et al., 2020; Caballero et al., 2023] can help understand how the performance of the model scales with respect to different parameters such as the amount of pretraining data, number of parameters in the model etc. Towards understanding these quantities for models such as Lag-Llama, we fit neural scaling laws [Caballero et al., 2023] to our model's validation loss and present in Appendix F.1 the obtained scaling laws that describe the performance of our model with respect to the amount of pretraining data.\n\n",
+    "summary": "Анализ: Data Diversity — увеличение diversity pretraining данных улучшает zero-shot performance. Scaling Analysis — увеличение размера модели (layers) улучшает качество с diminishing returns. Lag features и robust scaling критичны для general-purpose forecasting.",
+    "keywords": [
+      "data diversity",
+      "scaling analysis",
+      "zero-shot",
+      "pretraining",
+      "robust scaling",
+      "lag features",
+      "diminishing returns"
+    ],
+    "question_types": [
+      "А+",
+      "Б"
+    ],
+    "token_count": 150
+  },
+  {
+    "chunk_id": "lag-llama_chunk_011",
+    "article_id": "lag-llama",
+    "article_meta": {
+      "title": "Lag-Llama: Towards Foundation Models for Probabilistic Time Series Forecasting",
+      "authors": [
+        "Rasul",
+        "Ashok",
+        "Williams",
+        "Khorasani",
+        "Adamskyy",
+        "Darakjian",
+        "Fraser",
+        "Hasson",
+        "Schneider",
+        "Nevmyvaka"
+      ],
+      "year": 2024,
+      "arxiv_id": "2310.08278"
+    },
+    "section": "Conclusion",
+    "section_hierarchy": [
+      "Conclusion",
+      "8. Discussion"
+    ],
+    "chunk_type": "prose",
+    "index": 11,
+    "text": "## 8. Discussion\n\nWe present Lag-Llama, a foundation model for univariate probabilistic time series forecasting based on a simple decoder-only transformer architecture. We show that Lag-Llama, when pretrained from scratch on a large corpus of datasets, has strong zero-shot generalization performance on unseen datasets, and performs comparably to dataset-specific models. Lag-Llama also demonstrates state-of-the-art performance across diverse datasets from different domains after finetuning, and emerges as the best general-purpose model without any knowledge of downstream datasets. Lag-Llama also demonstrates a strong few-shot adaptation performance across varying amounts of data history being available. Finally, we investigate the diversity of the pretraining corpus used to train Lag-Llama.\n\nOur work opens up several potential directions for future work. For now, collecting and collating a large scale time series corpus of open dataset would be of high value, since the largest time series dataset repositories [Godahewa et al., 2021] are themselves too small. Further, scaling up the models further beyond the model sizes explored in this work using different training strategies constitutes an essential next step towards building even more powerful time series foundation models. Finally, expanding our work from univariate towards multivariate approaches by capturing complex multivariate dynamics of real-world datasets also constitutes an important direction for future work.\n\n",
+    "summary": "Discussion: Lag-Llama демонстрирует, что general-purpose TS foundation models возможны без NLP LLM бэкенда. Ключевые findings: lag tokens эффективнее патчинга для capturing TS динамики; robust scaling превосходит standard normalization; from-scratch pretraining достижим с 352M токенами.",
+    "keywords": [
+      "Lag-Llama",
+      "foundation model",
+      "lag tokens",
+      "robust scaling",
+      "from scratch",
+      "general-purpose",
+      "limitations"
+    ],
+    "question_types": [
+      "А"
+    ],
+    "token_count": 170
+  }
+]

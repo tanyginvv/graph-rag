@@ -1,0 +1,389 @@
+[
+  {
+    "chunk_id": "llm-agents_chunk_000",
+    "article_id": "llm-agents",
+    "article_meta": {
+      "title": "Empowering Time Series Forecasting with LLM Agents",
+      "authors": [
+        "Yeh",
+        "Lai",
+        "Saini",
+        "Fan",
+        "Fan",
+        "Wang",
+        "Dai",
+        "Zheng"
+      ],
+      "year": 2025,
+      "arxiv_id": "2508.04231"
+    },
+    "section": "Abstract",
+    "section_hierarchy": [
+      "Abstract"
+    ],
+    "chunk_type": "prose",
+    "index": 0,
+    "text": "**Abstract.** Large Language Model (LLM) powered agents have emerged as effective planners for Automated Machine Learning (AutoML) systems. While most existing AutoML approaches focus on automating feature engineering and model architecture search, recent studies in time series forecasting suggest that lightweight models can often achieve state-of-the-art performance. This observation led us to explore improving data quality, rather than model architecture, as a potentially fruitful direction for AutoML on time series data. We propose DCATS, a Data-Centric Agent for Time Series. DCATS leverages metadata accompanying time series to clean data while optimizing forecasting performance. We evaluated DCATS using four time series forecasting models on a large-scale traffic volume forecasting dataset. Results demonstrate that DCATS achieves an average 6% error reduction across all tested models and time horizons, highlighting the potential of data-centric approaches in AutoML for time series forecasting. The source code is available at: https://sites.google.com/view/ts-agent.",
+    "summary": "Аннотация представляет DCATS — Data-Centric Agent for Time Series, LLM-агента для AutoML на временных рядах. DCATS использует метаданные временных рядов для улучшения качества данных вместо оптимизации архитектуры модели. На задаче прогнозирования трафика достигнуто 6% снижение ошибки для четырёх моделей на всех горизонтах.",
+    "keywords": [
+      "DCATS",
+      "LLM-agent",
+      "AutoML",
+      "data-centric AI",
+      "traffic forecasting",
+      "metadata"
+    ],
+    "question_types": [
+      "А",
+      "Ж"
+    ],
+    "token_count": 170
+  },
+  {
+    "chunk_id": "llm-agents_chunk_001",
+    "article_id": "llm-agents",
+    "article_meta": {
+      "title": "Empowering Time Series Forecasting with LLM Agents",
+      "authors": [
+        "Yeh",
+        "Lai",
+        "Saini",
+        "Fan",
+        "Fan",
+        "Wang",
+        "Dai",
+        "Zheng"
+      ],
+      "year": 2025,
+      "arxiv_id": "2508.04231"
+    },
+    "section": "Introduction",
+    "section_hierarchy": [
+      "Introduction",
+      "1. Introduction"
+    ],
+    "chunk_type": "prose",
+    "index": 1,
+    "text": "## 1. Introduction\n\nTime series data pervades diverse real-world applications, including traffic monitoring, financial transactions, and ride-share demand forecasting [11]. Accurate time series forecasting, in particular, is a critical research area with extensive applications [7, 11, 27]. Concurrently, Large Language Models (LLMs) have demonstrated considerable success in powering Automatic Machine Learning (AutoML) systems for various general machine learning tasks [1, 8, 16, 19]. This confluence motivates our exploration into developing an LLM-powered AutoML system specifically designed for the unique challenges of time series forecasting.\n\nHowever, directly applying general AutoML principles to time series forecasting can overlook domain-specific optimization opportunities. Recent findings indicate that lightweight time series models can achieve state-of-the-art performance [3, 9, 22, 27], shifting focus towards data quality. This aligns with the principles of data-centric AI [18, 28], which prioritizes data refinement over complex model architectures. We identify a significant opportunity in leveraging LLMs to automate this data-centric approach for time series forecasting, an area that remains underexplored. Therefore, this paper introduces DCATS (Data-Centric Agent for Time Series), an LLM-powered agent that focuses on intelligently refining training data rather than solely optimizing model architectures.\n\nDCATS operates by strategically enriching the training dataset through the selection of relevant auxiliary time series. The LLM-agent formulates a dataset expansion plan by reasoning over the metadata associated with available time series. For instance, as illustrated in Fig. 1, to forecast traffic volume for a highway entrance near San Mateo, California, DCATS might identify and incorporate historical data from proximate locations like Burlingame or from geographically distant areas exhibiting similar temporal patterns. Furthermore, the agent iteratively refines this data selection plan by evaluating the impact of different enrichment strategies, thereby optimizing the final dataset.\n\nTo validate our approach, we conducted a preliminary study employing a large-scale traffic volume forecasting dataset [11], notable for its extensive metadata. Our findings demonstrate that DCATS achieves a 6% reduction in forecasting error compared to a baseline model trained using all available time series. This result underscores the efficacy of leveraging LLM-agents for data-centric optimization in time series forecasting and signals a promising avenue for future research across various domains.\n\nOur key contributions are as follows:\n\n- We introduce DCATS, a novel data-centric agentic framework designed specifically for time series forecasting problems.\n- We present a preliminary study using traffic volume time series, showcasing a 6% performance improvement over alternative solutions that do not employ LLM-agents.\n- We showcase the ability of LLMs to perform reasoning over time series metadata to formulate effective data enrichment strategies for improved forecasting accuracy.",
+    "summary": "Введение мотивирует создание DCATS: лёгкие модели временных рядов достигают SOTA, поэтому фокус смещается на качество данных (data-centric AI). DCATS — это LLM-агент, который обогащает обучающие данные путём рассуждения над метаданными временных рядов, выбирая релевантные вспомогательные ряды и итеративно улучшая выборку.",
+    "keywords": [
+      "DCATS",
+      "LLM-agent",
+      "data-centric AI",
+      "AutoML",
+      "metadata",
+      "traffic forecasting",
+      "iterative refinement"
+    ],
+    "question_types": [
+      "А"
+    ],
+    "token_count": 400
+  },
+  {
+    "chunk_id": "llm-agents_chunk_002",
+    "article_id": "llm-agents",
+    "article_meta": {
+      "title": "Empowering Time Series Forecasting with LLM Agents",
+      "authors": [
+        "Yeh",
+        "Lai",
+        "Saini",
+        "Fan",
+        "Fan",
+        "Wang",
+        "Dai",
+        "Zheng"
+      ],
+      "year": 2025,
+      "arxiv_id": "2508.04231"
+    },
+    "section": "Methodology",
+    "section_hierarchy": [
+      "Methodology",
+      "3. Methodology"
+    ],
+    "chunk_type": "prose",
+    "index": 2,
+    "text": "## 3. Methodology\n\nThe proposed DCATS framework comprises four core components, as illustrated in Fig. 2. We will use the traffic volume prediction use case to demonstrate the application of the proposed framework for time series forecasting. The key components of DCATS are: 1) a time series dataset consisting of multiple univariate time series, 2) an accompanying metadata database containing shared background information and additional details about each univariate time series, 3) an LLM-agent responsible for driving the automatic forecasting model building process, and 4) a forecasting module that builds models and validates performance based on the agent's requests.\n\nThe framework is initiated when users submit a query expressing their intent to build a forecasting model for specific time series within the dataset. Upon receiving the query, the LLM-agent retrieves background information about the entire time series dataset and detailed information about each time series from the metadata database. Based on this information, the agent generates a list of proposals, each containing instructions for creating a sub-dataset from the time series dataset and an explanation of the strategy behind it. The proposal generation process is detailed in Section 3.1. Each proposal is then evaluated by the forecasting module, which trains models using the sub-dataset and reports performance on the validation dataset. The forecasting module is described in detail in Section 3.2. Using the validation performance, the LLM-agent provides a new set of proposals for the next evaluation round, typically refining the winning strategy from the previous iteration. The refinement process is explained in Section 3.3. This iterative process continues until no proposals in the current round show improvement over the best-so-far solution.",
+    "summary": "Методология DCATS состоит из четырёх компонентов: (1) датасет временных рядов, (2) база метаданных, (3) LLM-агент для управления процессом построения модели, (4) forecasting-модуль для обучения и валидации. Пайплайн: пользовательский запрос → LLM-агент извлекает метаданные → генерирует предложения по суб-датасетам → forecasting-модуль оценивает → агент итеративно улучшает предложения.",
+    "keywords": [
+      "DCATS",
+      "LLM-agent",
+      "metadata database",
+      "forecasting module",
+      "proposal generation",
+      "iterative refinement",
+      "pipeline"
+    ],
+    "question_types": [
+      "А",
+      "Д",
+      "Е"
+    ],
+    "token_count": 250
+  },
+  {
+    "chunk_id": "llm-agents_chunk_003",
+    "article_id": "llm-agents",
+    "article_meta": {
+      "title": "Empowering Time Series Forecasting with LLM Agents",
+      "authors": [
+        "Yeh",
+        "Lai",
+        "Saini",
+        "Fan",
+        "Fan",
+        "Wang",
+        "Dai",
+        "Zheng"
+      ],
+      "year": 2025,
+      "arxiv_id": "2508.04231"
+    },
+    "section": "Methodology",
+    "section_hierarchy": [
+      "Methodology",
+      "3. Methodology",
+      "3.1. Initial Proposal"
+    ],
+    "chunk_type": "prose",
+    "index": 3,
+    "text": "### 3.1. Initial Proposal\n\nThe LLM-agent generates initial proposals using a five-section prompt: 1) background, 2) task, 3) guidelines, 4) neighbor sets, and 5) output format. The background section provides context for the time series dataset. For the traffic volume forecasting problem, the prompt is shown in Listing 1.\n\n**Listing 1.** The background.\n\n```text\n# Background\nWe have a spatio-temporal dataset containing 8,600 locations, each with a\nunique `location_id` (integer from 0 to 8,599). Each location has a\nunivariate time series representing traffic volume changes over time,\nsplit into training and validation datasets. Our goal is to build time\nseries forecasting models for specific locations.\n```\n\nThe task section includes information about the target time series and the specific task, i.e. providing a number of proposals.\n\nAdditional guidelines are provided to the agent, as shown in Listing 3, detailing what is known about each time series and how sub-datasets should be created. Sub-datasets are created by selecting time series from the \"neighbors\" of the target time series, defined by similarity in road network distance, local correlation, or geodetic distance. These \"neighbors\" serve a similar function to retrieved documents in a RAG system [2, 6].\n\n**Listing 3.** The guidelines.\n\n```text\n## Guidelines:\n- Ensure each location is selected only once per proposal.\n- Utilize the provided neighbor sets based on different criteria (road\n  network, temporal pattern similarity, and geodetic distance).\n- Consider the additional details provided for each location, including:\n  - Similarity or Distance\n  - Historical Total Volume\n  - City\n  - County\n  - Population\n  - Freeway\n  - Number of Lanes\n- Balance the selection of neighbors across different criteria to create\n  diverse and informative proposals.\n- Explain the rationale behind each proposal, highlighting how the\n  selected neighbors might contribute to improving the forecasting model.\n```",
+    "summary": "Начальное предложение (Initial Proposal): LLM-агент генерирует предложения по суб-датасетам через 5-секционный промпт (background, task, guidelines, neighbor sets, output format). Суб-датасеты формируются выбором временных рядов из «соседей» целевого ряда по критериям схожести: дорожная сеть, локальная корреляция, геодезическое расстояние. Агент использует метаданные (город, округ, население, фривей) для обоснования выбора.",
+    "keywords": [
+      "prompt engineering",
+      "metadata reasoning",
+      "neighbor sets",
+      "sub-dataset",
+      "road network",
+      "temporal pattern similarity",
+      "geodetic distance",
+      "RAG"
+    ],
+    "question_types": [
+      "Б",
+      "И"
+    ],
+    "token_count": 260
+  },
+  {
+    "chunk_id": "llm-agents_chunk_004",
+    "article_id": "llm-agents",
+    "article_meta": {
+      "title": "Empowering Time Series Forecasting with LLM Agents",
+      "authors": [
+        "Yeh",
+        "Lai",
+        "Saini",
+        "Fan",
+        "Fan",
+        "Wang",
+        "Dai",
+        "Zheng"
+      ],
+      "year": 2025,
+      "arxiv_id": "2508.04231"
+    },
+    "section": "Methodology",
+    "section_hierarchy": [
+      "Methodology",
+      "3. Methodology",
+      "3.3. Proposal Refinement"
+    ],
+    "chunk_type": "prose",
+    "index": 4,
+    "text": "### 3.3. Proposal Refinement\n\nThe proposal refinement agent uses a six-section prompt: 1) objective, 2) background, 3) experiment results, 4) task, 5) additional considerations, and 6) output format. The overall objective statement and background for the refinement agent are shown in Listing 6, providing information about the target time series and current best-so-far validation performance.\n\n**Listing 6.** The objective.\n\n```text\n# Objective\nDevelop an improved time series forecasting model for `location_id=1201`,\nleveraging data from other relevant locations.\n\n# Background\n- Target location: `location_id=1201`\n- Target location information: location_id=1201,\n  historical_total_volume=2229867. This location is in Campbell, a city\n  located in Santa Clara County, California. Campbell has a population of\n  approximately 41,700 residents. The location is on freeway SR87-N, which\n  has 3 lanes.\n- Best performance achieved (Mean Absolute Error): 7.4190\n```\n\nThe experiment section lists all sub-dataset setups and their corresponding performance, as shown in Listing 7. Explanations are included to help the agent reason about the main factors behind good performance, and results are ordered based on performance.\n\nDetailed tasks are given to the agent in Listing 8, along with additional considerations to aid in reasoning.\n\n**Listing 8.** The task.\n\n```text\n# Task\nBased on the experiment results, baseline performance, and best-so-far\nperformance, provide a new set of proposals to further enhance the\nforecasting model. Each proposal should:\n1. Include a list of `location_id`s selected from the neighbors of\n   `location_id=1201`\n2. Ensure no duplicate selections within a single proposal\n3. Aim to minimize the Mean Absolute Error (MAE)\n\n# Additional Considerations\n- Analyze the characteristics of the target location and its neighbors\n- Identify patterns in successful proposals from previous experiments\n- Explore diverse combinations of locations that may capture various\n  aspects of time series behavior\n```",
+    "summary": "Итеративное улучшение (Proposal Refinement): агент использует 6-секционный промпт, включающий результаты предыдущих экспериментов и лучшее достигнутое качество (best-so-far MAE). На основе анализа успешных предложений и метаданных локаций агент генерирует новый набор предложений, стремясь минимизировать MAE. Процесс повторяется до отсутствия улучшений.",
+    "keywords": [
+      "iterative refinement",
+      "proposal refinement",
+      "best-so-far",
+      "MAE",
+      "metadata",
+      "prompt engineering",
+      "experiment results"
+    ],
+    "question_types": [
+      "Б",
+      "Е"
+    ],
+    "token_count": 250
+  },
+  {
+    "chunk_id": "llm-agents_chunk_005",
+    "article_id": "llm-agents",
+    "article_meta": {
+      "title": "Empowering Time Series Forecasting with LLM Agents",
+      "authors": [
+        "Yeh",
+        "Lai",
+        "Saini",
+        "Fan",
+        "Fan",
+        "Wang",
+        "Dai",
+        "Zheng"
+      ],
+      "year": 2025,
+      "arxiv_id": "2508.04231"
+    },
+    "section": "Methodology",
+    "section_hierarchy": [
+      "Methodology",
+      "3. Methodology",
+      "3.2. Forecasting Module"
+    ],
+    "chunk_type": "prose",
+    "index": 5,
+    "text": "### 3.2. Forecasting Module\n\nThe forecasting module trains time series forecasting models using the sub-dataset and evaluates their performance on the validation set. The DCATS framework implements four different time series forecasting models:\n\n- Linear [27]: A simple yet effective forecasting model.\n- MLP [3, 23]: A natural extension of the linear model with increased learning capability due to additional parameters.\n- SparseTSF [9]: A compact and effective forecasting model.\n- UltraSTF [22]: Another compact model with improved cost/learning capability trade-off.\n\nTo enhance model convergence speed, the framework first trains a foundation model [12, 20, 24, 25] using all available time series data before user queries. It then uses the sub-dataset proposed by the LLM-agent to fine-tune the foundation model when testing different proposals. To further refine the data before fine-tuning, it removes the 10% most anomalous data from the sub-dataset using discord-based anomaly detection methods [21, 26].\n\nImportantly, the LLM-agent itself is not fine-tuned: it operates as a reasoning engine, generating proposals through prompt engineering rather than through parameter updates. The actual model training (foundation model pre-training and proposal-specific fine-tuning) is performed entirely within the forecasting module.",
+    "summary": "Forecasting-модуль обучает четыре модели (Linear, MLP, SparseTSF, UltraSTF) на суб-датасетах, предложенных LLM-агентом. Перед запросами предобучается foundation model на всех данных, затем дообучается на суб-датасете с удалением 10% аномалий. LLM-агент НЕ дообучается — он работает как reasoning engine через prompt engineering без обновления параметров.",
+    "keywords": [
+      "forecasting module",
+      "Linear",
+      "MLP",
+      "SparseTSF",
+      "UltraSTF",
+      "foundation model",
+      "fine-tuning",
+      "anomaly detection",
+      "prompt engineering",
+      "frozen LLM"
+    ],
+    "question_types": [
+      "К"
+    ],
+    "token_count": 210
+  },
+  {
+    "chunk_id": "llm-agents_chunk_006",
+    "article_id": "llm-agents",
+    "article_meta": {
+      "title": "Empowering Time Series Forecasting with LLM Agents",
+      "authors": [
+        "Yeh",
+        "Lai",
+        "Saini",
+        "Fan",
+        "Fan",
+        "Wang",
+        "Dai",
+        "Zheng"
+      ],
+      "year": 2025,
+      "arxiv_id": "2508.04231"
+    },
+    "section": "Experiments",
+    "section_hierarchy": [
+      "Experiments",
+      "4. Experiment",
+      "4.1. Dataset and Experiment Setup"
+    ],
+    "chunk_type": "prose",
+    "index": 6,
+    "text": "### 4.1. Dataset and Experiment Setup\n\nThe authors utilized the LargeST dataset [11], comprising traffic time series from 8,600 sensors across California. The dataset includes metadata such as location coordinates, county, freeway name, and number of lanes. They augmented this metadata with city names, populations, and historical transaction volumes. Sensor readings were aggregated into 15-minute intervals, resulting in 96 intervals per day over 35,040 time steps. Each sub-dataset was split into training, validation, and test sets using a 6:2:2 ratio. The framework was applied to the training and validation sets, with performance reported on the test set. The authors tested 60 user queries with randomly selected locations, forecasting the next 12 intervals for each sensor at each timestamp. Performance was evaluated using Mean Absolute Error (MAE), Root Mean Squared Error (RMSE), and Mean Absolute Percentage Error (MAPE). GPT-4 Turbo was employed as the LLM agent, generating five proposals per round.",
+    "summary": "Экспериментальный setup: датасет LargeST (8600 сенсоров трафика в Калифорнии, метаданные: координаты, округ, фривей, население), агрегация в 15-минутные интервалы (96/день, 35040 шагов), разбиение 6:2:2. 60 пользовательских запросов, прогноз на 12 интервалов. Метрики: MAE, RMSE, MAPE. LLM-агент: GPT-4 Turbo, 5 предложений за раунд.",
+    "keywords": [
+      "LargeST",
+      "traffic forecasting",
+      "MAE",
+      "RMSE",
+      "MAPE",
+      "GPT-4 Turbo",
+      "California",
+      "sensor",
+      "metadata"
+    ],
+    "question_types": [
+      "В",
+      "З",
+      "Д"
+    ],
+    "token_count": 160
+  },
+  {
+    "chunk_id": "llm-agents_chunk_007",
+    "article_id": "llm-agents",
+    "article_meta": {
+      "title": "Empowering Time Series Forecasting with LLM Agents",
+      "authors": [
+        "Yeh",
+        "Lai",
+        "Saini",
+        "Fan",
+        "Fan",
+        "Wang",
+        "Dai",
+        "Zheng"
+      ],
+      "year": 2025,
+      "arxiv_id": "2508.04231"
+    },
+    "section": "Experiments",
+    "section_hierarchy": [
+      "Experiments",
+      "4. Experiment",
+      "4.2. Experiment Results"
+    ],
+    "chunk_type": "table_with_prose",
+    "index": 7,
+    "text": "### 4.2. Experiment Results\n\nThe authors applied the DCATS framework to four time series forecasting models, see Section 3.2, with results shown in Table 1. Performance metrics were averaged across all 12 time steps and 60 queries.\n\n**Table 1.** The DCATS framework improves performance across all scenarios.\n\n| Method | MAE | RMSE | MAPE |\n| --- | ---: | ---: | ---: |\n| Linear | 37.31 | 74.01 | 15.12% |\n| Linear+DCATS | 35.91 | 72.91 | 14.20% |\n| % improvement | 3.77% | 1.48% | 6.14% |\n| MLP | 34.07 | 67.68 | 13.33% |\n| MLP+DCATS | 31.26 | 63.34 | 12.34% |\n| % improvement | 8.26% | 6.41% | 7.42% |\n| SparseTSF | 37.92 | 74.19 | 16.83% |\n| SparseTSF+DCATS | 34.88 | 69.20 | 15.46% |\n| % improvement | 8.02% | 6.73% | 8.14% |\n| UltraSTF | 29.77 | 60.92 | 10.26% |\n| UltraSTF+DCATS | 28.61 | 57.78 | 9.79% |\n| % improvement | 3.91% | 5.16% | 4.55% |\n\nThe DCATS framework consistently improved performance across all tested methods, with an average improvement of 6% across all queries, models, and metrics. This model-agnostic improvement suggests that the framework's data selection process enhances forecast quality regardless of the underlying model. SparseTSF showed the lowest performance, while UltraSTF combined with the DCATS framework achieved the best results.",
+    "summary": "Результаты: DCATS улучшает качество прогноза для всех четырёх моделей (Linear, MLP, SparseTSF, UltraSTF) на датасете трафика. Среднее улучшение — 6% по всем запросам, моделям и метрикам (MAE, RMSE, MAPE). Наилучший результат: UltraSTF+DCATS (MAE=28.61). Наибольшее улучшение: MLP+DCATS (8.26% по MAE).",
+    "keywords": [
+      "DCATS",
+      "MAE",
+      "RMSE",
+      "MAPE",
+      "improvement",
+      "UltraSTF",
+      "MLP",
+      "SparseTSF",
+      "Linear",
+      "traffic forecasting"
+    ],
+    "question_types": [
+      "А+",
+      "Ж"
+    ],
+    "token_count": 230
+  },
+  {
+    "chunk_id": "llm-agents_chunk_008",
+    "article_id": "llm-agents",
+    "article_meta": {
+      "title": "Empowering Time Series Forecasting with LLM Agents",
+      "authors": [
+        "Yeh",
+        "Lai",
+        "Saini",
+        "Fan",
+        "Fan",
+        "Wang",
+        "Dai",
+        "Zheng"
+      ],
+      "year": 2025,
+      "arxiv_id": "2508.04231"
+    },
+    "section": "Conclusion",
+    "section_hierarchy": [
+      "Conclusion",
+      "5. Conclusion"
+    ],
+    "chunk_type": "prose",
+    "index": 8,
+    "text": "## 5. Conclusion\n\nThis paper presents a preliminary study on utilizing LLMs for building time series forecasting models automatically, employing the principles of data-centric AI. The authors propose the DCATS framework and demonstrate its capability on a traffic volume forecasting dataset, where it improves upon existing systems by 6%. The results suggest that LLMs have significant potential in enhancing time series analysis and forecasting tasks. For future work, it would be valuable to investigate the performance of the DCATS framework when applied to time series from diverse domains and compare agents powered by different LLMs.",
+    "summary": "Заключение: DCATS — это data-centric AI фреймворк на базе LLM-агента для автоматического построения моделей прогнозирования временных рядов. Достигнуто 6% улучшение на задаче прогнозирования трафика. Будущая работа: оценка на других доменах и сравнение различных LLM в роли агента.",
+    "keywords": [
+      "DCATS",
+      "data-centric AI",
+      "LLM-agent",
+      "traffic forecasting",
+      "AutoML"
+    ],
+    "question_types": [
+      "А"
+    ],
+    "token_count": 95
+  }
+]

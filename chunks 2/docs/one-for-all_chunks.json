@@ -1,0 +1,442 @@
+[
+  {
+    "chunk_id": "one-for-all_chunk_000",
+    "article_id": "one-for-all",
+    "article_meta": {
+      "title": "One for All: A Lightweight, Stabilized and Parameter-Efficient Approach for Time Series Forecasting",
+      "authors": [
+        "Dey",
+        "Dev",
+        "Schoen-Phelan"
+      ],
+      "year": 2026,
+      "arxiv_id": "2603.29756"
+    },
+    "section": "Abstract",
+    "section_hierarchy": [
+      "Abstract"
+    ],
+    "chunk_type": "prose",
+    "index": 0,
+    "text": "**Abstract.** We address the challenge of adapting pre-trained Large Language Models (LLMs) for multivariate time-series analysis, where their deployment is often hindered by prohibitive computational and memory demands. Our solution, One-for-All, introduces Gaussian Rank-Stabilized Low-Rank Adapters (rsLoRA) to enable parameter-efficient fine-tuning of frozen LLMs. While inspired by LoRA, rsLoRA introduces a mathematically grounded rank-stabilization mechanism that enables provable gradient stability at low ranks, a novel contribution absent in prior PEFT methods. Our framework injects trainable rank decomposition matrices (rank 16) into positional embeddings and output layers, while keeping self-attention weights fixed. This design reduces trainable parameters by 6.8× (vs. TimesNet), 21× (vs. GPT4TS), and 11.8× (vs. TIME-LLM), while achieving a 168–1,776× smaller memory footprint (2.2 MiB vs. 340 MiB–4.18 GiB in SOTA models). Rigorous evaluation across six time-series tasks demonstrates that One-for-All achieves state-of-the-art efficiency-accuracy trade-offs: 5.5× higher parameter efficiency (MSE = 5.50) than TimesNet and 21× better than GPT4TS, while matching their forecasting accuracy (MSE = 0.33). The framework's stability is validated through consistent performance across diverse horizons (96–720 steps) and datasets (ETT, Weather, M3, M4), with 98.3% fewer parameters than conventional transformers. These advances enable deployment on edge devices for healthcare, finance, and environmental monitoring without compromising performance. Code is available at: `https://github.com/Prasanjit-Dey/One_for_All`.",
+    "summary": "Аннотация представляет метод One-for-All — параметрически эффективную адаптацию замороженных LLM (GPT-2) через Gaussian Rank-Stabilized LoRA (rsLoRA, rank 16). Метод достигает снижения обучаемых параметров в 6.8–21× и сокращения памяти в 168–1776× при сохранении точности прогнозирования (MSE = 0.33) на горизонтах 96–720 шагов для шести задач временных рядов.",
+    "keywords": [
+      "One-for-All",
+      "rsLoRA",
+      "GPT-2",
+      "PEFT",
+      "Eff.MSE",
+      "ETT",
+      "Weather",
+      "M3",
+      "M4",
+      "parameter efficiency"
+    ],
+    "question_types": [
+      "А",
+      "Ж"
+    ],
+    "token_count": 210
+  },
+  {
+    "chunk_id": "one-for-all_chunk_001",
+    "article_id": "one-for-all",
+    "article_meta": {
+      "title": "One for All: A Lightweight, Stabilized and Parameter-Efficient Approach for Time Series Forecasting",
+      "authors": [
+        "Dey",
+        "Dev",
+        "Schoen-Phelan"
+      ],
+      "year": 2026,
+      "arxiv_id": "2603.29756"
+    },
+    "section": "Introduction",
+    "section_hierarchy": [
+      "Introduction",
+      "I. INTRODUCTION",
+      "Novelty of the Proposed Framework"
+    ],
+    "chunk_type": "prose",
+    "index": 1,
+    "text": "Recent advancements in Large Language Models (LLMs) have significantly enhanced their capabilities in the NLP domain [10], [11]. The main advantage is using pre-trained LLMs on billions of tokens for downstream tasks, even with few or no labeled instances. Another advantage provided by LLMs is their unified architecture for multiple downstream applications. Despite this, very few developments have been made to explore pre-trained LLMs for multivariate time-series analysis due to three key challenges. The primary challenge is the lack of sufficient data to train LLMs for multivariate time-series analysis. The maximum dataset size available for training is less than 10 GB [12], which is much less than what is typically available for NLP. The second challenge is that pre-trained LLMs require significant storage. Unified adaptation is typically achieved through fine-tuning, which updates all parameters of the pre-trained models. A major disadvantage of fine-tuning is that the new models contain as many parameters as the original models. The third and most fundamental challenge stems from the mismatch between time-series characteristics and existing parameter-efficient adaptation methods designed for NLP/CV:\n\n1. Non-stationarity: time-series exhibit time-varying statistics (e.g., trends, seasonality) that violate the stationarity assumptions of standard adapters.\n2. Irregular sampling: missing values and heterogeneous frequencies complicate tokenization compared to fixed-length text or images.\n3. Multi-scale dependencies: local noise and global trends require adaptive rank allocation, whereas NLP-focused PEFT uses fixed ranks.\n\nMany sought to address these problems by adopting only a few parameters or learning embedding and output layers for new tasks. This approach requires storing and loading only a few additional parameters with the pre-trained LLM for time-series analysis, significantly enhancing operational efficiency upon deployment. However, existing solutions often increase inference latency by extending model depth or reducing usable sequence length [13], [14]. Moreover, these algorithms often fail to match the fine-tuning baseline, which reduces the model's efficiency and quality.\n\nRecent efforts to adapt LLMs for time-series [15] partially address data scarcity but fail to solve these inherent mismatches. Various enhancements have been implemented to advance LLM capabilities in time-series forecasting, including refined fine-tuning techniques [16], sequence decomposition strategies [17], and integrating textual prompts [18]. Despite promising results, many methods require a large number of trainable parameters, increasing storage and computational demands. Moreover, a surge in cross-model parameter-efficient LLMs has emerged, facilitating knowledge transfer across domains such as semantic segmentation [19], speaker recognition [20], and action detection [21]. However, this development primarily focuses on NLP and computer vision, leaving untapped potential in exploring cross-model parameter efficiency for temporal modalities.\n\n## Novelty of the Proposed Framework\n\nOur *One-for-All* framework introduces fundamental advances in time-series analysis through parameter-efficient adaptation of pre-trained LLMs. While leveraging established components (e.g., instance normalization, patching), we make the following key innovations:\n\n- **Gaussian Rank-Stabilized LoRA (rsLoRA):** While inspired by LoRA, rsLoRA introduces a mathematically grounded rank-stabilization mechanism that enables provable gradient stability at low ranks, a novel contribution absent in prior PEFT methods. Our rank-16 adapter features Gaussian-distributed scaling $\\beta_r = \\alpha / \\sqrt{r}$ (Theorem 1), specifically designed to address time-series challenges.\n- **95% accuracy saturation by Rank 16:** Compared to Rank 256+ required in standard LoRA, this enables efficient modeling of multi-scale dependencies.\n- **Theoretical guarantees:** Stable gradients under non-stationarity, the first formal proof for time-series adapters.\n- **21× fewer parameters than GPT4TS:** 0.55 M vs. 3.9–24.0 M while matching accuracy.\n- **First Unified Time-Series Architecture:** The framework simultaneously provides cross-task unification, horizon-agnostic stability, and provable efficiency.\n- **Cross-task unification:** A single 2.2 MiB model handles irregular sampling across forecasting, classification, and anomaly detection.\n- **Horizon-agnostic stability:** Less than 1% MSE variance across 96–720 steps.\n- **Provable efficiency:** 5.5× better parameter efficiency (`Eff.*MSE = 5.50`) than TimesNet.\n- **Breakthrough in Resource Efficiency:** Our frozen backbone + rsLoRA design achieves unprecedented efficiency.\n- **98.3% parameter reduction vs. transformers:** 0.55 M vs. 10.53 M in Autoformer.\n- **Edge deployment capability:** 1,776× smaller memory than TIME-LLM (2.2 MiB vs. 3.9 GiB).\n- **Sub-0.35 MSE with 170× fewer resources than GPT4TS.**\n\nThese advances directly address the core challenges of time-series PEFT. rsLoRA's Gaussian scaling ensures stability under non-stationarity, and patch-based tokens effectively handle irregular sampling. Prior cross-modal adapters have not achieved either of these capabilities.",
+    "summary": "Введение описывает три ключевых вызова адаптации LLM к временным рядам (нестационарность, нерегулярная дискретизация, многомасштабные зависимости) и представляет новизну метода One-for-All: Gaussian Rank-Stabilized LoRA (rsLoRA) с математически обоснованной стабилизацией ранга, обеспечивающий 21× меньше параметров чем GPT4TS, кросс-задачную унификацию и стабильность на горизонтах 96–720.",
+    "keywords": [
+      "One-for-All",
+      "rsLoRA",
+      "PEFT",
+      "non-stationarity",
+      "multi-scale",
+      "GPT-2",
+      "parameter efficiency",
+      "cross-task unification"
+    ],
+    "question_types": [
+      "А"
+    ],
+    "token_count": 640
+  },
+  {
+    "chunk_id": "one-for-all_chunk_002",
+    "article_id": "one-for-all",
+    "article_meta": {
+      "title": "One for All: A Lightweight, Stabilized and Parameter-Efficient Approach for Time Series Forecasting",
+      "authors": [
+        "Dey",
+        "Dev",
+        "Schoen-Phelan"
+      ],
+      "year": 2026,
+      "arxiv_id": "2603.29756"
+    },
+    "section": "Methodology",
+    "section_hierarchy": [
+      "Methodology",
+      "III. METHODOLOGY",
+      "A. Frozen Pre-trained LLM"
+    ],
+    "chunk_type": "formula_heavy",
+    "index": 2,
+    "text": "## III. METHODOLOGY\n\nOur One-for-All framework, depicted in Figure 1, leverages rsLoRA [38] (rank 16), a Gaussian-distributed parameter-efficient low-rank stabilized matrix, in the positional embedding and output layers of pre-trained LLMs models like GPT-2 [28]. This optimization enhances time series tasks without the need to fine-tune the backbone LLM model. rsLoRA incorporates the \"intrinsic dimension\" during weight updates in pre-trained LLMs. For these models, the weight matrix $W_o \\in \\mathbb{R}^{d \\times d'}$, where $d$ and $d'$ are the dimensions, is updated using a parameter-efficient stabilized low-rank decomposition:\n\n$$\nW_o + \\Delta W = W_o + \\beta_r Y X\n\\tag{1}\n$$\n\nWhere matrices $Y \\in \\mathbb{R}^{d \\times r}$ and $X \\in \\mathbb{R}^{r \\times d'}$, and $r \\ll \\min(d, d')$ denotes the rank, and $\\beta_r \\in \\mathbb{R}^+$ is a scaling factor. Throughout the fine-tuning phase, the weight matrix $W_o$ remains fixed, undergoing no gradient updates, while matrices $X$ and $Y$ remain trainable. We initialize $X$ randomly with a Gaussian distribution and set $Y$ to zero. The gradient update $\\Delta W = YX$ is zero at the beginning of training.\n\n### A. Frozen Pre-trained LLM\n\nOur One-for-All framework preserves the self-attention block from the pre-trained LLM, transferring its knowledge to our downstream time series analysis. We opt to maintain this layer frozen during fine-tuning.",
+    "summary": "Методология One-for-All: rsLoRA (rank 16) внедряет параметрически эффективную низкоранговую декомпозицию ($W_o + \\beta_r Y X$) в позиционные эмбеддинги и выходные слои GPT-2. Веса self-attention заморожены, обучаются только матрицы X и Y через Gaussian-стабилизированное масштабирование.",
+    "keywords": [
+      "One-for-All",
+      "rsLoRA",
+      "GPT-2",
+      "PEFT",
+      "rank decomposition",
+      "frozen LLM",
+      "low-rank adapter",
+      "positional embedding"
+    ],
+    "question_types": [
+      "А",
+      "Д",
+      "Е",
+      "К"
+    ],
+    "token_count": 230
+  },
+  {
+    "chunk_id": "one-for-all_chunk_003",
+    "article_id": "one-for-all",
+    "article_meta": {
+      "title": "One for All: A Lightweight, Stabilized and Parameter-Efficient Approach for Time Series Forecasting",
+      "authors": [
+        "Dey",
+        "Dev",
+        "Schoen-Phelan"
+      ],
+      "year": 2026,
+      "arxiv_id": "2603.29756"
+    },
+    "section": "Methodology",
+    "section_hierarchy": [
+      "Methodology",
+      "III. METHODOLOGY",
+      "C. Input Embedding",
+      "D. Normalization",
+      "E. Patching"
+    ],
+    "chunk_type": "formula_heavy",
+    "index": 3,
+    "text": "### C. Input Embedding\n\nTo process the raw time series $X \\in \\mathbb{R}^{L \\times d}$, where $L$ is the sequence length and $d$ is the number of variables, we apply a shared linear projection to map inputs into the model space:\n\n$$\nX_{\\text{embed}} = X \\cdot W_{\\text{embed}}, \\qquad W_{\\text{embed}} \\in \\mathbb{R}^{d \\times D}\n\\tag{12}\n$$\n\nwhere $D$ is the hidden dimension. Unlike transformer models for text, we do not use positional encodings, as prior work (e.g., TimesNet [39]) has shown minimal benefit for temporal dynamics. This also reduces parameter overhead and simplifies deployment.\n\n### D. Normalization\n\nBefore patching, we apply Z-score normalization independently to each time series:\n\n$$\n\\tilde{X} = \\frac{X - \\mu}{\\sigma}\n\\tag{13}\n$$\n\nwhere $\\mu$ and $\\sigma$ are the mean and standard deviation of the series computed over the input window. This standardization is done both during training and inference, and is reversed post-prediction. It ensures consistent feature scaling across time and tasks.\n\n### E. Patching\n\nTo improve computational efficiency and capture local trends, we segment the input series into non-overlapping patches of size $P$. Each patch is flattened and projected via a learnable linear layer:\n\n$$\nZ_i = \\operatorname{Linear}(\\operatorname{Flatten}(\\tilde{X}_{i:i+P-1}))\n\\tag{14}\n$$\n\nresulting in a token sequence $\\{Z_1, \\ldots, Z_N\\} \\in \\mathbb{R}^{N \\times D}$ where $N = L / P$. This tokenized form is passed to the frozen LLM backbone.",
+    "summary": "Входной временной ряд преобразуется через линейную проекцию (Input Embedding), Z-score нормализацию (с обратимым пост-предсказательным восстановлением) и разбиение на неперекрывающиеся патчи размера P. Патчи сглаживаются и проецируются обучаемым линейным слоем, формируя токенную последовательность для замороженного LLM.",
+    "keywords": [
+      "Patching",
+      "Z-score normalization",
+      "Input Embedding",
+      "tokenization",
+      "flatten",
+      "linear projection",
+      "RevIN"
+    ],
+    "question_types": [
+      "Г",
+      "Л"
+    ],
+    "token_count": 240
+  },
+  {
+    "chunk_id": "one-for-all_chunk_004",
+    "article_id": "one-for-all",
+    "article_meta": {
+      "title": "One for All: A Lightweight, Stabilized and Parameter-Efficient Approach for Time Series Forecasting",
+      "authors": [
+        "Dey",
+        "Dev",
+        "Schoen-Phelan"
+      ],
+      "year": 2026,
+      "arxiv_id": "2603.29756"
+    },
+    "section": "Methodology",
+    "section_hierarchy": [
+      "Methodology",
+      "III. METHODOLOGY",
+      "B. Positional and Output Layer Stabilization"
+    ],
+    "chunk_type": "formula_heavy",
+    "index": 4,
+    "text": "The scaling factor $\\beta_r$ acts as a parameter-efficient mechanism for the matrix product $YX$, adapting its value based on the rank $r$. Specifically, $\\beta_r$ is defined as $\\alpha / \\sqrt{r}$, where $\\alpha$ represents a hyperparameter. Our ablation studies (Section VI, Table VII) reveal that $\\alpha \\in [0.8, 1.2]$ achieves optimal performance across all tasks, with $\\alpha = 1.0$ providing the best balance between stability and convergence speed. Notably, performance variations were minimal ($\\Delta$MSE < 2%) for $r \\ge 16$ (Figure 6), demonstrating that rsLoRA's effectiveness is more sensitive to rank selection than to the exact value of $\\alpha$. This aligns with Theorem 1's stability guarantees, which hold for any $\\alpha \\in \\Theta(1)$. For reproducibility, we fix $\\alpha = 1.0$ as the default setting. Remarkably, this scaling factor $\\beta_r$ exhibits stability in gradients, facilitating the increase in rank.\n\n### B. Positional and Output Layer Stabilization\n\n**Definition 1.** An adapter $\\beta_r Y X$ (either positional embedding or output layer) is Gaussian rank-stabilized if the following conditions hold:\n\n1. If the inputs to the adapter are i.i.d. Gaussian random variables with the $n$-th moment $\\Theta_r(1)$ in each entry, then the $n$-th moment of the outputs of the adapter is also $\\Theta_r(1)$ in each entry.\n2. If the gradient of the loss with respect to the adapter outputs is $\\Theta_r(1)$ in each entry, then the loss gradients with respect to the inputs of the adapter are also $\\Theta_r(1)$ in each entry.\n\n**Theorem 1.** Consider a pre-trained language model with an adapter $\\beta_r Y X$, where $Y \\in \\mathbb{R}^{d \\times r}$ is initialized to $0_{d \\times r}$, and entries of $X \\in \\mathbb{R}^{r \\times d'}$ are i.i.d. Gaussian random variables with zero mean and variance $\\sigma_X^2$. Here, $d$ and $d'$ are the dimensions. The scaling factor $\\beta_r \\in \\mathbb{R}$ is such that $\\lim_{r \\to \\infty} \\beta_r = 0$. In expectation over initialization, all adapters (positional embedding or output layer) are Gaussian rank-stabilized if and only if $\\beta_r \\in \\Theta_r(1 / \\sqrt{r})$.",
+    "summary": "Ключевой механизм улучшения: Gaussian Rank-Stabilized LoRA (rsLoRA) с масштабирующим фактором $\\beta_r = \\alpha/\\sqrt{r}$ (где $\\alpha=1.0$ оптимально). Теорема 1 доказывает, что адаптеры позиционных эмбеддингов и выходных слоёв являются Gaussian rank-стабилизированными тогда и только тогда, когда $\\beta_r \\in \\Theta_r(1/\\sqrt{r})$, что обеспечивает стабильность градиентов при нестационарности.",
+    "keywords": [
+      "rsLoRA",
+      "Rank Stabilization",
+      "Gaussian scaling",
+      "positional embedding",
+      "output layer",
+      "Theorem 1",
+      "adapter",
+      "gradient stability"
+    ],
+    "question_types": [
+      "Б",
+      "Д"
+    ],
+    "token_count": 380
+  },
+  {
+    "chunk_id": "one-for-all_chunk_005",
+    "article_id": "one-for-all",
+    "article_meta": {
+      "title": "One for All: A Lightweight, Stabilized and Parameter-Efficient Approach for Time Series Forecasting",
+      "authors": [
+        "Dey",
+        "Dev",
+        "Schoen-Phelan"
+      ],
+      "year": 2026,
+      "arxiv_id": "2603.29756"
+    },
+    "section": "Experiments",
+    "section_hierarchy": [
+      "Experiments",
+      "IV. EXPERIMENT DETAILS",
+      "A. Implementation Details"
+    ],
+    "chunk_type": "prose",
+    "index": 5,
+    "text": "### A. Implementation Details\n\nWe adopt the TimesNet configuration [39] for all baseline models to ensure a fair comparison. Our framework is implemented in PyTorch, with GPT-2 [40] as the default backbone LLM, enhanced with rank-16 rsLoRA. All models are trained on NVIDIA A100 80 GB GPUs. To ensure robustness, experiments are repeated three times, and results are reported as the mean performance. Detailed hyperparameters and runtime settings are provided in Section A of the supplementary material.\n\nOur One-for-All framework preserves the self-attention block from the pre-trained LLM, transferring its knowledge to our downstream time series analysis. We opt to maintain this layer frozen during fine-tuning. This design reduces trainable parameters to only 0.55 M (6.8× fewer than TimesNet, 21× fewer than GPT4TS), with a memory footprint of just 2.2 MiB.",
+    "summary": "Реализация и обучение: PyTorch, GPT-2 с rank-16 rsLoRA на NVIDIA A100 80GB, 3 повтора. Self-attention блок LLM заморожен — обучается только 0.55M параметров (rsLoRA адаптеры в позиционных эмбеддингах и выходных слоях), что требует всего 2.2 MiB памяти.",
+    "keywords": [
+      "rsLoRA",
+      "PEFT",
+      "GPT-2",
+      "PyTorch",
+      "NVIDIA A100",
+      "frozen backbone",
+      "rank-16",
+      "0.55M params",
+      "2.2 MiB"
+    ],
+    "question_types": [
+      "И",
+      "К"
+    ],
+    "token_count": 160
+  },
+  {
+    "chunk_id": "one-for-all_chunk_006",
+    "article_id": "one-for-all",
+    "article_meta": {
+      "title": "One for All: A Lightweight, Stabilized and Parameter-Efficient Approach for Time Series Forecasting",
+      "authors": [
+        "Dey",
+        "Dev",
+        "Schoen-Phelan"
+      ],
+      "year": 2026,
+      "arxiv_id": "2603.29756"
+    },
+    "section": "Experiments",
+    "section_hierarchy": [
+      "Experiments",
+      "IV. EXPERIMENT DETAILS",
+      "B. Datasets for Time-Series Tasks"
+    ],
+    "chunk_type": "prose",
+    "index": 6,
+    "text": "### B. Datasets for Time-Series Tasks\n\nWe evaluate our approach across six time-series tasks:\n\n1. **Long-term and Few-shot Forecasting:** Benchmarked on five standard datasets: ETT (ETTh, ETTm) and Weather [41].\n2. **Zero-shot Forecasting:** Evaluated on the M3 and M4 datasets, which span diverse frequencies (yearly, quarterly, monthly).\n3. **Short-term Forecasting:** Assessed on the M4 dataset, a large-scale collection of business, financial, and economic time series with heterogeneous frequencies.\n4. **Classification:** Tested on multivariate UEA [42] classification datasets.\n5. **Anomaly Detection:** Evaluated on five widely used benchmarks: SMD [43], MSL [44], SMAP [44], SWaT [45], and PSM [46].\n\nFor dataset statistics (e.g., dimensions, splits, and frequencies), refer to Supplementary Tables 1–2.",
+    "summary": "Оценка проводится на шести задачах: long-term/few-shot forecasting (ETTh, ETTm, Weather), zero-shot forecasting (M3, M4), short-term forecasting (M4), classification (UEA), anomaly detection (SMD, MSL, SMAP, SWaT, PSM).",
+    "keywords": [
+      "ETT",
+      "ETTh",
+      "ETTm",
+      "Weather",
+      "M3",
+      "M4",
+      "UEA",
+      "SMD",
+      "MSL",
+      "SMAP",
+      "SWaT",
+      "PSM",
+      "Benchmark"
+    ],
+    "question_types": [
+      "В"
+    ],
+    "token_count": 130
+  },
+  {
+    "chunk_id": "one-for-all_chunk_007",
+    "article_id": "one-for-all",
+    "article_meta": {
+      "title": "One for All: A Lightweight, Stabilized and Parameter-Efficient Approach for Time Series Forecasting",
+      "authors": [
+        "Dey",
+        "Dev",
+        "Schoen-Phelan"
+      ],
+      "year": 2026,
+      "arxiv_id": "2603.29756"
+    },
+    "section": "Appendix",
+    "section_hierarchy": [
+      "Appendix",
+      "Supplementary Document",
+      "A. Experimental Setup",
+      "A.3 Evaluation Metrics"
+    ],
+    "chunk_type": "prose",
+    "index": 7,
+    "text": "#### A.3 Evaluation Metrics\n\nWe evaluate model performance using task-specific metrics tailored to the nature of each task. For few-shot and long-term forecasting, we use Mean Squared Error (MSE) and Mean Absolute Error (MAE) to quantify the prediction accuracy. In zero-shot forecasting settings, Symmetric Mean Absolute Percentage Error (sMAPE) is employed to account for scale-invariant percentage errors. For short-term forecasting tasks on the M4 dataset, we adopt a combination of sMAPE, Mean Absolute Scaled Error (MASE), and Overall Weighted Average (OWA) to enable fair benchmarking against naive baselines and other models. For classification tasks, we report Accuracy as the proportion of correct predictions. Finally, for anomaly detection, we rely on Precision, Recall, and F1 Score to assess the trade-off between false positives and false negatives. Additionally, we introduce a parameter efficiency metric Eff.*MSE = (1/MSE) / Parameters, which quantifies the trade-off between accuracy and model size.",
+    "summary": "Метрики оценки: MSE и MAE для long-term и few-shot forecasting; sMAPE для zero-shot; sMAPE, MASE и OWA для short-term forecasting; Accuracy для classification; Precision, Recall и F1 Score для anomaly detection. Дополнительная метрика эффективности: Eff.*MSE = (1/MSE)/Parameters.",
+    "keywords": [
+      "MSE",
+      "MAE",
+      "sMAPE",
+      "MASE",
+      "OWA",
+      "Accuracy",
+      "Precision",
+      "Recall",
+      "F1",
+      "Eff.MSE",
+      "Metric"
+    ],
+    "question_types": [
+      "З"
+    ],
+    "token_count": 200
+  },
+  {
+    "chunk_id": "one-for-all_chunk_008",
+    "article_id": "one-for-all",
+    "article_meta": {
+      "title": "One for All: A Lightweight, Stabilized and Parameter-Efficient Approach for Time Series Forecasting",
+      "authors": [
+        "Dey",
+        "Dev",
+        "Schoen-Phelan"
+      ],
+      "year": 2026,
+      "arxiv_id": "2603.29756"
+    },
+    "section": "Experiments",
+    "section_hierarchy": [
+      "Experiments",
+      "V. EXPERIMENTAL RESULTS",
+      "A. Model Efficiency Analysis Across Forecasting Horizons"
+    ],
+    "chunk_type": "prose",
+    "index": 8,
+    "text": "## V. EXPERIMENTAL RESULTS\n\nWe evaluate the Gaussian rank-stabilized parameter-efficient One-for-All framework through comprehensive experiments across multiple time series forecasting tasks. Our results demonstrate that the proposed method achieves state-of-the-art performance while maintaining exceptional efficiency in both parameter count and memory footprint. Using a GPT-2 backbone enhanced with Gaussian rsLoRA [38], the framework shows consistent performance across different prediction horizons while reducing trainable parameters by 6.8–21× compared to contemporary approaches.\n\n### A. Model Efficiency Analysis Across Forecasting Horizons\n\nThe One-for-All framework demonstrates exceptional efficiency across both trainable parameters and memory footprint when evaluated against state-of-the-art time series forecasting models, as evidenced in Figure 2. Across all prediction horizons (96 to 720 steps), our method maintains a consistently low parameter count of 0.546–0.556 million, representing a 6.8× reduction compared to TimesNet (0.605–0.666 M), a 21× improvement over GPT4TS (3.916–24.04 M), and an 11.8× advantage relative to TIME-LLM (6.39–6.55 M). Notably, it achieves a 98.3% parameter reduction versus conventional transformers like Autoformer (10.53 M) and Informer (11.33 M), occupying a distinct efficiency regime in the logarithmic-scale comparison. The memory efficiency proves equally compelling, with a fixed 2.2 MiB footprint that is 168× smaller than GPT4TS (340–420 MiB), 1,776× more compact than TIME-LLM (3.68–4.18 GiB), and 28–32× leaner than medium-sized GPT-2 variants (TEST/TEMPO: 701–710 MiB). Unlike other methods that exhibit 5–25% size variations across horizons, One-for-All maintains consistent resource requirements regardless of prediction length. The \"Avg\" columns further highlight this sustained advantage, with our framework achieving 5.5× higher parameter efficiency (`Eff.*MSE`) than TimesNet while using 30% fewer parameters (0.55 M vs. 0.63 M). This dual efficiency, coupled with competitive accuracy (Avg MSE = 0.33, Table I), enables deployment on resource-constrained edge devices without compromising forecasting capability.",
+    "summary": "Результаты: One-for-All достигает SOTA эффективности — 0.55M обучаемых параметров (снижение в 6.8× vs TimesNet, 21× vs GPT4TS, 11.8× vs TIME-LLM), 2.2 MiB памяти (в 168–1776× меньше аналогов), 5.5× выше параметрическая эффективность (Eff.*MSE = 5.50). Точность сохраняется на уровне Avg MSE = 0.33 при стабильной работе на горизонтах 96–720 для 6 задач прогнозирования.",
+    "keywords": [
+      "One-for-All",
+      "Eff.MSE",
+      "parameter efficiency",
+      "GPT4TS",
+      "TIME-LLM",
+      "TimesNet",
+      "horizon",
+      "memory footprint",
+      "Autoformer",
+      "Informer",
+      "SOTA"
+    ],
+    "question_types": [
+      "А+",
+      "Ж"
+    ],
+    "token_count": 400
+  },
+  {
+    "chunk_id": "one-for-all_chunk_009",
+    "article_id": "one-for-all",
+    "article_meta": {
+      "title": "One for All: A Lightweight, Stabilized and Parameter-Efficient Approach for Time Series Forecasting",
+      "authors": [
+        "Dey",
+        "Dev",
+        "Schoen-Phelan"
+      ],
+      "year": 2026,
+      "arxiv_id": "2603.29756"
+    },
+    "section": "Experiments",
+    "section_hierarchy": [
+      "Experiments",
+      "VI. ABLATION STUDY"
+    ],
+    "chunk_type": "prose",
+    "index": 9,
+    "text": "## VI. ABLATION STUDY\n\nOur systematic evaluation of the One-for-All framework's rank scalability (Table VII, Figure 6) reveals three critical findings about its parameter efficiency and stability. First, performance metrics saturate at remarkably low ranks. Both long-term and few-shot forecasting achieve 95% of their maximum accuracy by Rank 16 (MSE: 0.33 and 0.42 respectively), with diminishing returns (<2% improvement) up to Rank 1024 (Figure 6a). This plateau effect demonstrates that our Gaussian rsLoRA stabilization successfully prevents underperformance at low ranks (Rank 2 maintains reasonable MSE within 15% of peak) while avoiding overfitting at high ranks. Second, resource requirements grow predictably, with Rank 16 using only 0.55 M parameters (3.1% of Rank 1024) and 2.2 MiB memory, making it 5.5× more parameter-efficient than GPT4TS while matching its accuracy. The logarithmic scaling of resources versus rank (Figure 6b) confirms the framework's lightweight nature, with Rank 64 requiring just 8.8 MiB memory (6.3% of Rank 1024) while delivering equivalent performance. Third, the consistent error patterns across both forecasting tasks (standard deviation < 0.01 in MSE beyond Rank 16) validate the architecture's task-agnostic stability. These results establish Rank 16–64 as the optimal operating range, balancing near-peak accuracy with minimal resource overhead. This is particularly crucial for edge deployment, where memory constraints require models under 3 MiB. The findings collectively demonstrate that One-for-All achieves state-of-the-art efficiency without compromising stability, eliminating the need for case-specific rank tuning. Although this study centers on rank, the observed stability implicitly confirms the robustness of the scaling factor $\\beta_r = \\alpha / \\sqrt{r}$ (with fixed $\\alpha = 1.0$), as performance remains consistent for $r \\ge 16$.",
+    "summary": "Абляционное исследование показывает, что производительность насыщается при Rank 16 (95% от максимума, MSE 0.33/0.42 для long-term/few-shot), с менее чем 2% улучшения до Rank 1024. Rank 16 использует лишь 0.55M параметров (3.1% от Rank 1024) и 2.2 MiB памяти, достигая 5.5× лучшей параметрической эффективности чем GPT4TS при сохранении точности. Оптимальный диапазон: Rank 16–64.",
+    "keywords": [
+      "Ablation Study",
+      "Rank 16",
+      "rsLoRA",
+      "rank scalability",
+      "parameter efficiency",
+      "GPT4TS",
+      "MSE",
+      "accuracy saturation",
+      "edge deployment"
+    ],
+    "question_types": [
+      "А+",
+      "Б"
+    ],
+    "token_count": 340
+  },
+  {
+    "chunk_id": "one-for-all_chunk_010",
+    "article_id": "one-for-all",
+    "article_meta": {
+      "title": "One for All: A Lightweight, Stabilized and Parameter-Efficient Approach for Time Series Forecasting",
+      "authors": [
+        "Dey",
+        "Dev",
+        "Schoen-Phelan"
+      ],
+      "year": 2026,
+      "arxiv_id": "2603.29756"
+    },
+    "section": "Conclusion",
+    "section_hierarchy": [
+      "Conclusion",
+      "VIII. CONCLUSION AND FUTURE STUDY"
+    ],
+    "chunk_type": "prose",
+    "index": 10,
+    "text": "## VIII. CONCLUSION AND FUTURE STUDY\n\nThe One-for-All framework introduces rsLoRA, a novel parameter-efficient approach that fundamentally advances pre-trained LLM adaptation for time-series analysis. Our key innovation lies in rsLoRA's mathematically grounded stabilization mechanism, which overcomes critical limitations of traditional LoRA when applied to temporal data. Through comprehensive ablation studies (Section VI), we demonstrate that rsLoRA achieves 95% accuracy saturation at Rank 16, a 16× reduction compared to the Rank 256+ required by standard LoRA, while maintaining provable gradient stability under non-stationary conditions (Theorem 1). This enables unprecedented efficiency gains: 6.8–21× fewer parameters and 168–1,776× reduced memory usage versus SOTA methods, while maintaining competitive accuracy (MSE = 0.33) across forecasting, classification, and anomaly detection tasks, enabling practical deployment on edge devices for healthcare and environmental applications.\n\nFuture work will focus on enhancing zero-shot performance through: (1) optimized adaptive patching for irregular data, (2) improved frequency-aware rsLoRA scaling, and (3) multimodal extensions. These developments will further establish One-for-All as a versatile solution for unified time-series analysis, building on its current strengths in efficiency and stability while expanding its capabilities for broader applications.",
+    "summary": "Заключение: One-for-All — это метод rsLoRA, обеспечивающий параметрически эффективную адаптацию LLM к временным рядам. Достигнуто 95% насыщение точности при Rank 16 (16× снижение относительно стандартного LoRA), 6.8–21× меньше параметров и 168–1776× меньше памяти при MSE=0.33. Будущая работа: адаптивный патчинг, частотно-зависимое масштабирование rsLoRA, мультимодальные расширения.",
+    "keywords": [
+      "One-for-All",
+      "rsLoRA",
+      "parameter efficiency",
+      "Rank 16",
+      "accuracy saturation",
+      "edge deployment",
+      "PEFT",
+      "zero-shot"
+    ],
+    "question_types": [
+      "А"
+    ],
+    "token_count": 196
+  }
+]
